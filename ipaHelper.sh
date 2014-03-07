@@ -35,7 +35,8 @@ fi
 #returns ipa file name in the working directory
 function ipa_in_wd
 {
-find ./ -type f -d 1 -iname "*.ipa" | while read f; do
+find ./ -type f -depth 1 -iname "*.ipa" | while read f; do
+echo 'in main'
 	f=${f:3}
 	echo "$f"
 	return
@@ -317,6 +318,91 @@ echo '</plist>'
 #if the first arg is an Info.plist file, use that file as the $(infoplist) and the Info.plist's directory as the bd
 #otherwise use the first ipa file (alphabetically) in the bd as the ipa.
 
+## COMMANDS THAT DON'T NEED AN IPA OR PATH ##
+
+#first arg should be the command ($cmd) 
+cmd="$1"
+
+#if there was no command, exit
+if [ "$cmd" = "" ];then
+    problem_encountered "no command"
+else
+    shift
+fi
+
+#if cmd was "help" or "h" show the usage page
+if [ "$cmd" = "help" -o "$cmd" = "h" ];then
+    if [ "$1" = "" ]; then
+        help_help
+        script_done
+    fi
+    if [ "$1" = "-v" ]; then
+        help_get
+        help_certs
+        help_profile
+        help_info
+        help_resign
+        script_done
+    fi
+    while [ "$1" != "" ]; do
+        case "$1" in
+            [hH]* ) help_help;;
+            [gG]* ) help_get;;
+            [cC]* ) help_certs;;
+            [pP]* ) help_profile;;
+            [iI]* ) help_info;;
+            [rR]* ) help_resign;;
+            * ) problem_encountered "Not a valid command";;
+        esac
+        shift
+    done
+    script_done
+fi
+
+#if the cmd is "c" or "certs" or "certificates", display the information about certificates in the keychain
+#if there is a following argument, it limits the certificates shown to ones matching this substring
+if [ "$cmd" = "c" -o "$cmd" = "certs" -o "$cmd" = "certficiates" ];then
+    tmp=
+    if [ "$1" != "" ]; then
+        tmp=" -c $1"
+    fi
+    certs="$(security find-certificate$tmp -a)"
+    echo '********************** Certificates **********************' 
+    while read line; do
+        if [ "$line" != "${line#*'labl"<blob>="'}" ]; then
+            tmp="${line#*'labl"<blob>="'}"
+            echo ${tmp%?}
+        fi
+    done <<< "$certs"
+    script_done
+fi
+
+#if the cmd is "get" or "g, move following args to the working directory if they are mobileprovision files.  If no args specified, pull all mobileprovision files from the ~/Downloads/ folder
+if [ "$cmd" = "get" -o "$cmd" = "g" ];then
+    echo "moving..."
+    if [ "$1" = "" ];then
+        find ~/Downloads/ -type f -iname "*.mobileprovision" | while read f; do
+            echo "$f"
+            profilename="$(basename ${f})"
+            mv "$f" "./$profilename"
+        done
+        script_done
+    fi
+    while [ "$1" != "" ];do
+        if [ "${1%.mobileprovision}" != "$1" ];then
+            echo "$1"
+            profilename="$(basename ${1})"
+            mv "$1" "$bd/$profilename"
+        else
+            problem_encountered "Not a profile"
+        fi
+        shift
+    done
+    script_done
+fi
+
+# get ipa/profile/info.plist/directory for the following commands that need one of these.
+
 wd=$(pwd)
 bd=$(pwd)
 ipa=
@@ -351,90 +437,6 @@ else
 	ipa=$(ipa_in_wd)
 fi 
 
-#next available arg should be the command ($cmd) 
-cmd="$1"
-
-#if there was no command, exit
-if [ "$cmd" = "" ];then
-	problem_encountered "no command"
-else
-	shift
-fi
-
-## COMMANDS THAT DON'T NEED AN IPA ##
-
-#if cmd was "help" or "h" show the usage page
-if [ "$cmd" = "help" -o "$cmd" = "h" ];then
-    if [ "$1" = "" ]; then
-        help_help
-	    script_done
-    fi
-    if [ "$1" = "-v" ]; then
-        help_get
-        help_certs
-        help_profile
-        help_info
-        help_resign
-        script_done
-    fi
-    while [ "$1" != "" ]; do
-        case "$1" in
-            [hH]* ) help_help;;
-            [gG]* ) help_get;;
-            [cC]* ) help_certs;;
-            [pP]* ) help_profile;;
-            [iI]* ) help_info;;
-            [rR]* ) help_resign;;
-            * ) problem_encountered "Not a valid command";;
-        esac
-        shift
-    done
-    script_done
-fi
-
-#if the cmd is "get" or "g, move following args to basedirectory if they are mobileprovision files.  If no args specified, pull all mobileprovision files from the ~/Downloads/ folder
-if [ "$cmd" = "get" -o "$cmd" = "g" ];then
-	echo "moving..."
-	if [ "$1" = "" ];then
-        find ~/Downloads/ -type f -iname "*.mobileprovision" | while read f; do
-            echo "$f"
-            profilename="$(basename ${f})"
-            mv "$f" "$bd/$profilename"
-        done
-        script_done
-	fi
-	
-    while [ "$1" != "" ];do
-        if [ "${1%.mobileprovision}" != "$1" ];then
-            echo "$1"
-            profilename="$(basename ${1})"
-            mv "$1" "$bd/$profilename"
-        else
-            problem_encountered "Not a profile"
-        fi
-        shift
-    done
-	script_done
-fi
-
-#if the cmd is "c" or "certs" or "certificates", display the information about certificates in the keychain
-#if there is a following argument, it limits the certificates shown to ones matching this substring
-if [ "$cmd" = "c" -o "$cmd" = "certs" -o "$cmd" = "certficiates" ];then
-    tmp=
-    if [ "$1" != "" ]; then
-        tmp=" -c $1"
-    fi
-    certs="$(security find-certificate$tmp -a)"
-    echo '********************** Certificates **********************' 
-    while read line; do
-        if [ "$line" != "${line#*'labl"<blob>="'}" ]; then
-            tmp="${line#*'labl"<blob>="'}"
-            echo ${tmp%?}
-        fi
-    done <<< "$certs"
-	script_done
-fi
-
 ## COMMANDS THAT DO NEED AN IPA (or profile or info.plist)##
 
 #profile commands
@@ -442,7 +444,7 @@ if [ "$cmd" = "p" -o "$cmd" = "prof" -o "$cmd" = "profile" ];then
 	#if the first arg wasn't a profile, then an ipa file is necessary
 	if [ "$profile" = "" ];then
 		assert_ipa mobileprovision
-		ad=$(make_ad $needsclean)
+		ad=$(make_ad)
 		profile="$bd/$ad/embedded.mobileprovision"
 	fi
 	profile=$(security cms -D -i "$profile")
@@ -479,14 +481,13 @@ if [ "$cmd" = "p" -o "$cmd" = "prof" -o "$cmd" = "profile" ];then
 		shift
 	done
 	script_done
-
 fi
 
 #Info.plist commands
 if [ "$cmd" = "i" -o "$cmd" = "info" ];then
 	if [ "$infoplist" = "" ];then
 		assert_ipa Info.plist
-        	ad=$(make_ad $needsclean)
+    	ad=$(make_ad)
 		infoplist="$bd/$ad/Info.plist"
 	fi
 	cp $infoplist $bd/.Info.plist
@@ -498,9 +499,9 @@ if [ "$cmd" = "i" -o "$cmd" = "info" ];then
                 parse_info "$infoplist"
                 echo '*********************************************************'
                 script_done
-        fi
-        while [ "$1" != "" ];do
-                case "$1" in
+    fi
+    while [ "$1" != "" ];do
+            case "$1" in
                         -v | --verbose )		echo "$infoplist";;
                         -n | --name )			echo "CFBundleName: $(value_for_key "$infoplist" "CFBundleName")";;
                         -d | --display )        	echo "CFBundleDisplayName: $(value_for_key "$infoplist" "CFBundleDisplayName")";;
@@ -523,7 +524,7 @@ fi
 #verify command, to see if an ipa is signed
 if [ "$cmd" = "v" -o "$cmd" = "verify" ];then
 	assert_ipa
-	ad=$(make_ad $needsclean)
+	ad=$(make_ad)
 	cd $(dirname $bd/$ad)
 	base=$(basename ${ad})	
 	codesign --verify -vvvv $base
@@ -533,7 +534,7 @@ fi
 #resign command, to resign an ipa
 if [ "$cmd" = "r" -o "$cmd" = "resign" ];then
 	assert_ipa
-	ad=$(make_ad $needsclean)
+	ad=$(make_ad)
 	profile=$(profile_from_args $@)
 	if [ "$profile" = "" ];then
 		problem_encountered "No Provisioning profile"
@@ -545,27 +546,13 @@ if [ "$cmd" = "r" -o "$cmd" = "resign" ];then
     plutil -convert xml1 "$bd/.Info.plist"
     infoplist="$(cat "$bd/.Info.plist")"
 	bundleid="$(value_for_key "$infoplist" CFBundleIdentifier)"
-	#entitlements=$(entitlements_from_args $@)
-	#entitlementsstring=
-	#if [ "${entitlements:0:1}" = "e" ]; then
-		entitlementsstring="--entitlements .Entitlements.plist"
-		#entitlements="${entitlements:2}"
-		#tent=$(make_entitlements "$appid" $entitlements)
-        tent=$(make_entitlements_from_profile "$fullprofile")
-        echo "$tent" > .Entitlements.plist
-		#if [ "$entitlements" = "" ]; then
-		#	entitlements=Yes
-		#else
-		#	entitlements="Yes - $entitlements"
-		#fi
-	#else
-		#entitlements="None"
-	#fi
+	entitlementsstring="--entitlements .Entitlements.plist"
+    tent=$(make_entitlements_from_profile "$fullprofile")
+    echo "$tent" > .Entitlements.plist
 	dc=$(dc_from_args $@)
 	if [ "$dc" = "dc" ];then
 		echo '*************************IPA File*************************'
 		echo "IPA: $ipa"
-		#echo "Entitlements: $entitlements"
 		echo '************************Info.plist************************'
         parse_info "$infoplist"
         echo '*************************Profile**************************'	
@@ -584,12 +571,12 @@ if [ "$cmd" = "r" -o "$cmd" = "resign" ];then
 	fi
 	#make sure AppID and CFBundleID match
 	bundlestring=
-	if [ "${appid#*.}" != "$bundleid" ]; then
+	if [[ "${appid#*.}" != "$bundleid" ]]; then
 		echo '**********************************************************'
 		echo "The profile's App ID: $appid and the"
 		echo "ipa file's Bundle ID: $bundleid do not match."
 		echo "Continue with resign using the profile's"
-		echo -n "bundle ID: ${appid#*.}? (Y or N or E to edit Info.plist):"
+		echo -n "bundle ID: ${appid#*.} or the ipa's ? (Y or N or E to edit Info.plist):"
 		read input
                 while [ "$input" != "Y" ];do
                         case "$input" in
@@ -635,7 +622,7 @@ if [ "$cmd" = "r" -o "$cmd" = "resign" ];then
 	codesign -f -s "$cert" $entitlementsstring $bundlestring $ad
 	newipa="${ipa%.*}-resigned.ipa"
 	echo $newipa
-	zip -qr $newipa Payload/
+	zip -qr $newipa .ipa_payload/Payload/
 	script_done
 fi
 
