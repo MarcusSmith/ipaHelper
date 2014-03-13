@@ -70,12 +70,14 @@ function help_help
 {
 echo '*****HELP*****
 
-help [-v] [commands]
+ipaHelper help [ -v ] [ commands... ]
 
-Displays usage information for the different commands.  If -v option is present it shows the usage information for all of the commands.
+Displays usage information for the different commands.  
+
+If -v option is present it shows the usage information for all of the commands.
 '
 
-echo "COMMANDS:"$'\t'"Help"$'\t'"Get"$'\t'"Certs"$'\t'"Profile "$'\t'"Info"$'\t'"Resign"
+echo "Commands:"$'\t'"Get"$'\t'"Certs"$'\t'"Profile "$'\t'"Info"$'\t'"Resign"$'\t'"Help"
 echo
 }
 
@@ -83,26 +85,23 @@ function help_get
 {
 echo '*****GET*****
 
-[directory path] get [-options]
+ipaHelper get [ mobileprovision files...  ]
 
-Moves files into directory path.  If no path is inputed, the working directory is used.
+Moves mobileprovision files into the working directory.
 
-Options:
-[-p | --prof | --profile | -- profiles] copies .mobileprovision profiles to the directory. 
-If no profiles are specified after the option flag, all .mobileprovision files in the Downloads folder are used.
-    
-[-e | --entitlements] copies Entitlements.plist from the Publishing Resources folder into the directory.  
-    No arguments are taken for this option.
-    '
+If no profiles are specified, all .mobileprovision files in the Downloads folder are moved.
+'
 }
 
 function help_certs
 {
 echo '*****CERTS*****
 
-certs
+ipaHelper certs [ substring ]
 
-Displays the BMW certificates, both common names and IDS.
+Displays information on all certificates in the keychain.
+
+If a substring is provided, only certificates containing this substring are displayed.
 '
 }
 
@@ -110,16 +109,11 @@ function help_profile
 {
 echo '*****PROFILE*****
 
-[ipa file] [-U] profile [-options]
-[mobileprovision file] profile [-options]
+ipaHelper profile [ ipa or mobileprovision file ] [ options ]
 
 checks the profile of an .ipa file, or shows the information about a .mobileprovision file
 
-If an .ipa file is provided, that ipa is unzipped (unless the -U option was present, in which case the available Payload folder in that directory is used)
-    
-If a .mobileprovision file is provided, this profile is used instead.
-        
-If no .movileprovision or .ipa file is provided, the first (alphabetically) ipa file in the working directory is used.
+If no .mobileprovision or .ipa file is provided, the first (alphabetically) ipa file in the working directory is used.
             
 If no options are present, a summary of the provisioning profile is displayed.
                 
@@ -142,6 +136,10 @@ Options:
 [-e | --entitlements] display the entitlements on the profile
                 
 [-k | --key] takes a key as an argument, returns the value for that key on the profile   
+
+[-l | --list] lists all keys in the profile
+
+[-E | --edit] edit the mobileprovision file in vim
 '
 }
 
@@ -149,15 +147,10 @@ function help_info
 {
 echo '*****INFO*****
 
-[ipa file] [-U] info [-options]
-[Info.plist file] info [-options]
+ipaHelper info [ ipa or Info.plist file ] [ options ]
 
 checks the Info.plist of an .ipa file, or shows the information about an Info.plist file
 
-If an .ipa file is provided, that ipa is unzipped (unless the -U option was present, in which case the available Payload folder in that directory is used)
-    
-If an Info.plist file is provided, this is used instead.
-        
 If no Info.plist or .ipa file is provided, the first (alphabetically) ipa file in the working directory is used.
             
 If no options are present, a summary of the Info.plist is displayed.
@@ -177,6 +170,10 @@ Options:
 [-s | --short | --shortVersion] display the CFBundleShortVersionString
                 
 [-k | --key] takes a key as an argument, returns the value for that key on the Info.plist
+
+[-l | --list] lists all keys in the Info.plist
+
+[-E | --edit] edit the mobileprovision file in vim
 '
 }
 
@@ -184,11 +181,11 @@ function help_resign
 {
 echo '*****RESIGN*****
 
-[ipa file] [-U] resign [-options]
+ipaHelper resign [ ipa file ] [ output filename ] [ options ]
 
-removes the code signature from the ipa file, and replaces it with the provided profile (uses the first profile in the directory with the ipa file if none is provided), resigns the ipa file using the certificate on the profile, zips the resigned ipa file with the name [ipa filename]-resigned.ipa
+Removes the code signature from the ipa file, and replaces it either with the first profile (alphabetically) in the directory with the ipa file.
 
-If an .ipa file is provided, that ipa is unzipped (unless the -U option was present, in which case the available Payload folder in that directory     is used)
+Resigns the ipa file using the certificate on the profile, zips the resigned ipa file with the output filename.  If no output filename is provided, [ipa filename]-resigned.ipa is used.
     
 If no .ipa file is provided, the first (alphabetically) ipa file in the working directory is used.
         
@@ -196,9 +193,7 @@ Options:
         
 [-p | -profile] takes a specific profile as an argument, uses this profile for resigning the ipa
         
-[-e | --entitlements] creates a new Entitlements.plist file and uses this file to resign the ipa.  Takes "Push" as an argument if the Entitlements need to include Apple Push Notifications
-
-[-dc | --doublecheck] displays information about the ipa, its Info.plist, and the provisioning profile and offers a choice to continue or quit
+[-d | --doublecheck] displays information about the ipa, its Info.plist, and the provisioning profile and offers a choice to continue or quit
 '
 }
 
