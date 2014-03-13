@@ -23,7 +23,7 @@ find ./ -type d -d 1 -iname "*.app*" | while read f; do
 done
 }
 
-#if $ipa is "" then there's a problem, exit if $1 is passed in, it is another possible required item (instead of the ipa file)
+#if $ipa is "" then there's a problem, exit. if $1 is passed in, it is another possible required item (instead of the ipa file)
 function assert_ipa
 {
 if [ "$ipa" = "" ];then
@@ -111,7 +111,7 @@ echo '*****PROFILE*****
 
 ipaHelper profile [ ipa or mobileprovision file ] [ options ]
 
-checks the profile of an .ipa file, or shows the information about a .mobileprovision file
+Checks the profile of an .ipa file, or shows the information about a .mobileprovision file
 
 If no .mobileprovision or .ipa file is provided, the first (alphabetically) ipa file in the working directory is used.
             
@@ -181,11 +181,11 @@ function help_resign
 {
 echo '*****RESIGN*****
 
-ipaHelper resign [ ipa file ] [ output filename ] [ options ]
+ipaHelper resign [ ipa file ] [ options ]
 
 Removes the code signature from the ipa file, and replaces it either with the first profile (alphabetically) in the directory with the ipa file.
 
-Resigns the ipa file using the certificate on the profile, zips the resigned ipa file with the output filename.  If no output filename is provided, [ipa filename]-resigned.ipa is used.
+Resigns the ipa file using the certificate on the profile, zips the resigned ipa file with the name [ipa filename]-resigned.ipa.
     
 If no .ipa file is provided, the first (alphabetically) ipa file in the working directory is used.
         
@@ -193,7 +193,9 @@ Options:
         
 [-p | -profile] takes a specific profile as an argument, uses this profile for resigning the ipa
         
-[-d | --doublecheck] displays information about the ipa, its Info.plist, and the provisioning profile and offers a choice to continue or quit
+[-d | --double-check] displays information about the ipa, its Info.plist, and the provisioning profile and offers a choice to continue or quit
+
+[-o | --output ] takes an output file as an argument, zips the resigned ipa file using this name instead of [ipa filename]-resigned.ipa
 '
 }
 
@@ -256,7 +258,7 @@ while [ "$1" != "" ];do
 				        	fi
 				        	cd $wd
 				        	tmp=$2
-				        	if [ "$2" = "*/*" ]; then
+				        	if [[ "$2" = *"/"* ]]; then
 					    	cd $(dirname ${2})
 					    	tmp=$(basename ${2})
     				    	fi
@@ -277,12 +279,40 @@ find ./ -type f -d 1 -iname "*.mobileprovision" | while read f; do
 done
 }
 
-#returns "dc" if -d -c -dc --check or --doublecheck option in args list
+#returns output filename from a list of resign args
+function output_from_args
+{
+tmp=
+while [ "$1" != "" ];do
+    case "$1" in
+        -o | --output )     if [ "${2:0:1}" = "-" -o "$2" = "" ];then
+                                break
+                            fi
+                            cd $wd
+                            tmp=$2
+                            if [[ "$2" = *"/"* ]]; then
+                                cd $(dirname ${2})
+                                tmp=$(basename ${2})
+                            fi
+                            dir=$(pwd)
+                            echo $dir/$tmp
+                            break;;
+        * )                 shift;;
+    esac
+done
+if [ "$tmp" != "" ]; then
+    return
+fi
+echo "$bd/${ipa%.*}-resigned.ipa"
+}
+
+
+#returns "dc" if -d --double-check option in args list
 function dc_from_args
 {
 while [ "$1" != "" ];do
 	case "$1" in
-		-d | -c | -dc | --check | --doublecheck ) 	echo "dc"
+		-d | --double-check ) 	echo "dc"
 								break;;
 		* )						shift
 	esac
@@ -604,9 +634,11 @@ if [ "$cmd" = "r" -o "$cmd" = "resign" ];then
 	cd $bd
 	rm -rf "$ad/_CodeSignature/"
 	cp $profile "$bd/$ad/embedded.mobileprovision"
-	codesign -f -s "$cert" $entitlementsstring $bundlestring $ad
-	newipa="${ipa%.*}-resigned.ipa"
-	echo $newipa
+    codesign -f -s "$cert" $entitlementsstring $bundlestring $ad
+    #echo "cert: $cert entitlementstring: $entitlementsstring bundlestring: $bundlestring ad: $ad"
+    #check to see if there was an output file
+    newipa=$(output_from_args $@)
+	#echo $newipa
 	zip -qr $newipa Payload/
 	script_done
 fi

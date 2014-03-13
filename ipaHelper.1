@@ -29,8 +29,6 @@ options
 .B ipaHelper resign [
 ipa file
 .B ] [
-output file
-.B ] [
 options
 .B ]
 .br
@@ -93,15 +91,15 @@ If no options are present, a summary of the provisioning profile is displayed.
 .B --key
 .I key
 .br
-    returns the value for
+    return the value for
 .I key
 in the profile
 
 .B -l, --list 
-    lists all keys in the profile
+    list all keys in the profile
 
 .B -E, --edit 
-    edit the mobileprovision file in vim
+    edit the profile in vim
                 
 .B -i, --id 
     display the application identifier
@@ -130,7 +128,7 @@ options
 .B ]
 .br
 
-checks the Info.plist of an .ipa file, or shows the information about an Info.plist file
+Checks the Info.plist of an .ipa file, or shows the information about an Info.plist file
 
 If no Info.plist or .ipa file is provided, the first (alphabetically) ipa file in the working directory is used.
          
@@ -147,15 +145,15 @@ If no options are present, a summary of the Info.plist is displayed.
 .B --key
 .I key
 .br
-    returns the value for
+    return the value for
 .I key
 in the Info.plist    
 
 .B -l, --list 
-    lists all keys in the Info.plist
+    list all keys in the Info.plist
 
 .B -E, --edit 
-    edit the mobileprovision file in vim
+    edit the Info.plist in vim
             
 .B -n, --name 
     display the CFBundleName
@@ -177,8 +175,6 @@ in the Info.plist
 .B ipaHelper resign [
 ipa file
 .B ] [
-output file
-.B ] [
 options
 .B ]
 .br
@@ -191,11 +187,28 @@ If no .ipa file is provided, the first (alphabetically) ipa file in the working 
         
 .B Resign Options:
         
-.B -p, -profile 
-    takes a specific profile as an argument, uses this profile for resigning the ipa
-        
+.B -p
+.I profile
+.B ,
+.B --profile
+.I profile
+.br
+    use
+.I profile
+for resigning the ipa
+
+.B -o
+.I filename
+.B ,
+.B --output
+.I filename
+.br
+    resign the ipa file as  
+.I filename
+instead of [ipa filename]-resigned.ipa
+
 .B -d, --double-check 
-    displays information about the ipa, its Info.plist, and the provisioning profile and offers a choice to continue or quit
+    display information about the ipa, its Info.plist, and the provisioning profile and have be given an option to continue with the resign or quit
 
 .B HELP
 
@@ -209,7 +222,8 @@ Displays usage information for the different commands.
 
 If -v option is present it shows the usage information for all of the commands.
 
-Commands: Get   Certs   Profile Info    Resign  Help
+.B Commands: 
+    Get   Certs   Profile Info    Resign  Help
 
 .SH AUTHOR
 Marcus Smith
