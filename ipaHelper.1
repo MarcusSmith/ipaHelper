@@ -11,7 +11,7 @@ mobileprovision files...
 .B ]
 .br
 .B ipaHelper certs [
-pattern
+substring
 .B ]
 .br
 .B ipaHelper profile [
@@ -35,15 +35,181 @@ options
 .B ]
 .br
 .B ipaHelper help [
-commands...
+-v
+.B ] [
+commands
+.B ]
+.br
+
+.SH DESCRIPTION
+.B GET
+
+.B ipaHelper get [
+mobileprovision files...
+.B ]
+.br
+
+Moves mobileprovision files into the working directory.
+
+If no profiles are specified, all .mobileprovision files in the Downloads folder are moved.
+
+.B CERTS
+
+.B ipaHelper certs [
+substring
+.B ]
+.br
+
+Displays information on all certificates in the keychain.
+
+If a substring is provided, only certificates containing this substring are displayed.
+
+.B PROFILE
+
+.B ipaHelper profile [
+ipa or mobileprovision file
 .B ] [
 options
 .B ]
-.SH DESCRIPTION
-add descriptions
+.br
 
-.SH OPTIONS
-add Options
+Checks the profile of an .ipa file, or shows the information about a .mobileprovision file
+
+If no .mobileprovision or .ipa file is provided, the first (alphabetically) ipa file in the working directory is used.
+            
+If no options are present, a summary of the provisioning profile is displayed.
+                
+.B Profile Options
+                
+.B -v, --verbose 
+    display the entire profile in xml format
+
+.B -e, --entitlements
+    display the entitlements on the profile
+
+.B -k
+.I key
+.B ,
+.B --key
+.I key
+.br
+    returns the value for
+.I key
+in the profile
+
+.B -l, --list 
+    lists all keys in the profile
+
+.B -E, --edit 
+    edit the mobileprovision file in vim
+                
+.B -i, --id 
+    display the application identifier
+                
+.B -n, --name 
+    display the app id name
+                
+.B -c, --certificate
+     display the certificate name
+                
+.B -t, --team 
+    display the team name on the certificate
+                
+.B -u, --uuid 
+    display the profiles UUID
+                
+.B -r, --version 
+    display the apps version
+
+.B INFO
+
+.B ipaHelper info [
+ipa or Info.plist file
+.B ] [
+options
+.B ]
+.br
+
+checks the Info.plist of an .ipa file, or shows the information about an Info.plist file
+
+If no Info.plist or .ipa file is provided, the first (alphabetically) ipa file in the working directory is used.
+         
+If no options are present, a summary of the Info.plist is displayed.
+                
+.B Info Options:
+                
+.B -v, --verbose 
+    display the entire Info.plist in xml format
+
+.B -k
+.I key
+.B ,
+.B --key
+.I key
+.br
+    returns the value for
+.I key
+in the Info.plist    
+
+.B -l, --list 
+    lists all keys in the Info.plist
+
+.B -E, --edit 
+    edit the mobileprovision file in vim
+            
+.B -n, --name 
+    display the CFBundleName
+                
+.B -d, --display 
+    display the CFBundleDisplayName
+                
+.B -i, --identifier 
+    display the CFBundleIdentifier
+                
+.B -r, --version 
+    display the CFBundleVersion
+                
+.B -s, --short, --shortVersion 
+    display the CFBundleShortVersionString
+
+.B RESIGN
+
+.B ipaHelper resign [
+ipa file
+.B ] [
+output file
+.B ] [
+options
+.B ]
+.br
+
+Removes the code signature from the ipa file, and replaces it either with the first profile (alphabetically) in the directory with the ipa file.
+
+Resigns the ipa file using the certificate on the profile, zips the resigned ipa file with the output filename.  If no output filename is provided, [ipa filename]-resigned.ipa is used.
+    
+If no .ipa file is provided, the first (alphabetically) ipa file in the working directory is used.
+        
+.B Resign Options:
+        
+.B -p, -profile 
+    takes a specific profile as an argument, uses this profile for resigning the ipa
+        
+.B -d, --double-check 
+    displays information about the ipa, its Info.plist, and the provisioning profile and offers a choice to continue or quit
+
+.B HELP
+
+.B ipaHelper help [
+-v
+.B ] [
+commands...
+.B ]
+
+Displays usage information for the different commands.
+
+If -v option is present it shows the usage information for all of the commands.
+
+Commands: Get   Certs   Profile Info    Resign  Help
 
 .SH AUTHOR
 Marcus Smith
