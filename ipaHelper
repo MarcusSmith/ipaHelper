@@ -7,15 +7,18 @@
 function make_ad
 {
 cd $bd
-unzip -q $ipa -d .ipa_payload
-if [ ! -d ".ipa_payload" ];then
+if [ -d "Payload" ]; then
+    mv Payload .ipa_payload
+fi
+unzip -q $ipa 
+if [ ! -d "Payload" ];then
     problem_encountered "problem unzipping ipa folder"
 fi
 
-cd .ipa_payload/Payload
+cd Payload
 find ./ -type d -d 1 -iname "*.app*" | while read f; do
         f=${f:3}
-        f=.ipa_payload/Payload/$f
+        f=Payload/$f
         echo "$f"
 done
 }
@@ -36,7 +39,6 @@ fi
 function ipa_in_wd
 {
 find ./ -type f -depth 1 -iname "*.ipa" | while read f; do
-echo 'in main'
 	f=${f:3}
 	echo "$f"
 	return
@@ -200,11 +202,13 @@ Options:
 '
 }
 
-#if $needsclean deletes the Payload folder, moves the _Payload folder back to Payload if it exists
 function clean_up
 {
-if [ -d "$bd/.ipa_payload" ];then
-    rm -rf "$bd/.ipa_payload"
+if [ -d "$bd/Payload" ]; then
+    rm -rf "$bd/Payload"
+fi
+if [ -d "$bd/.ipa_payload" ]; then
+    mv "$bd/.ipa_payload" "$bd/Payload"
 fi
 if [ -f "$bd/.Info.plist" ]; then
 	rm "$bd/.Info.plist"
@@ -212,12 +216,6 @@ fi
 if [ -f "$bd/.Entitlements.plist" ]; then
 	rm "$bd/.Entitlements.plist" 
 fi
-}
-
-#returns the last $1 characters of $2 (used to check extension of an arg)
-function last
-{
-echo -n "$2" | tail -c "$1"
 }
 
 ##Parsing Functions##
@@ -571,23 +569,23 @@ if [ "$cmd" = "r" -o "$cmd" = "resign" ];then
 	fi
 	#make sure AppID and CFBundleID match
 	bundlestring=
-	if [[ "${appid#*.}" != "$bundleid" ]]; then
+	if [ "${appid#*.}" != "$bundleid" ]; then
 		echo '**********************************************************'
 		echo "The profile's App ID: $appid and the"
 		echo "ipa file's Bundle ID: $bundleid do not match."
 		echo "Continue with resign using the profile's"
-		echo -n "bundle ID: ${appid#*.} or the ipa's ? (Y or N or E to edit Info.plist):"
+		echo "AppID: ${appid#*.} or the ipa's bundleID?"
+        echo -n "AppId(A), BundleID(B) or Cancel(C):"
 		read input
-                while [ "$input" != "Y" ];do
+                while [ "$input" != "A" ];do
                         case "$input" in
-                                [nN]* ) script_done;;
-                                [yYeE]* ) break;;
-                                * )     echo -n 'Continue with resign? (Y, N or E):'
+                                [cC]* ) script_done;;
+                                [aAbB]* ) break;;
+                                 * )    echo -n "AppId(A), BundleID(B) or Cancel(C):"
                                         read input;;
                         esac
                 done
 		xml=Y
-		newbundleID=
 		#check to see if the info.plist is a binary
 		plist="$(cat $bd/$ad/Info.plist)"
 		if [ "${plist:0:5}" != "<?xml" ]; then
@@ -595,34 +593,26 @@ if [ "$cmd" = "r" -o "$cmd" = "resign" ];then
 			plutil -convert xml1 $bd/$ad/Info.plist
 		fi
 		case "$input" in
-			[yY]* ) tmp="${infoplist#*<key>CFBundleIdentifier</key>}"
-				tmp="${infoplist#*<key>CFBundleIdentifier</key>}"
+			[aA]* ) tmp="${infoplist#*<key>CFBundleIdentifier</key>}"
 				tmp="${tmp#*</}"
 				tbck="</$tmp"
 				tmp="${infoplist%$tbck}"
 				tmp="${tmp%>*}"
 				tfrt="$tmp>"	
-				newbundleID="${appid#*.}"
+				bundlestring="-i ${appid#*.}"
 				echo "$tfrt$newbundleID$tbck" > "$bd/$ad/Info.plist";;
-			[eE]* )	vi $bd/$ad/Info.plist
-				newbundleID="$(value_for_key "$(cat "$bd/$ad/Info.plist")" "CFBundleIdentifier")";;
 		esac		
 		if [ "$xml" = "N" ]; then
 			plutil -convert binary1 "$bd/$ad/Info.plist"
 		fi
-		bundlestring="-i $newbundleID"
-		echo "bundlestring: $bundlestring"
 	fi
-	####
-	#see if they specified another cert - I don't think this is necessary
-	####
 	cd $bd
 	rm -rf "$ad/_CodeSignature/"
 	cp $profile "$bd/$ad/embedded.mobileprovision"
 	codesign -f -s "$cert" $entitlementsstring $bundlestring $ad
 	newipa="${ipa%.*}-resigned.ipa"
 	echo $newipa
-	zip -qr $newipa .ipa_payload/Payload/
+	zip -qr $newipa Payload/
 	script_done
 fi
 
