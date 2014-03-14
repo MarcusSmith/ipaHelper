@@ -592,41 +592,67 @@ if [ "$cmd" = "r" -o "$cmd" = "resign" ];then
 			esac
 		done			
 	fi
-	#make sure AppID and CFBundleID match
+    #check to see if there was an output file
+    newipa=$(output_from_args $@)
+    #see if this output file already exists
+    if [ -f $newipa ]; then
+        echo "$(basename $newipa) already exists."
+        input=
+        while [ "$input" != "O" ]; do
+            case "$input" in
+                [cC]* ) script_done;;
+                [oO]* ) break;;
+                * )     echo -n "Overwrite (O) or Cancel (C)? "
+                        read input;;
+            esac
+        done
+    fi
+    #make sure AppID and CFBundleID match
 	bundlestring=
-	if [ "${appid#*.}" != "$bundleid" ]; then
+    matching=N
+    trimmedappid="${appid#*.}"
+    #see if the app id is a match to the bundle id
+    if [ "$trimmedappid" = "$bundleid" ]; then
+        matching=Y
+    fi
+    #if the app id is a wildcard, see if the pattern matches the bundleid
+    if [[ ("${appid: -1}" = "*") && ("$bundleid" = "${trimmedappid%?}"*) ]]; then
+        matching=Y
+    fi
+	if [ "$matching" = "N" ]; then
 		echo '**********************************************************'
 		echo "The profile's App ID: $appid and the"
 		echo "ipa file's Bundle ID: $bundleid do not match."
-		echo "Continue with resign using the profile's"
-		echo "AppID: ${appid#*.} or the ipa's bundleID?"
-        echo -n "AppId(A), BundleID(B) or Cancel(C):"
-		read input
-                while [ "$input" != "A" ];do
-                        case "$input" in
-                                [cC]* ) script_done;;
-                                [aAbB]* ) break;;
-                                 * )    echo -n "AppId(A), BundleID(B) or Cancel(C):"
-                                        read input;;
-                        esac
-                done
-		xml=Y
+		echo '**********************************************************'
+        input=
+            while [ "$input" != "Y" ]; do
+                case "$input" in
+                    [nN]* ) script_done;;
+                    [yY]* ) break;;
+                    * )     echo -n "Continue with resign? (Y or N):" 
+                            read input;;
+                esac
+            done
+        newbundleID=
+        while [ "$newbundleID" = "" ]; do
+            echo -n "sign with bundleID:"
+            read newbundleID
+        done
+        xml=Y
 		#check to see if the info.plist is a binary
 		plist="$(cat $bd/$ad/Info.plist)"
 		if [ "${plist:0:5}" != "<?xml" ]; then
 			xml=N
 			plutil -convert xml1 $bd/$ad/Info.plist
 		fi
-		case "$input" in
-			[aA]* ) tmp="${infoplist#*<key>CFBundleIdentifier</key>}"
-				tmp="${tmp#*</}"
-				tbck="</$tmp"
-				tmp="${infoplist%$tbck}"
-				tmp="${tmp%>*}"
-				tfrt="$tmp>"	
-				bundlestring="-i ${appid#*.}"
-				echo "$tfrt$newbundleID$tbck" > "$bd/$ad/Info.plist";;
-		esac		
+	    tmp="${infoplist#*<key>CFBundleIdentifier</key>}"
+		tmp="${tmp#*</}"
+		tbck="</$tmp"
+		tmp="${infoplist%$tbck}"
+		tmp="${tmp%>*}"
+		tfrt="$tmp>"	
+		bundlestring="-i ${appid#*.}"
+		echo "$tfrt$newbundleID$tbck" > "$bd/$ad/Info.plist"
 		if [ "$xml" = "N" ]; then
 			plutil -convert binary1 "$bd/$ad/Info.plist"
 		fi
@@ -636,9 +662,6 @@ if [ "$cmd" = "r" -o "$cmd" = "resign" ];then
 	cp $profile "$bd/$ad/embedded.mobileprovision"
     codesign -f -s "$cert" $entitlementsstring $bundlestring $ad
     #echo "cert: $cert entitlementstring: $entitlementsstring bundlestring: $bundlestring ad: $ad"
-    #check to see if there was an output file
-    newipa=$(output_from_args $@)
-	#echo $newipa
 	zip -qr $newipa Payload/
 	script_done
 fi
