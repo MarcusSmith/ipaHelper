@@ -243,6 +243,7 @@ echo "           App ID Name: $(value_for_key "$1" "AppIDName")"
 echo "Application Identifier: $(value_for_key "$1" "application-identifier")"
 echo "      Certificate Name: $(value_for_key "$1" "Name")"
 echo "             Team Name: $(value_for_key "$1" "TeamName")"
+echo "       Expiration Date: $(date -j -f "%Y-%m-%dT%H:%M:%SZ" $(value_for_key "$1" "ExpirationDate") +"%b %e, %Y")"
 echo "                  UUID: $(value_for_key "$1" "UUID")"
 echo "               Version: $(value_for_key "$1" "Version")"
 }
@@ -486,6 +487,7 @@ if [ "$cmd" = "p" -o "$cmd" = "prof" -o "$cmd" = "profile" ];then
 			-t | --team )		echo "Team Name: $(value_for_key "$profile" "TeamName")";;
 			-u | --uuid )		echo "UUID: $(value_for_key "$profile" "UUID")";;
 			-r | --version )	echo "Version: $(value_for_key "$profile" "Version")";;
+            -x | --expiration ) echo "Expiration Date: $(date -j -f "%Y-%m-%dT%H:%M:%SZ" $(value_for_key "$profile" "ExpirationDate") +"%b %e, %Y")";;
 			-e | --entitlements )	tmp="${profile##*Entitlements}"
 						tmp="${tmp#*<dict>}"
 						tmp="${tmp%%</dict>*}"
@@ -581,14 +583,13 @@ if [ "$cmd" = "r" -o "$cmd" = "resign" ];then
         echo '*************************Profile**************************'	
 		parse_profile "$fullprofile"
 		echo '**********************************************************'	
-		echo -n 'Continue with resign? (Y or N):'
-        read input
-		while [ "$input" != "Y" ];do
+        input=
+		while [ "$input" != "y" ];do
 			case "$input" in
-				[nN]* )	script_done;;
-				[yY]* ) break;;
-				* )	echo -n 'Continue with resign? (Y or N):'
-					read input;;
+				[n] )	script_done;;
+				[y] ) break;;
+				* )	echo -n 'Continue with resign? (y or n):'
+					read -n 1 input;;
 			esac
 		done			
 	fi
@@ -598,12 +599,12 @@ if [ "$cmd" = "r" -o "$cmd" = "resign" ];then
     if [ -f $newipa ]; then
         echo "$(basename $newipa) already exists."
         input=
-        while [ "$input" != "O" ]; do
+        while [ "$input" != "o" ]; do
             case "$input" in
                 [cC]* ) script_done;;
                 [oO]* ) break;;
-                * )     echo -n "Overwrite (O) or Cancel (C)? "
-                        read input;;
+                * )     echo -n "Overwrite (o) or Cancel (c)? "
+                        read -n 1 input;;
             esac
         done
     fi
@@ -625,12 +626,12 @@ if [ "$cmd" = "r" -o "$cmd" = "resign" ];then
 		echo "ipa file's Bundle ID: $bundleid do not match."
 		echo '**********************************************************'
         input=
-            while [ "$input" != "Y" ]; do
+            while [ "$input" != "y" ]; do
                 case "$input" in
                     [nN]* ) script_done;;
                     [yY]* ) break;;
-                    * )     echo -n "Continue with resign? (Y or N):" 
-                            read input;;
+                    * )     echo -n "Continue with resign? (y or n):" 
+                            read -n 1 input;;
                 esac
             done
         newbundleID=
