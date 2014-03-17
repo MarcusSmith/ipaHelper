@@ -511,7 +511,23 @@ if [ "$cmd" = "i" -o "$cmd" = "info" ];then
     	ad=$(make_ad)
 		infoplist="$bd/$ad/Info.plist"
 	fi
-	cp $infoplist $bd/.Info.plist
+	if [ "$1" = "-E" ]; then
+        xml=Y
+        #check to see if the info.plist is a binary
+        plist="$(cat $infoplist)"
+        if [ "${plist:0:5}" != "<?xml" ]; then
+            xml=N
+            plutil -convert xml1 $infoplist
+        fi
+        vi $infoplist
+        #convert back to binary if it was binary
+        if [ "$xml" = "N" ]; then
+            plutil -convert binary1 "$infoplist"
+        fi
+        zip -qr $ipa Payload/
+        script_done
+    fi
+    cp $infoplist $bd/.Info.plist
 	infoplist="$bd/.Info.plist"
 	plutil -convert xml1 "$infoplist"
 	infoplist="$(cat "$infoplist")"
