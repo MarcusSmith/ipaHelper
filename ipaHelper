@@ -73,7 +73,7 @@ Displays usage information for the different commands.
 If -v option is present it shows the usage information for all of the commands.
 '
 
-echo "Commands:"$'\t'"Get"$'\t'"Certs"$'\t'"Profile "$'\t'"Info"$'\t'"Resign"$'\t'"Help"
+echo "Commands:   Get   Certs   Profile   Info   Summary   Verify   Resign   Help"
 echo
 }
 
@@ -85,7 +85,7 @@ ipaHelper get [ mobileprovision files...  ]
 
 Moves mobileprovision files into the working directory.
 
-If no profiles are specified, all .mobileprovision files in the Downloads folder are moved.
+If no profiles are specified, all mobileprovision files in the Downloads folder are moved.
 '
 }
 
@@ -107,9 +107,9 @@ echo '*****PROFILE*****
 
 ipaHelper profile [ ipa or mobileprovision file ] [ options ]
 
-Checks the profile of an .ipa file, or shows the information about a .mobileprovision file
+Checks the profile of an ipa file, or shows the information about a mobileprovision file
 
-If no .mobileprovision or .ipa file is provided, the first (alphabetically) ipa file in the working directory is used.
+If no .mobileprovision or ipa file is provided, the first (alphabetically) ipa file in the working directory is used.
             
 If no options are present, a summary of the provisioning profile is displayed.
                 
@@ -119,23 +119,17 @@ Options:
                 
 [-i | --id] display the application identifier
                 
-[-n | --name] display the app id name
-                
 [-c | --certificate] display the certificate name
                 
 [-t | --team] display the team name on the certificate
                 
-[-u | --uuid] display the profiles UUID
-                
-[-r | --version] display the apps version
+[-x | --expiration] display the expiration date for the profile
                 
 [-e | --entitlements] display the entitlements on the profile
                 
 [-k | --key] takes a key as an argument, returns the value for that key on the profile   
 
 [-l | --list] lists all keys in the profile
-
-[-E | --edit] edit the mobileprovision file in vim
 '
 }
 
@@ -143,33 +137,49 @@ function help_info
 {
 echo '*****INFO*****
 
-ipaHelper info [ ipa or Info.plist file ] [ options ]
+ipaHelper info [ ipa or Info.plist file ] [ -E ] [ options ]
 
-checks the Info.plist of an .ipa file, or shows the information about an Info.plist file
+Checks the Info.plist of an .ipa file, or shows the information about an Info.plist file
 
-If no Info.plist or .ipa file is provided, the first (alphabetically) ipa file in the working directory is used.
+If no Info.plist or ipa file is provided, the first (alphabetically) ipa file in the working directory is used.
             
 If no options are present, a summary of the Info.plist is displayed.
                 
 Options:
+
+[-E | --edit] edit the mobileprovision file in vim
                 
 [-v | --verbose] display the entire Info.plist in xml format
                 
-[-n | --name] display the CFBundleName
-                
-[-d | --display] display the CFBundleDisplayName
-                
 [-i | --identifier] display the CFBundleIdentifier
-                
-[-r | --version] display the CFBundleVersion
-                
-[-s | --short | --shortVersion] display the CFBundleShortVersionString
                 
 [-k | --key] takes a key as an argument, returns the value for that key on the Info.plist
 
 [-l | --list] lists all keys in the Info.plist
+'
+}
 
-[-E | --edit] edit the mobileprovision file in vim
+function help_summary
+{
+echo '*****SUMMARY*****
+
+ipaHelper summary [ ipa file ]
+
+Displays profile and info.plist information about the ipa file.
+
+If no ipa file is provided the first (alphabetically) ipa file in the working directory is used.
+'
+}
+
+function help_verify
+{
+echo '*****VERIFY*****
+
+ipaHelper verify [ ipa file ]
+
+Checks to make sure the necessary code signing components are in place for an ipa file.
+
+If no ipa file is provided the first (alphabetically) ipa file in the working directory is used.
 '
 }
 
@@ -357,6 +367,8 @@ if [ "$cmd" = "help" -o "$cmd" = "h" ];then
         help_certs
         help_profile
         help_info
+        help_summary
+        help_verify
         help_resign
         script_done
     fi
@@ -367,6 +379,8 @@ if [ "$cmd" = "help" -o "$cmd" = "h" ];then
             [cC]* ) help_certs;;
             [pP]* ) help_profile;;
             [iI]* ) help_info;;
+            [sS]* ) help_summary;;
+            [vV]* ) help_verify;;
             [rR]* ) help_resign;;
             * ) problem_encountered "Not a valid command";;
         esac
