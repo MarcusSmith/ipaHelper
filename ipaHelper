@@ -490,7 +490,15 @@ if [ "$cmd" = "p" -o "$cmd" = "prof" -o "$cmd" = "profile" ];then
 						             	problem_encountered "key option needs a parameter"
 						            fi
 						            echo "$1: $(value_for_key "$profile" "$1")";;
-			* )			            problem_encountered "Invalid Option";;
+            -l | --list)            echo '****************** KEYS ******************'
+                                    while read line; do 
+                                        if [ "${line#*<key>}" != "$line" ]; then 
+                                            tmp="${line%%</key>*}" 
+                                            echo "${tmp##*<key>}"  
+                                        fi 
+                                    done <<< "$profile"
+                                    echo '******************************************';;
+            * )			            problem_encountered "Invalid Option";;
 		esac
 		shift
 	done
@@ -533,13 +541,21 @@ if [ "$cmd" = "i" -o "$cmd" = "info" ];then
     fi
     while [ "$1" != "" ];do
         case "$1" in
-            -v | --verbose )    		echo "$infoplist";;
-            -i | --identifier )   		echo "CFBundleIdentifier: $(value_for_key "$infoplist" "CFBundleIdentifier")";;
-            -k | --key )            	shift
-                                      	if [ "$1" = "" ];then
-                                            	problem_encountered "key option needs a parameter"
-                                       	fi
-                                    	echo "$1: $(value_for_key "$infoplist" "$1")";;
+            -v | --verbose )    	echo "$infoplist";;
+            -i | --identifier )   	echo "CFBundleIdentifier: $(value_for_key "$infoplist" "CFBundleIdentifier")";;
+            -k | --key )            shift
+                                    if [ "$1" = "" ];then
+                                        problem_encountered "key option needs a parameter"
+                                    fi
+                                    echo "$1: $(value_for_key "$infoplist" "$1")";;
+            -l | --list)            echo '****************** KEYS ******************'
+                                    while read line; do
+                                        if [ "${line#*<key>}" != "$line" ]; then
+                                            tmp="${line%%</key>*}"
+                                            echo "${tmp##*<key>}"  
+                                        fi
+                                    done <<< "$infoplist"
+                                    echo '******************************************';;
             * )                     	problem_encountered "Invalid Option";;
         esac
         shift
