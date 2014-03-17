@@ -7,18 +7,14 @@
 function make_ad
 {
 cd $bd
-if [ -d "Payload" ]; then
-    mv Payload .ipa_payload
-fi
-unzip -q $ipa 
-if [ ! -d "Payload" ];then
+unzip -q $ipa -d .ipa_payload 
+if [ ! -d ".ipa_payload/Payload" ];then
     problem_encountered "problem unzipping ipa folder"
 fi
-
-cd Payload
+cd .ipa_payload/Payload
 find ./ -type d -d 1 -iname "*.app*" | while read f; do
         f=${f:3}
-        f=Payload/$f
+        f=.ipa_payload/Payload/$f
         echo "$f"
 done
 }
@@ -201,11 +197,8 @@ Options:
 
 function clean_up
 {
-if [ -d "$bd/Payload" ]; then
-    rm -rf "$bd/Payload"
-fi
 if [ -d "$bd/.ipa_payload" ]; then
-    mv "$bd/.ipa_payload" "$bd/Payload"
+    rm -rf "$bd/.ipa_payload"
 fi
 if [ -f "$bd/.Info.plist" ]; then
 	rm "$bd/.Info.plist"
@@ -509,7 +502,7 @@ if [ "$cmd" = "i" -o "$cmd" = "info" ];then
 	if [ "$infoplist" = "" ];then
 		assert_ipa Info.plist
     	ad=$(make_ad)
-		infoplist="$bd/$ad/Info.plist"
+        infoplist="$bd/$ad/Info.plist"
 	fi
 	if [ "$1" = "-E" ]; then
         xml=Y
@@ -524,7 +517,8 @@ if [ "$cmd" = "i" -o "$cmd" = "info" ];then
         if [ "$xml" = "N" ]; then
             plutil -convert binary1 "$infoplist"
         fi
-        zip -qr $ipa Payload/
+        cd $bd/.ipa_payload
+        zip -qr $bd/$ipa Payload/
         script_done
     fi
     cp $infoplist $bd/.Info.plist
@@ -691,7 +685,8 @@ if [ "$cmd" = "r" -o "$cmd" = "resign" ];then
 	cp $profile "$bd/$ad/embedded.mobileprovision"
     codesign -f -s "$cert" $entitlementsstring $bundlestring $ad
     #echo "cert: $cert entitlementstring: $entitlementsstring bundlestring: $bundlestring ad: $ad"
-	zip -qr $newipa Payload/
+	cd .ipa_payload
+    zip -qr $newipa Payload/
 	script_done
 fi
 
