@@ -1,8 +1,5 @@
 #!/bin/bash
 
-#pulls Resources folder and plist editor from a separate, editable script
-#. ~/.publishingresource #no longer necessary
-
 #unzips $ipa and returns the .app directory inside the Payload directory
 function make_ad
 {
@@ -229,6 +226,18 @@ tmp="${tmp##*>}"
 echo "$tmp"
 }
 
+#takes an xml file and returns all keys in that file
+function allkeys
+{
+while read -r line; do
+    if [ "$line" != "${line#*<key>}" ]; then
+        tmp="${line#*<key>}"
+        tmp="${tmp%</key>*}"
+        echo "$tmp"
+    fi
+done <<< "$1"
+}
+
 #returns useful information from an Info.plist
 function parse_info
 {
@@ -337,6 +346,16 @@ echo '</dict>'
 echo '</plist>'
 }
 
+function make_plist
+{
+    echo '<?xml version="1.0" encoding="UTF-8"?>'
+    echo '<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">'
+    echo '<plist version="1.0">'
+    echo '<dict>'
+    echo '</dict>'
+    echo '</plist>'
+}
+
 #### MAIN ####
 #if the first arg is an ipa file, use the ipa's directory as the basedirectory ($bd) and the ipa as the ($ipa)
 #if the first arg is a path, use that path as the bd, otherwise use the working directory as the bd
@@ -407,7 +426,7 @@ if [ "$cmd" = "c" -o "$cmd" = "certs" -o "$cmd" = "certficiates" ];then
     script_done
 fi
 
-#if the cmd is "get" or "g, move following args to the working directory if they are mobileprovision files.  If no args specified, pull all mobileprovision files from the ~/Downloads/ folder
+#if the cmd is "get" or "g", move following args to the working directory if they are mobileprovision files.  If no args specified, pull all mobileprovision files from the ~/Downloads/ folder
 if [ "$cmd" = "get" -o "$cmd" = "g" ];then
     echo "moving..."
     if [ "$1" = "" ];then
@@ -428,6 +447,62 @@ if [ "$cmd" = "get" -o "$cmd" = "g" ];then
         fi
         shift
     done
+    script_done
+fi
+
+#if the cmd is "account" or "a", modify the accounts plist (for use in linking certificates to iTunesConnect accounts)
+if [ "$cmd" = "account" -o "$cmd" = "accounts" -o "$cmd" = "a" ];then
+    if [ ! -f ~/Publishing/Resources/accounts.plist ]; then
+        make_plist > ~/Publishing/Resources/accounts.plist
+    fi
+    accounts="$(cat ~/Publishing/Resources/accounts.plist)" 
+    if [ "$1" = "" ]; then
+        keys="$(allkeys "$accounts")"
+        while read -r key; do
+            #echo "key is: $key"
+            value="$(value_for_key "$accounts" "$key")"
+            if [ "$key" != "" ]; then
+                echo "$key: $value"
+            fi
+        done <<< "$keys"
+        script_done
+    fi
+    case "$1" in
+        -g | --get )    if [ "$2" = "" ]; then
+                            problem_encountered "missing key"
+                        fi
+                        value="$(value_for_key "$accounts" $2)"
+                        echo "$2: $value";;
+        -s | --set )    if [ "$2" = "" ]; then
+                            problem_encountered "missing key"
+                        fi
+                        if [ "$3" = "" ]; then
+                            problem_encountered "missing value"
+                        fi
+                        #check to see if the key is already there
+                        if [ "$accounts" != "${accounts#*<key>$2</key>}" ]; then
+                            tmp="${accounts#*<key>$2</key>}"
+                            tmp="${tmp#*>}"
+                            front="${accounts%$tmp}"
+                            back="<${tmp#*<}"
+                            echo "$front$3$back" > ~/Publishing/Resources/accounts.plist
+                        else
+                            front="${accounts%%</dict*>}"
+                            back="${accounts#$front}"
+                            new="$front\t<key>$2</key>\n\t<string>$3</string>\n$back"
+                            echo -e "$new" > ~/Publishing/Resources/accounts.plist
+                        fi;;
+        -r | --remove ) if [ "$accounts" != "${accounts#*<key>$2</key>}" ]; then
+                            front="${accounts%%<key>$2</key>*}"
+                            front="${front%>*}>"
+                            tmp="${accounts#$front}"
+                            back="${tmp#*</string>}"
+                            echo "$front$back" > ~/Publishing/Resources/accounts.plist
+                        else
+                            problem_encountered "Key does not exist"
+                        fi;;
+        * )             problem_encountered "not a valid option";;
+    esac
     script_done
 fi
 
