@@ -226,7 +226,7 @@ tmp="${tmp##*>}"
 echo "$tmp"
 }
 
-#takes an xml file and returns all keys in that file
+#takes an xml string and returns all keys in that file
 function allkeys
 {
 while read -r line; do
@@ -795,7 +795,49 @@ if [ "$cmd" = "r" -o "$cmd" = "resign" ];then
 	script_done
 fi
 
-
+#if cmd is "upload" or "u" try to upload the ipa to iTunesConnect
+if [ "$cmd" = "u" -o "$cmd" = "upload" ];then
+    assert_ipa
+    ad=$(make_ad)
+    profile=$bd/$ad/embedded.mobileprovision
+    if [ "$profile" = "" ];then
+        problem_encountered "No Provisioning profile"
+    fi
+    fullprofile=$(security cms -D -i "$profile")
+    cert="$(value_for_key "$fullprofile" TeamName)"
+    username=
+    if [ -f ~/Publishing/Resources/accounts.plist ]; then
+        accounts="$(cat ~/Publishing/Resources/accounts.plist)"
+        keys="$(allkeys "$accounts")"
+        if [ "$keys" != "${keys#*$cert}" ]; then
+            username="$(value_for_key "$accounts" "$cert")"
+        fi
+    fi
+    password=
+    if [ "$username" = "" ]; then
+        echo -n "username:"
+        read username
+        echo -n "password:"
+        read -s password
+    else
+        echo -n "password for $username:"
+        read -s password
+    fi
+    echo ""
+    validator="$(xcrun -sdk iphoneos -find Validation)"
+    q="$(security delete-generic-password  -s Xcode:itunesconnect.apple.com 2>&1)"
+    q="$(security add-generic-password -s Xcode:itunesconnect.apple.com -a $username -w $password -U -T $validator 2>&1)"
+    echo "uploading..."
+#    output="$(xcrun -sdk iphoneos Validation -online -upload -verbose $ipa 2>/dev/null)"
+    xcrun -sdk iphoneos Validation -online -upload -verbose $ipa 2>/dev/null
+    q="$(security delete-generic-password  -s Xcode:itunesconnect.apple.com 2>&1)"
+#    echo "$output" | while read line; do
+#        if [ "$line" != "${line#warning}" -o "$line" != "${line#didCompleteUploadForApplication}" ]; then
+#            echo "$line"
+#        fi
+#    done
+    script_done
+fi
 #cmd was not a valid command
 if [ "${cmd:0:1}" = "-" ];then
 	problem_encountered "Missing Command"
