@@ -40,6 +40,14 @@ ipa file
 options
 .B ]
 .br
+.B ipaHelper account [
+options
+.B ]
+.br
+.B ipaHelper upload [
+ipa file
+.B ]
+.br
 .B ipaHelper help [
 -v
 .B ] [
@@ -221,6 +229,62 @@ instead of [ipa filename]-resigned.ipa
 .B -d, --double-check 
     display information about the ipa, its Info.plist, and the provisioning profile and have be given an option to continue with the resign or quit
 
+.B ACCOUNT
+
+.B ipaHelper account [
+options
+.B ]
+.br
+
+Displays information about which certificates are linked with which iTunesConnect accounts.
+
+.B Account Options:
+
+.B -g
+.I certificate
+.B ,
+.B --get
+.I certificate
+.br
+    returns the iTunesConnect account linked to 
+.I certificate
+.br
+
+.B -s
+.I certificate account
+.B ,
+.B --set
+.I certificate account
+.br
+    Links 
+.I certificate
+to the iTunesConnect
+.I account
+.br
+
+.B -r
+.I certificate
+.B ,
+.B --remove
+.I certificate
+.br
+    Removes the link between
+.I certificate
+and its iTunesConnect account
+
+.B UPLOAD
+
+.B ipaHelper upload [
+ipa file
+.B ]
+.br
+
+Uploads the ipa file to iTunesConnect.  Asks for an iTunesConnect username if none is linked to the ipas certificate.
+
+Asks for a password for this account.
+
+If no .ipa file is provided, the first (alphabetically) ipa file in the working directory is used.
+
 .B HELP
 
 .B ipaHelper help [
@@ -234,7 +298,7 @@ Displays usage information for the different commands.
 If -v option is present it shows the usage information for all of the commands.
 
 .B Commands: 
-    Get   Certs   Profile   Info   Summary   Verify   Resign   Help
+    Get   Certs   Profile   Info   Summary   Verify   Resign   Account  Upload  Help
 
 .SH AUTHOR
 Marcus Smith

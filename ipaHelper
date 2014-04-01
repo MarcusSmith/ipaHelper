@@ -70,7 +70,7 @@ Displays usage information for the different commands.
 If -v option is present it shows the usage information for all of the commands.
 '
 
-echo "Commands:   Get   Certs   Profile   Info   Summary   Verify   Resign   Help"
+echo "Commands:   Get   Certs   Profile   Info   Summary   Verify   Resign   Account   Upload   Help"
 echo
 }
 
@@ -194,11 +194,43 @@ If no .ipa file is provided, the first (alphabetically) ipa file in the working 
         
 Options:
         
-[-p | -profile] takes a specific profile as an argument, uses this profile for resigning the ipa
+[-p | --profile] takes a specific profile as an argument, uses this profile for resigning the ipa
         
 [-d | --double-check] displays information about the ipa, its Info.plist, and the provisioning profile and offers a choice to continue or quit
 
 [-o | --output ] takes an output file as an argument, zips the resigned ipa file using this name instead of [ipa filename]-resigned.ipa
+'
+}
+
+function help_account
+{
+echo '*****ACCOUNT*****
+
+ipaHelper account [ options ]
+
+Displays information about which certificates are linked with which iTunesConnect accounts.
+
+Options:
+
+[-g | --get] takes a certificate as an argument, returns the iTunesConnect account linked to that certificate
+
+[-s | --set] takes a certificate and an iTunesConnect account as arguments.  Links the certificate to the iTunesAccount
+
+[-r | --remove] takes a certificate as an argument.  Removes the link between this certificate and its iTunesConnect account.
+'
+}
+
+function help_upload
+{
+echo '*****UPLOAD*****
+
+ipaHelper upload [ ipa file ]
+
+Uploads the ipa file to iTunesConnect.  Asks for an iTunesConnect username if none is linked to the ipas certificate.
+
+Asks for a password for this account.
+
+If no .ipa file is provided, the first (alphabetically) ipa file in the working directory is used.
 '
 }
 
@@ -389,6 +421,8 @@ if [ "$cmd" = "help" -o "$cmd" = "h" ];then
         help_summary
         help_verify
         help_resign
+        help_account
+        help_upload
         script_done
     fi
     while [ "$1" != "" ]; do
@@ -401,6 +435,8 @@ if [ "$cmd" = "help" -o "$cmd" = "h" ];then
             [sS]* ) help_summary;;
             [vV]* ) help_verify;;
             [rR]* ) help_resign;;
+            [aA]* ) help_account;;
+            [uU]* ) help_upload;;
             * ) problem_encountered "Not a valid command";;
         esac
         shift
