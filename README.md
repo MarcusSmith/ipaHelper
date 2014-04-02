@@ -1,4 +1,4 @@
-ipa-helper
+ipaHelper
 ==========
 
 ### NAME ###
