@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		4505CCFC18F734B5006D8046 /* ipaHelper.qlgenerator in CopyFiles */ = {isa = PBXBuildFile; fileRef = 452F810518F71F3F00E76451 /* ipaHelper.qlgenerator */; };
 		452F810918F71F3F00E76451 /* QuickLook.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 452F810818F71F3F00E76451 /* QuickLook.framework */; };
 		452F810B18F71F3F00E76451 /* ApplicationServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 452F810A18F71F3F00E76451 /* ApplicationServices.framework */; };
 		452F810D18F71F3F00E76451 /* CoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 452F810C18F71F3F00E76451 /* CoreServices.framework */; };
@@ -17,18 +18,31 @@
 		452F811B18F71F3F00E76451 /* main.c in Sources */ = {isa = PBXBuildFile; fileRef = 452F811A18F71F3F00E76451 /* main.c */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXCopyFilesBuildPhase section */
+		4505CCFB18F73221006D8046 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "~/Library/QuickLook";
+			dstSubfolderSpec = 0;
+			files = (
+				4505CCFC18F734B5006D8046 /* ipaHelper.qlgenerator in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
-		452F810518F71F3F00E76451 /* QuickLookPlugin.qlgenerator */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = QuickLookPlugin.qlgenerator; sourceTree = BUILT_PRODUCTS_DIR; };
+		452F810518F71F3F00E76451 /* ipaHelper.qlgenerator */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ipaHelper.qlgenerator; sourceTree = BUILT_PRODUCTS_DIR; };
 		452F810818F71F3F00E76451 /* QuickLook.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuickLook.framework; path = System/Library/Frameworks/QuickLook.framework; sourceTree = SDKROOT; };
 		452F810A18F71F3F00E76451 /* ApplicationServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ApplicationServices.framework; path = System/Library/Frameworks/ApplicationServices.framework; sourceTree = SDKROOT; };
 		452F810C18F71F3F00E76451 /* CoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreServices.framework; path = System/Library/Frameworks/CoreServices.framework; sourceTree = SDKROOT; };
 		452F810E18F71F3F00E76451 /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = System/Library/Frameworks/CoreFoundation.framework; sourceTree = SDKROOT; };
-		452F811218F71F3F00E76451 /* QuickLookPlugin-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "QuickLookPlugin-Info.plist"; sourceTree = "<group>"; };
+		452F811218F71F3F00E76451 /* ipaHelper-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "ipaHelper-Info.plist"; sourceTree = "<group>"; };
 		452F811418F71F3F00E76451 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		452F811618F71F3F00E76451 /* GenerateThumbnailForURL.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = GenerateThumbnailForURL.m; sourceTree = "<group>"; };
 		452F811818F71F3F00E76451 /* GeneratePreviewForURL.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = GeneratePreviewForURL.m; sourceTree = "<group>"; };
 		452F811A18F71F3F00E76451 /* main.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = main.c; sourceTree = "<group>"; };
-		452F811C18F71F3F00E76451 /* QuickLookPlugin-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "QuickLookPlugin-Prefix.pch"; sourceTree = "<group>"; };
+		452F811C18F71F3F00E76451 /* ipaHelper-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "ipaHelper-Prefix.pch"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -58,7 +72,7 @@
 		452F810618F71F3F00E76451 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				452F810518F71F3F00E76451 /* QuickLookPlugin.qlgenerator */,
+				452F810518F71F3F00E76451 /* ipaHelper.qlgenerator */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -88,9 +102,9 @@
 		452F811118F71F3F00E76451 /* Supporting Files */ = {
 			isa = PBXGroup;
 			children = (
-				452F811218F71F3F00E76451 /* QuickLookPlugin-Info.plist */,
+				452F811218F71F3F00E76451 /* ipaHelper-Info.plist */,
 				452F811318F71F3F00E76451 /* InfoPlist.strings */,
-				452F811C18F71F3F00E76451 /* QuickLookPlugin-Prefix.pch */,
+				452F811C18F71F3F00E76451 /* ipaHelper-Prefix.pch */,
 			);
 			name = "Supporting Files";
 			sourceTree = "<group>";
@@ -108,23 +122,24 @@
 /* End PBXHeadersBuildPhase section */
 
 /* Begin PBXNativeTarget section */
-		452F810418F71F3F00E76451 /* QuickLookPlugin */ = {
+		452F810418F71F3F00E76451 /* ipaHelper */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 452F811F18F71F3F00E76451 /* Build configuration list for PBXNativeTarget "QuickLookPlugin" */;
+			buildConfigurationList = 452F811F18F71F3F00E76451 /* Build configuration list for PBXNativeTarget "ipaHelper" */;
 			buildPhases = (
 				452F80FF18F71F3F00E76451 /* Sources */,
 				452F810018F71F3F00E76451 /* Frameworks */,
 				452F810118F71F3F00E76451 /* Headers */,
 				452F810218F71F3F00E76451 /* Resources */,
 				452F810318F71F3F00E76451 /* Rez */,
+				4505CCFB18F73221006D8046 /* CopyFiles */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 			);
-			name = QuickLookPlugin;
+			name = ipaHelper;
 			productName = QuickLookPlugin;
-			productReference = 452F810518F71F3F00E76451 /* QuickLookPlugin.qlgenerator */;
+			productReference = 452F810518F71F3F00E76451 /* ipaHelper.qlgenerator */;
 			productType = "com.apple.product-type.bundle";
 		};
 /* End PBXNativeTarget section */
@@ -136,7 +151,7 @@
 				LastUpgradeCheck = 0510;
 				ORGANIZATIONNAME = "Marcus Smith";
 			};
-			buildConfigurationList = 452F80FE18F71F3F00E76451 /* Build configuration list for PBXProject "QuickLookPlugin" */;
+			buildConfigurationList = 452F80FE18F71F3F00E76451 /* Build configuration list for PBXProject "ipaHelper" */;
 			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = English;
 			hasScannedForEncodings = 0;
@@ -148,7 +163,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				452F810418F71F3F00E76451 /* QuickLookPlugin */,
+				452F810418F71F3F00E76451 /* ipaHelper */,
 			);
 		};
 /* End PBXProject section */
@@ -265,6 +280,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 10.9;
+				PRODUCT_NAME = "";
 				SDKROOT = macosx;
 			};
 			name = Release;
@@ -274,10 +290,10 @@
 			buildSettings = {
 				COMBINE_HIDPI_IMAGES = YES;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
-				GCC_PREFIX_HEADER = "QuickLookPlugin/QuickLookPlugin-Prefix.pch";
-				INFOPLIST_FILE = "QuickLookPlugin/QuickLookPlugin-Info.plist";
+				GCC_PREFIX_HEADER = "QuickLookPlugin/ipaHelper-Prefix.pch";
+				INFOPLIST_FILE = "QuickLookPlugin/ipaHelper-Info.plist";
 				INSTALL_PATH = /Library/QuickLook;
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_NAME = ipaHelper;
 				WRAPPER_EXTENSION = qlgenerator;
 			};
 			name = Debug;
@@ -287,10 +303,10 @@
 			buildSettings = {
 				COMBINE_HIDPI_IMAGES = YES;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
-				GCC_PREFIX_HEADER = "QuickLookPlugin/QuickLookPlugin-Prefix.pch";
-				INFOPLIST_FILE = "QuickLookPlugin/QuickLookPlugin-Info.plist";
+				GCC_PREFIX_HEADER = "QuickLookPlugin/ipaHelper-Prefix.pch";
+				INFOPLIST_FILE = "QuickLookPlugin/ipaHelper-Info.plist";
 				INSTALL_PATH = /Library/QuickLook;
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_NAME = ipaHelper;
 				WRAPPER_EXTENSION = qlgenerator;
 			};
 			name = Release;
@@ -298,7 +314,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		452F80FE18F71F3F00E76451 /* Build configuration list for PBXProject "QuickLookPlugin" */ = {
+		452F80FE18F71F3F00E76451 /* Build configuration list for PBXProject "ipaHelper" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				452F811D18F71F3F00E76451 /* Debug */,
@@ -307,13 +323,14 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		452F811F18F71F3F00E76451 /* Build configuration list for PBXNativeTarget "QuickLookPlugin" */ = {
+		452F811F18F71F3F00E76451 /* Build configuration list for PBXNativeTarget "ipaHelper" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				452F812018F71F3F00E76451 /* Debug */,
 				452F812118F71F3F00E76451 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};

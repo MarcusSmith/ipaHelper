@@ -13,60 +13,14 @@ void CancelPreviewGeneration(void *thisInterface, QLPreviewRequestRef preview);
    ----------------------------------------------------------------------------- */
 
 OSStatus GeneratePreviewForURL(void *thisInterface, QLPreviewRequestRef preview, CFURLRef url, CFStringRef contentTypeUTI, CFDictionaryRef options)
-{
-    
-    //Example Code Below
-    /*
-    NSString *_content = [NSString stringWithContentsOfURL:(__bridge NSURL *)url encoding:NSUTF8StringEncoding error:nil];
-    
-    QLPreviewRequestSetDataRepresentation(preview,(__bridge CFDataRef)[_content dataUsingEncoding:NSUTF8StringEncoding],kUTTypePlainText,NULL);
-     */
-    
-    /* NSTask Example
-    NSTask *task = [[NSTask alloc] init];
-    [task setLaunchPath:@"/usr/bin"];
-    [task setArguments:[NSArray arrayWithObjects:@"ipaHelper.sh", @"summary", nil]];
-    [task setStandardOutput:[NSPipe pipe]];
-    [task setStandardInput:[NSPipe pipe]];
-    
-    [task launch];
-    */
-    
-    /*  Better NSTask Example
-    NSTask *task;
-    task = [[NSTask alloc] init];
-    [task setLaunchPath: @"/usr/bin/grep"];
-    
-    NSArray *arguments;
-    arguments = [NSArray arrayWithObjects: @"foo", @"bar.txt", nil];
-    [task setArguments: arguments];
-    
-    NSPipe *pipe;
-    pipe = [NSPipe pipe];
-    [task setStandardOutput: pipe];
-    //The magic line that keeps your log where it belongs
-    [task setStandardInput:[NSPipe pipe]];
-
-    NSFileHandle *file;
-    file = [pipe fileHandleForReading];
-    
-    [task launch];
-    
-    NSData *data;
-    data = [file readDataToEndOfFile];
-    
-    NSString *string;
-    string = [[NSString alloc] initWithData: data encoding: NSUTF8StringEncoding];
-    NSLog (@"grep returned:\n%@", string);
-    */
-    
+{    
     //My attempt
     NSURL *ipaURL = (__bridge NSURL *)url;
     
     NSTask *task = [[NSTask alloc] init];
-    [task setLaunchPath:@"/usr/bin"];
-    [task setArguments:[NSArray arrayWithObjects:@"ipaHelper.sh", @"summary", [ipaURL absoluteString], nil]];
-
+    [task setLaunchPath:@"/usr/bin/ipaHelper"];
+    [task setArguments:[NSArray arrayWithObjects:@"summary", [ipaURL path], nil]];
+    
     NSPipe *pipe = [NSPipe pipe];
     [task setStandardOutput: pipe];
     //The magic line that keeps your log where it belongs
@@ -75,10 +29,18 @@ OSStatus GeneratePreviewForURL(void *thisInterface, QLPreviewRequestRef preview,
     NSFileHandle *file;
     file = [pipe fileHandleForReading];
 
+    NSLog(@"Launching Task");
     [task launch];
     
     NSData *data;
     data = [file readDataToEndOfFile];
+    
+    NSLog(@"Data: %@", data);
+    
+//    CGContextRef cgContext = QLPreviewRequestCreateContext(<#QLPreviewRequestRef preview#>, <#CGSize size#>, <#Boolean isBitmap#>, <#CFDictionaryRef properties#>);
+//    QLPreviewRequestFlushContext(<#QLPreviewRequestRef preview#>, <#CGContextRef context#>);
+    
+    QLPreviewRequestSetDataRepresentation(preview,(__bridge CFDataRef)data,kUTTypePlainText,NULL);
     
     return noErr;
 }

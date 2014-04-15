@@ -636,7 +636,7 @@ if [ "$cmd" = "i" -o "$cmd" = "info" ];then
 		assert_ipa Info.plist
     	ad=$(make_ad)
         infoplist="$bd/$ad/Info.plist"
-	fi
+    fi
 	if [ "$1" = "-E" ]; then
         xml=Y
         #check to see if the info.plist is a binary
@@ -645,7 +645,7 @@ if [ "$cmd" = "i" -o "$cmd" = "info" ];then
             xml=N
             plutil -convert xml1 $infoplist
         fi
-        vi $infoplist
+        vi "$infoplist"
         #convert back to binary if it was binary
         if [ "$xml" = "N" ]; then
             plutil -convert binary1 "$infoplist"
@@ -654,7 +654,7 @@ if [ "$cmd" = "i" -o "$cmd" = "info" ];then
         zip -qr $bd/$ipa Payload/
         script_done
     fi
-    cp $infoplist $bd/.Info.plist
+    cp "$infoplist" $bd/.Info.plist
 	infoplist="$bd/.Info.plist"
 	plutil -convert xml1 "$infoplist"
 	infoplist="$(cat "$infoplist")"
@@ -691,10 +691,10 @@ fi
 #verify command, to see if an ipa is signed
 if [ "$cmd" = "v" -o "$cmd" = "verify" ]; then
 	assert_ipa
-	ad=$(make_ad)
-	cd $(dirname $bd/$ad)
-	base=$(basename ${ad})	
-	codesign --verify -vvvv $base
+	ad="$(make_ad)"
+	cd $(dirname "$bd/$ad")
+	base=$(basename "${ad}")	
+	codesign --verify -vvvv "$base"
 	script_done
 fi
 
@@ -715,7 +715,7 @@ fi
 #resign command, to resign an ipa
 if [ "$cmd" = "r" -o "$cmd" = "resign" ];then
 	assert_ipa
-	ad=$(make_ad)
+	ad="$(make_ad)"
 	profile=$(profile_from_args $@)
 	if [ "$profile" = "" ];then
 		problem_encountered "No Provisioning profile"
@@ -747,7 +747,7 @@ if [ "$cmd" = "r" -o "$cmd" = "resign" ];then
         done
         echo ""
     fi
-	dc=$(dc_from_args $@)
+    dc=$(dc_from_args $@)
 	if [ "$dc" = "dc" ];then
         echo '*************************IPA File*************************'
         echo "          input ipa: $ipa"
@@ -807,7 +807,7 @@ if [ "$cmd" = "r" -o "$cmd" = "resign" ];then
 		plist="$(cat $bd/$ad/Info.plist)"
 		if [ "${plist:0:5}" != "<?xml" ]; then
 			xml=N
-			plutil -convert xml1 $bd/$ad/Info.plist
+			plutil -convert xml1 "$bd/$ad/Info.plist"
 		fi
 	    tmp="${infoplist#*<key>CFBundleIdentifier</key>}"
 		tmp="${tmp#*</}"
@@ -824,11 +824,11 @@ if [ "$cmd" = "r" -o "$cmd" = "resign" ];then
 	cd $bd
 	rm -rf "$ad/_CodeSignature/"
 	cp $profile "$bd/$ad/embedded.mobileprovision"
-    codesign -f -s "$cert" $entitlementsstring $bundlestring $ad
+    codesign -f -s "$cert" $entitlementsstring $bundlestring "$ad"
     #echo "cert: $cert entitlementstring: $entitlementsstring bundlestring: $bundlestring ad: $ad"
 	cd .ipa_payload
     zip -qr $newipa Payload/
-	script_done
+    script_done
 fi
 
 #if cmd is "upload" or "u" try to upload the ipa to iTunesConnect
