@@ -9,7 +9,7 @@ if [ ! -d ".ipa_payload/Payload" ];then
     problem_encountered "problem unzipping ipa folder"
 fi
 cd .ipa_payload/Payload
-find ./ -type d -d 1 -iname "*.app*" | while read f; do
+find ./ -type d -maxdepth 1 -iname "*.app*" | while read f; do
         f=${f:3}
         f=.ipa_payload/Payload/$f
         echo "$f"
@@ -31,7 +31,7 @@ fi
 #returns ipa file name in the working directory
 function ipa_in_wd
 {
-find ./ -type f -depth 1 -iname "*.ipa" | while read f; do
+find ./ -type f -maxdepth 1 -iname "*.ipa" | while read f; do
 	f=${f:3}
 	echo "$f"
 	return
@@ -316,7 +316,7 @@ if [ "$tmp" != "" ]; then
 	return
 fi
 cd $bd
-find ./ -type f -d 1 -iname "*.mobileprovision" | while read f; do
+find ./ -type f -maxdepth 1 -iname "*.mobileprovision" | while read f; do
         f=${f:3}
         echo "$bd/$f"
         break
