@@ -4,16 +4,22 @@
 function make_ad
 {
 cd "$bd"
-unzip -q "$ipa" -d .ipa_payload 
-if [ ! -d ".ipa_payload/Payload" ];then
-    problem_encountered "problem unzipping ipa folder"
-fi
-cd .ipa_payload/Payload
-find ./ -type d -maxdepth 1 -iname "*.app*" | while read f; do
+if [ "$filetype" = "app" ]; then
+    mkdir .ipa_payload && mkdir .ipa_payload/Payload
+    cp -r "$ipa" ".ipa_payload/Payload/$ipa/"
+    echo ".ipa_payload/Payload/$ipa"
+elif [ "$filetype" = "ipa" ]; then
+    unzip -q "$ipa" -d .ipa_payload 
+    if [ ! -d ".ipa_payload/Payload" ];then
+        problem_encountered "problem unzipping ipa folder"
+    fi
+    cd .ipa_payload/Payload
+    find ./ -type d -maxdepth 1 -iname "*.app*" | while read f; do
         f="${f:3}"
         f=".ipa_payload/Payload/$f"
         echo "$f"
-done
+    done
+fi
 }
 
 #if $ipa is "" then there's a problem, exit. if $1 is passed in, it is another possible required item (instead of the ipa file)
@@ -562,13 +568,12 @@ ipa=
 filetype=
 profile=
 infoplist=
-if [ "${1%.ipa}" != "$1" -o "${1%.app}" != "$1" -o "${1%.xcarchive*}" != "$1" -o "${1%.zip}" != "$1" ];then
+if [ "${1%.ipa}" != "$1" -o "${1%.app*}" != "$1" ];then
     bd="$(dirname "${1}")"
 	ipa="$(basename "${1}")"
 	shift
 	cd "$bd"
 	bd="$(pwd)"
-    filetype="${ipa##*.}"
 elif [ "${1%.mobileprovision}" != "$1" ];then
 	bd="$(dirname "${1}")"
     profile="$(basename "${1}")"
@@ -591,9 +596,8 @@ else
 	fi
     ipa="$(ipa_in_wd)"
 fi 
-
-#echo "ipa: $ipa  filetype: $filetype"
-#script_done
+filetype="${ipa##*.}"
+#make ad here
 
 ## COMMANDS THAT DO NEED AN IPA (or profile or info.plist)##
 
@@ -842,13 +846,16 @@ if [ "$cmd" = "r" -o "$cmd" = "resign" ];then
 	rm -rf "$ad/_CodeSignature/"
 	cp "$profile" "$bd/$ad/embedded.mobileprovision"
     codesign -f -s "$cert" $entitlementsstring $bundlestring "$ad"
-	cd .ipa_payload
+    cd .ipa_payload
     zip -qr "$newipa" Payload/
     script_done
 fi
 
 #if cmd is "upload" or "u" try to upload the ipa to iTunesConnect
 if [ "$cmd" = "u" -o "$cmd" = "upload" ];then
+    if [ "$filetype" != "ipa" ]; then
+        problem_encountered "Can only upload ipa files"
+    fi
     assert_ipa
     ad="$(make_ad)"
     profile="$bd/$ad/embedded.mobileprovision"
