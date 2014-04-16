@@ -37,8 +37,8 @@ OSStatus GeneratePreviewForURL(void *thisInterface, QLPreviewRequestRef preview,
     
     NSLog(@"Data: %@", data);
     
-//    CGContextRef cgContext = QLPreviewRequestCreateContext(<#QLPreviewRequestRef preview#>, <#CGSize size#>, <#Boolean isBitmap#>, <#CFDictionaryRef properties#>);
-//    QLPreviewRequestFlushContext(<#QLPreviewRequestRef preview#>, <#CGContextRef context#>);
+//    CGContextRef cgContext = QLPreviewRequestCreateContext(preview, CGSizeMake(100, 100), NO, NULL);
+//    QLPreviewRequestFlushContext(preview, cgContext);
     
     QLPreviewRequestSetDataRepresentation(preview,(__bridge CFDataRef)data,kUTTypePlainText,NULL);
     
