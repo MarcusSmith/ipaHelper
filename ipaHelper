@@ -3,15 +3,15 @@
 #unzips $ipa and returns the .app directory inside the Payload directory
 function make_ad
 {
-cd $bd
-unzip -q $ipa -d .ipa_payload 
+cd "$bd"
+unzip -q "$ipa" -d .ipa_payload 
 if [ ! -d ".ipa_payload/Payload" ];then
     problem_encountered "problem unzipping ipa folder"
 fi
 cd .ipa_payload/Payload
 find ./ -type d -maxdepth 1 -iname "*.app*" | while read f; do
-        f=${f:3}
-        f=.ipa_payload/Payload/$f
+        f="${f:3}"
+        f=".ipa_payload/Payload/$f"
         echo "$f"
 done
 }
@@ -31,8 +31,9 @@ fi
 #returns ipa file name in the working directory
 function ipa_in_wd
 {
+cd "$wd"
 find ./ -type f -maxdepth 1 -iname "*.ipa" | while read f; do
-	f=${f:3}
+	f="${f:3}"
 	echo "$f"
 	return
 done
@@ -300,14 +301,14 @@ while [ "$1" != "" ];do
 		-p | --profile )	if [ "${2:0:1}" = "-" -o "$2" = "" ];then
 		        				break
 				        	fi
-				        	cd $wd
-				        	tmp=$2
+				        	cd "$wd"
+				        	tmp="$2"
 				        	if [[ "$2" = *"/"* ]]; then
-					    	cd $(dirname ${2})
-					    	tmp=$(basename ${2})
+					    	cd $(dirname "${2}")
+					    	tmp=$(basename "${2}")
     				    	fi
-    					    dir=$(pwd)
-    				    	echo $dir/$tmp
+    					    dir="$(pwd)"
+    				    	echo "$dir/$tmp"
     			    		break;;
 		* )			        shift;;
 	esac
@@ -315,9 +316,9 @@ done
 if [ "$tmp" != "" ]; then
 	return
 fi
-cd $bd
+cd "$bd"
 find ./ -type f -maxdepth 1 -iname "*.mobileprovision" | while read f; do
-        f=${f:3}
+        f="${f:3}"
         echo "$bd/$f"
         break
 done
@@ -332,14 +333,14 @@ while [ "$1" != "" ];do
         -o | --output )     if [ "${2:0:1}" = "-" -o "$2" = "" ];then
                                 break
                             fi
-                            cd $wd
-                            tmp=$2
+                            cd "$wd"
+                            tmp="$2"
                             if [[ "$2" = *"/"* ]]; then
-                                cd $(dirname ${2})
-                                tmp=$(basename ${2})
+                                cd $(dirname "${2}")
+                                tmp=$(basename "${2}")
                             fi
-                            dir=$(pwd)
-                            echo $dir/$tmp
+                            dir="$(pwd)"
+                            echo "$dir/$tmp"
                             break;;
         * )                 shift;;
     esac
@@ -360,6 +361,17 @@ while [ "$1" != "" ];do
 								break;;
 		* )						shift
 	esac
+done
+}
+
+function ql_from_args
+{
+while [ "$1" != "" ];do
+    case "$1" in
+        -d | --double-check )   echo "ql"
+                                break;;
+        * )                     shift
+    esac
 done
 }
 
@@ -456,7 +468,7 @@ if [ "$cmd" = "c" -o "$cmd" = "certs" -o "$cmd" = "certficiates" ];then
     while read line; do
         if [ "$line" != "${line#*'labl"<blob>="'}" ]; then
             tmp="${line#*'labl"<blob>="'}"
-            echo ${tmp%?}
+            echo "${tmp%?}"
         fi
     done <<< "$certs"
     script_done
@@ -468,7 +480,7 @@ if [ "$cmd" = "get" -o "$cmd" = "g" ];then
     if [ "$1" = "" ];then
         find ~/Downloads/ -type f -iname "*.mobileprovision" | while read f; do
             echo "$f"
-            profilename="$(basename ${f})"
+            profilename="$(basename "${f}")"
             mv "$f" "./$profilename"
         done
         script_done
@@ -476,7 +488,7 @@ if [ "$cmd" = "get" -o "$cmd" = "g" ];then
     while [ "$1" != "" ];do
         if [ "${1%.mobileprovision}" != "$1" ];then
             echo "$1"
-            profilename="$(basename ${1})"
+            profilename="$(basename "${1}")"
             mv "$1" "$bd/$profilename"
         else
             problem_encountered "Not a profile"
@@ -544,39 +556,44 @@ fi
 
 # get ipa/profile/info.plist/directory for the following commands that need one of these.
 
-wd=$(pwd)
-bd=$(pwd)
+wd="$(pwd)"
+bd="$(pwd)"
 ipa=
+filetype=
 profile=
 infoplist=
-if [ "${1%.ipa}" != "$1" ];then
-	bd=$(dirname ${1})
-	ipa=$(basename ${1})
+if [ "${1%.ipa}" != "$1" -o "${1%.app}" != "$1" -o "${1%.xcarchive*}" != "$1" -o "${1%.zip}" != "$1" ];then
+    bd="$(dirname "${1}")"
+	ipa="$(basename "${1}")"
 	shift
-	cd $bd
-	bd=$(pwd)
+	cd "$bd"
+	bd="$(pwd)"
+    filetype="${ipa##*.}"
 elif [ "${1%.mobileprovision}" != "$1" ];then
-	bd=$(dirname ${1})
-    profile=$(basename ${1})
+	bd="$(dirname "${1}")"
+    profile="$(basename "${1}")"
     shift
-    cd $bd
+    cd "$bd"
     bd=$(pwd)
 	profile="$bd/$profile"
 elif [ "${1%Info.plist}" != "$1" ];then
-	bd=$(dirname ${1})
-    infoplist=$(basename ${1})
+	bd="$(dirname "${1}")"
+    infoplist="$(basename "${1}")"
     shift
-    cd $bd
-    bd=$(pwd)
+    cd "$bd"
+    bd="$(pwd)"
 	infoplist="$bd/$infoplist"
 else
-	if [ "${1: -1}" = "/" ];then
-		cd $1
-		bd=$(pwd)
+    if [ "${1: -1}" = "/" ];then
+		cd "$1"
+		bd="$(pwd)"
 		shift
 	fi
-	ipa=$(ipa_in_wd)
+    ipa="$(ipa_in_wd)"
 fi 
+
+#echo "ipa: $ipa  filetype: $filetype"
+#script_done
 
 ## COMMANDS THAT DO NEED AN IPA (or profile or info.plist)##
 
@@ -585,10 +602,10 @@ if [ "$cmd" = "p" -o "$cmd" = "prof" -o "$cmd" = "profile" ];then
 	#if the first arg wasn't a profile, then an ipa file is necessary
 	if [ "$profile" = "" ];then
 		assert_ipa mobileprovision
-		ad=$(make_ad)
+		ad="$(make_ad)"
 		profile="$bd/$ad/embedded.mobileprovision"
 	fi
-	profile=$(security cms -D -i "$profile")
+	profile="$(security cms -D -i "$profile")"
 	if [ "$1" = "" ];then
 		echo '*********************************************************'
 		parse_profile "$profile"
@@ -634,7 +651,7 @@ fi
 if [ "$cmd" = "i" -o "$cmd" = "info" ];then
 	if [ "$infoplist" = "" ];then
 		assert_ipa Info.plist
-    	ad=$(make_ad)
+    	ad="$(make_ad)"
         infoplist="$bd/$ad/Info.plist"
     fi
 	if [ "$1" = "-E" ]; then
@@ -643,18 +660,18 @@ if [ "$cmd" = "i" -o "$cmd" = "info" ];then
         plist="$(cat $infoplist)"
         if [ "${plist:0:5}" != "<?xml" ]; then
             xml=N
-            plutil -convert xml1 $infoplist
+            plutil -convert xml1 "$infoplist"
         fi
         vi "$infoplist"
         #convert back to binary if it was binary
         if [ "$xml" = "N" ]; then
             plutil -convert binary1 "$infoplist"
         fi
-        cd $bd/.ipa_payload
-        zip -qr $bd/$ipa Payload/
+        cd "$bd/.ipa_payload"
+        zip -qr "$bd/$ipa Payload/"
         script_done
     fi
-    cp "$infoplist" $bd/.Info.plist
+    cp "$infoplist" "$bd/.Info.plist"
 	infoplist="$bd/.Info.plist"
 	plutil -convert xml1 "$infoplist"
 	infoplist="$(cat "$infoplist")"
@@ -692,8 +709,8 @@ fi
 if [ "$cmd" = "v" -o "$cmd" = "verify" ]; then
 	assert_ipa
 	ad="$(make_ad)"
-	cd $(dirname "$bd/$ad")
-	base=$(basename "${ad}")	
+	cd "$(dirname "$bd/$ad")"
+	base="$(basename "${ad}")"	
 	codesign --verify -vvvv "$base"
 	script_done
 fi
@@ -701,10 +718,10 @@ fi
 #summary command, to show info.plist and profile information in brief summary
 if [ "$cmd" = "s" -o "$cmd" = "summary" ]; then
     assert_ipa
-    ad=$(make_ad)
+    ad="$(make_ad)"
     plutil -convert xml1 "$bd/$ad/Info.plist"
     info="$(cat "$bd/$ad/Info.plist")"
-    profile=$(security cms -D -i "$bd/$ad/embedded.mobileprovision")
+    profile="$(security cms -D -i "$bd/$ad/embedded.mobileprovision")"
     echo "******************** $ipa ********************"
     parse_info "$info"
     parse_profile "$profile"
@@ -716,11 +733,11 @@ fi
 if [ "$cmd" = "r" -o "$cmd" = "resign" ];then
 	assert_ipa
 	ad="$(make_ad)"
-	profile=$(profile_from_args $@)
+	profile="$(profile_from_args $@)"
 	if [ "$profile" = "" ];then
 		problem_encountered "No Provisioning profile"
 	fi
-	fullprofile=$(security cms -D -i "$profile")
+	fullprofile="$(security cms -D -i "$profile")"
 	cert="$(value_for_key "$fullprofile" TeamName)"
 	appid="$(value_for_key "$fullprofile" application-identifier)"
 	cp "$bd/$ad/Info.plist" "$bd/.Info.plist"
@@ -728,13 +745,13 @@ if [ "$cmd" = "r" -o "$cmd" = "resign" ];then
     infoplist="$(cat "$bd/.Info.plist")"
 	bundleid="$(value_for_key "$infoplist" CFBundleIdentifier)"
 	entitlementsstring="--entitlements .Entitlements.plist"
-    tent=$(make_entitlements_from_profile "$fullprofile")
+    tent="$(make_entitlements_from_profile "$fullprofile")"
     echo "$tent" > .Entitlements.plist
     #check to see if there was an output file
-    newipa=$(output_from_args $@)
+    newipa="$(output_from_args $@)"
     #see if this output file already exists
-    if [ -f $newipa ]; then
-        echo "$(basename $newipa) already exists."
+    if [ -f "$newipa" ]; then
+        echo "$(basename "$newipa") already exists."
         input=
         while [ "$input" != "o" ]; do
             case "$input" in
@@ -747,11 +764,11 @@ if [ "$cmd" = "r" -o "$cmd" = "resign" ];then
         done
         echo ""
     fi
-    dc=$(dc_from_args $@)
+    dc="$(dc_from_args $@)"
 	if [ "$dc" = "dc" ];then
         echo '*************************IPA File*************************'
         echo "          input ipa: $ipa"
-        echo "         output ipa: $(basename $newipa)"
+        echo "         output ipa: $(basename "$newipa")"
         echo '************************Info.plist************************'
         parse_info "$infoplist"
         echo '*************************Profile**************************'   
@@ -804,7 +821,7 @@ if [ "$cmd" = "r" -o "$cmd" = "resign" ];then
         done
         xml=Y
 		#check to see if the info.plist is a binary
-		plist="$(cat $bd/$ad/Info.plist)"
+		plist="$(cat "$bd/$ad/Info.plist")"
 		if [ "${plist:0:5}" != "<?xml" ]; then
 			xml=N
 			plutil -convert xml1 "$bd/$ad/Info.plist"
@@ -821,25 +838,24 @@ if [ "$cmd" = "r" -o "$cmd" = "resign" ];then
 			plutil -convert binary1 "$bd/$ad/Info.plist"
 		fi
 	fi
-	cd $bd
+	cd "$bd"
 	rm -rf "$ad/_CodeSignature/"
-	cp $profile "$bd/$ad/embedded.mobileprovision"
+	cp "$profile" "$bd/$ad/embedded.mobileprovision"
     codesign -f -s "$cert" $entitlementsstring $bundlestring "$ad"
-    #echo "cert: $cert entitlementstring: $entitlementsstring bundlestring: $bundlestring ad: $ad"
 	cd .ipa_payload
-    zip -qr $newipa Payload/
+    zip -qr "$newipa" Payload/
     script_done
 fi
 
 #if cmd is "upload" or "u" try to upload the ipa to iTunesConnect
 if [ "$cmd" = "u" -o "$cmd" = "upload" ];then
     assert_ipa
-    ad=$(make_ad)
-    profile=$bd/$ad/embedded.mobileprovision
+    ad="$(make_ad)"
+    profile="$bd/$ad/embedded.mobileprovision"
     if [ "$profile" = "" ];then
         problem_encountered "No Provisioning profile"
     fi
-    fullprofile=$(security cms -D -i "$profile")
+    fullprofile="$(security cms -D -i "$profile")"
     cert="$(value_for_key "$fullprofile" TeamName)"
     username=
     if [ -f ~/Publishing/Resources/accounts.plist ]; then
@@ -865,7 +881,7 @@ if [ "$cmd" = "u" -o "$cmd" = "upload" ];then
     q="$(security add-generic-password -s Xcode:itunesconnect.apple.com -a $username -w $password -U -T $validator 2>&1)"
     echo "uploading..."
 #    output="$(xcrun -sdk iphoneos Validation -online -upload -verbose $ipa 2>/dev/null)"
-    xcrun -sdk iphoneos Validation -online -upload -verbose $ipa 2>/dev/null
+    xcrun -sdk iphoneos Validation -online -upload -verbose "$ipa" 2>/dev/null
     q="$(security delete-generic-password  -s Xcode:itunesconnect.apple.com 2>&1)"
 #    echo "$output" | while read line; do
 #        if [ "$line" != "${line#warning}" -o "$line" != "${line#didCompleteUploadForApplication}" ]; then
