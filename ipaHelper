@@ -796,6 +796,7 @@ function cmd_upload
 
 #first arg should be the command ($cmd) 
 cmd="$1"
+bd="$(pwd)"
 
 #if there was no command, exit
 if [ "$cmd" = "" ];then
@@ -832,7 +833,6 @@ fi
 # get ipa/profile/info.plist/directory for the following commands that need one of these.
 
 wd="$(pwd)"
-bd="$(pwd)"
 ipa=
 filetype=
 profile=
@@ -868,7 +868,7 @@ else
     problem_encountered "invalid filetype"
 fi 
 filetype="${ipa##*.}"
-echo "ipa: $ipa filetype: $filetype"
+#echo "ipa: $ipa filetype: $filetype"
 #make ad folder
 cd "$bd"
 ad=
@@ -895,7 +895,7 @@ elif [ "$filetype" = "ipa" ]; then
     ad=".ipa_payload/Payload/${app:3}"
 fi
 
-echo "ipa: $ipa ad: $ad"
+#echo "ipa: $ipa ad: $ad"
 
 ## COMMANDS THAT NEED AN IPA, profile or info.plist##
 
@@ -919,6 +919,12 @@ if [ "$cmd" = "i" -o "$cmd" = "info" ];then
     fi
     cmd_info $@
     script_done
+fi
+
+#print app directory for quicklook plugin
+if [ "$cmd" = "ql" ]; then
+    echo "$bd/$ad"
+    exit 0
 fi
 
 ## COMMANDS THAT NEED AN IPA
