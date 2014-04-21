@@ -1,32 +1,10 @@
 #!/bin/bash
 
-#unzips $ipa and returns the .app directory inside the Payload directory
-function make_ad
-{
-cd "$bd"
-if [ "$filetype" = "app" ]; then
-    mkdir .ipa_payload && mkdir .ipa_payload/Payload
-    cp -r "$ipa" ".ipa_payload/Payload/$ipa/"
-    echo ".ipa_payload/Payload/$ipa"
-elif [ "$filetype" = "ipa" ]; then
-    unzip -q "$ipa" -d .ipa_payload 
-    if [ ! -d ".ipa_payload/Payload" ];then
-        problem_encountered "problem unzipping ipa folder"
-    fi
-    cd .ipa_payload/Payload
-    find ./ -type d -maxdepth 1 -iname "*.app*" | while read f; do
-        f="${f:3}"
-        f=".ipa_payload/Payload/$f"
-        echo "$f"
-    done
-fi
-}
-
 #if $ipa is "" then there's a problem, exit. if $1 is passed in, it is another possible required item (instead of the ipa file)
 function assert_ipa
 {
 if [ "$ipa" = "" ];then
-	message="no ipa file"
+	message="missing file"
 	if [ "$1" != "" ];then
 		message="$message or $1"
 	fi
@@ -568,7 +546,7 @@ ipa=
 filetype=
 profile=
 infoplist=
-if [ "${1%.ipa}" != "$1" -o "${1%.app*}" != "$1" ];then
+if [ "${1%.ipa}" != "$1" -o "${1%.app*}" != "$1" -o "${1%.xcarchive*}" != "$1" ];then
     bd="$(dirname "${1}")"
 	ipa="$(basename "${1}")"
 	shift
@@ -597,7 +575,35 @@ else
     ipa="$(ipa_in_wd)"
 fi 
 filetype="${ipa##*.}"
-#make ad here
+echo "ipa: $ipa filetype: $filetype"
+#make ad folder
+cd "$bd"
+tmpd=
+ad=
+if [ "$filetype" = "xcarchive" ]; then
+    cd "$ipa"
+    tmp="$(find ./ -iname "*.app*" -maxdepth 3 -mindepth 3)"
+    cd "$bd"
+    tmpd="$ipa$(dirname "${tmp:2}")/"
+    filetype="app"
+    ipa="$(basename "${tmp}")"
+fi
+if [ "$filetype" = "app" ]; then
+    mkdir .ipa_payload && mkdir .ipa_payload/Payload
+    cp -r "$tmpd$ipa" ".ipa_payload/Payload/$ipa/"
+    ad=".ipa_payload/Payload/$ipa"
+elif [ "$filetype" = "ipa" ]; then
+    unzip -q "$ipa" -d .ipa_payload 
+    if [ ! -d ".ipa_payload/Payload" ];then
+        problem_encountered "problem unzipping ipa folder"
+    fi
+    cd .ipa_payload/Payload
+    app="$(find ./ -type d -maxdepth 1 -iname "*.app*")"
+    ad=".ipa_payload/Payload/${app:3}"
+fi
+
+echo "ipa: $ipa ad: $ad"
+script_done
 
 ## COMMANDS THAT DO NEED AN IPA (or profile or info.plist)##
 
