@@ -384,43 +384,22 @@ function make_plist
     echo '</plist>'
 }
 
-#### MAIN ####
-#if the first arg is an ipa file, use the ipa's directory as the basedirectory ($bd) and the ipa as the ($ipa)
-#if the first arg is a path, use that path as the bd, otherwise use the working directory as the bd
-#if the first arg is a mobileprovision file, use that file as the profile ($profile) and the profile's directory as the bd
-#if the first arg is an Info.plist file, use that file as the $(infoplist) and the Info.plist's directory as the bd
-#otherwise use the first ipa file (alphabetically) in the bd as the ipa.
-
-## COMMANDS THAT DON'T NEED AN IPA OR PATH ##
-
-#first arg should be the command ($cmd) 
-cmd="$1"
-
-#if there was no command, exit
-if [ "$cmd" = "" ];then
-    problem_encountered "no command"
+### CMD FUNCTIONS ###
+function cmd_help
+{
+if [ "$1" = "" ]; then
+    help_help
+elif [ "$1" = "-v" ]; then
+    help_get
+    help_certs
+    help_profile
+    help_info
+    help_summary
+    help_verify
+    help_resign
+    help_account
+    help_upload
 else
-    shift
-fi
-
-#if cmd was "help" or "h" show the usage page
-if [ "$cmd" = "help" -o "$cmd" = "h" ];then
-    if [ "$1" = "" ]; then
-        help_help
-        script_done
-    fi
-    if [ "$1" = "-v" ]; then
-        help_get
-        help_certs
-        help_profile
-        help_info
-        help_summary
-        help_verify
-        help_resign
-        help_account
-        help_upload
-        script_done
-    fi
     while [ "$1" != "" ]; do
         case "$1" in
             [hH]* ) help_help;;
@@ -437,12 +416,11 @@ if [ "$cmd" = "help" -o "$cmd" = "h" ];then
         esac
         shift
     done
-    script_done
 fi
+}
 
-#if the cmd is "c" or "certs" or "certificates", display the information about certificates in the keychain
-#if there is a following argument, it limits the certificates shown to ones matching this substring
-if [ "$cmd" = "c" -o "$cmd" = "certs" -o "$cmd" = "certficiates" ];then
+function cmd_certs
+{
     tmp=
     if [ "$1" != "" ]; then
         tmp=" -c $1"
@@ -455,11 +433,10 @@ if [ "$cmd" = "c" -o "$cmd" = "certs" -o "$cmd" = "certficiates" ];then
             echo "${tmp%?}"
         fi
     done <<< "$certs"
-    script_done
-fi
+}
 
-#if the cmd is "get" or "g", move following args to the working directory if they are mobileprovision files.  If no args specified, pull all mobileprovision files from the ~/Downloads/ folder
-if [ "$cmd" = "get" -o "$cmd" = "g" ];then
+function cmd_get
+{
     echo "moving..."
     if [ "$1" = "" ];then
         find ~/Downloads/ -type f -iname "*.mobileprovision" | while read f; do
@@ -479,11 +456,10 @@ if [ "$cmd" = "get" -o "$cmd" = "g" ];then
         fi
         shift
     done
-    script_done
-fi
+}
 
-#if the cmd is "account" or "a", modify the accounts plist (for use in linking certificates to iTunesConnect accounts)
-if [ "$cmd" = "account" -o "$cmd" = "accounts" -o "$cmd" = "a" ];then
+function cmd_account
+{
     if [ ! -f ~/Publishing/Resources/accounts.plist ]; then
         make_plist > ~/Publishing/Resources/accounts.plist
     fi
@@ -491,15 +467,13 @@ if [ "$cmd" = "account" -o "$cmd" = "accounts" -o "$cmd" = "a" ];then
     if [ "$1" = "" ]; then
         keys="$(allkeys "$accounts")"
         while read -r key; do
-            #echo "key is: $key"
             value="$(value_for_key "$accounts" "$key")"
             if [ "$key" != "" ]; then
                 echo "$key: $value"
             fi
         done <<< "$keys"
-        script_done
-    fi
-    case "$1" in
+    else
+        case "$1" in
         -g | --get )    if [ "$2" = "" ]; then
                             problem_encountered "missing key"
                         fi
@@ -534,88 +508,12 @@ if [ "$cmd" = "account" -o "$cmd" = "accounts" -o "$cmd" = "a" ];then
                             problem_encountered "Key does not exist"
                         fi;;
         * )             problem_encountered "not a valid option";;
-    esac
-    script_done
-fi
-
-# get ipa/profile/info.plist/directory for the following commands that need one of these.
-
-wd="$(pwd)"
-bd="$(pwd)"
-ipa=
-filetype=
-profile=
-infoplist=
-if [ "${1%.ipa}" != "$1" -o "${1%.app*}" != "$1" -o "${1%.xcarchive*}" != "$1" ];then
-    bd="$(dirname "${1}")"
-	ipa="$(basename "${1}")"
-	shift
-	cd "$bd"
-	bd="$(pwd)"
-elif [ "${1%.mobileprovision}" != "$1" ];then
-	bd="$(dirname "${1}")"
-    profile="$(basename "${1}")"
-    shift
-    cd "$bd"
-    bd=$(pwd)
-	profile="$bd/$profile"
-elif [ "${1%Info.plist}" != "$1" ];then
-	bd="$(dirname "${1}")"
-    infoplist="$(basename "${1}")"
-    shift
-    cd "$bd"
-    bd="$(pwd)"
-	infoplist="$bd/$infoplist"
-elif [ "${1: -1}" = "/" ];then
-	cd "$1"
-	bd="$(pwd)"
-	shift
-    ipa="$(ipa_in_wd)"
-elif [ "${1:0:1}" = "-" -o "$1" = "" ]; then
-    ipa="$(ipa_in_wd)"
-else
-    problem_encountered "invalid filetype"
-fi 
-filetype="${ipa##*.}"
-echo "ipa: $ipa filetype: $filetype"
-#make ad folder
-cd "$bd"
-ad=
-if [ "$filetype" = "xcarchive" ]; then
-    mkdir .ipa_payload && mkdir .ipa_payload/Payload
-    cd "$ipa"
-    tmp="$(find ./ -iname "*.app*" -maxdepth 3 -mindepth 3)"
-    cd "$bd"
-    tmpd="$ipa$(dirname "${tmp:2}")/"
-    tmpa="$(basename "${tmp}")"
-    cp -r "$tmpd$tmpa" ".ipa_payload/Payload/$tmpa/"
-    ad=".ipa_payload/Payload/$tmpa"
-elif [ "$filetype" = "app" ]; then
-    mkdir .ipa_payload && mkdir .ipa_payload/Payload
-    cp -r "$ipa" ".ipa_payload/Payload/$ipa/"
-    ad=".ipa_payload/Payload/$ipa"
-elif [ "$filetype" = "ipa" ]; then
-    unzip -q "$ipa" -d .ipa_payload 
-    if [ ! -d ".ipa_payload/Payload" ];then
-        problem_encountered "problem unzipping ipa folder"
+        esac
     fi
-    cd .ipa_payload/Payload
-    app="$(find ./ -type d -maxdepth 1 -iname "*.app*")"
-    ad=".ipa_payload/Payload/${app:3}"
-fi
+}
 
-echo "ipa: $ipa ad: $ad"
-
-## COMMANDS THAT DO NEED AN IPA (or profile or info.plist)##
-
-#profile commands
-if [ "$cmd" = "p" -o "$cmd" = "prof" -o "$cmd" = "profile" ];then
-	#if the first arg wasn't a profile, then an ipa file is necessary
-	if [ "$profile" = "" ];then
-		assert_ipa mobileprovision
-		profile="$bd/$ad/embedded.mobileprovision"
-	fi
-	profile="$(security cms -D -i "$profile")"
+function cmd_profile
+{
 	if [ "$1" = "" ];then
 		echo '*********************************************************'
 		parse_profile "$profile"
@@ -654,16 +552,11 @@ if [ "$cmd" = "p" -o "$cmd" = "prof" -o "$cmd" = "profile" ];then
 		esac
 		shift
 	done
-	script_done
-fi
+}
 
-#Info.plist commands
-if [ "$cmd" = "i" -o "$cmd" = "info" ];then
-	if [ "$infoplist" = "" ];then
-		assert_ipa Info.plist
-        infoplist="$bd/$ad/Info.plist"
-    fi
-	if [ "$1" = "-E" ]; then
+function cmd_info
+{
+if [ "$1" = "-E" ]; then
         xml=Y
         #check to see if the info.plist is a binary
         plist="$(cat $infoplist)"
@@ -678,8 +571,7 @@ if [ "$cmd" = "i" -o "$cmd" = "info" ];then
         fi
         cd "$bd/.ipa_payload"
         zip -qr "$bd/$ipa Payload/"
-        script_done
-    fi
+else
     cp "$infoplist" "$bd/.Info.plist"
 	infoplist="$bd/.Info.plist"
 	plutil -convert xml1 "$infoplist"
@@ -688,10 +580,9 @@ if [ "$cmd" = "i" -o "$cmd" = "info" ];then
                 echo '*********************************************************'
                 parse_info "$infoplist"
                 echo '*********************************************************'
-                script_done
-    fi
-    while [ "$1" != "" ];do
-        case "$1" in
+    else
+        while [ "$1" != "" ];do
+            case "$1" in
             -v | --verbose )    	echo "$infoplist";;
             -i | --identifier )   	echo "CFBundleIdentifier: $(value_for_key "$infoplist" "CFBundleIdentifier")";;
             -k | --key )            shift
@@ -708,37 +599,35 @@ if [ "$cmd" = "i" -o "$cmd" = "info" ];then
                                     done <<< "$infoplist"
                                     echo '******************************************';;
             * )                     	problem_encountered "Invalid Option";;
-        esac
-        shift
-    done
-    script_done
+            esac
+            shift
+        done
+    fi
 fi
+}
 
-#verify command, to see if an ipa is signed
-if [ "$cmd" = "v" -o "$cmd" = "verify" ]; then
-	assert_ipa
-	cd "$(dirname "$bd/$ad")"
-	base="$(basename "${ad}")"	
-	codesign --verify -vvvv "$base"
-	script_done
-fi
-
-#summary command, to show info.plist and profile information in brief summary
-if [ "$cmd" = "s" -o "$cmd" = "summary" ]; then
-    assert_ipa
-    plutil -convert xml1 "$bd/$ad/Info.plist"
-    info="$(cat "$bd/$ad/Info.plist")"
+function cmd_summary
+{
+    cp "$bd/$ad/Info.plist" "$bd/.Info.plist"
+    plutil -convert xml1 "$bd/.Info.plist"
+    info="$(cat "$bd/.Info.plist")"
     profile="$(security cms -D -i "$bd/$ad/embedded.mobileprovision")"
     echo "******************** $ipa ********************"
     parse_info "$info"
     parse_profile "$profile"
     echo '**********************************************************'
-    script_done
-fi
+}
 
-#resign command, to resign an ipa
-if [ "$cmd" = "r" -o "$cmd" = "resign" ];then
-	assert_ipa
+function cmd_verify
+{
+	cd "$(dirname "$bd/$ad")"
+	base="$(basename "${ad}")"	
+	codesign --verify -vvvv "$base"
+}
+
+function cmd_resign
+{
+    cd "$bd"
 	profile="$(profile_from_args $@)"
 	if [ "$profile" = "" ];then
 		problem_encountered "No Provisioning profile"
@@ -773,8 +662,8 @@ if [ "$cmd" = "r" -o "$cmd" = "resign" ];then
     dc="$(dc_from_args $@)"
 	if [ "$dc" = "dc" ];then
         echo '*************************IPA File*************************'
-        echo "          input ipa: $ipa"
-        echo "         output ipa: $(basename "$newipa")"
+        echo "          input file: $ipa"
+        echo "         output file: $(basename "$newipa")"
         echo '************************Info.plist************************'
         parse_info "$infoplist"
         echo '*************************Profile**************************'   
@@ -850,15 +739,13 @@ if [ "$cmd" = "r" -o "$cmd" = "resign" ];then
     codesign -f -s "$cert" $entitlementsstring $bundlestring "$ad"
     cd .ipa_payload
     zip -qr "$newipa" Payload/
-    script_done
-fi
+}
 
-#if cmd is "upload" or "u" try to upload the ipa to iTunesConnect
-if [ "$cmd" = "u" -o "$cmd" = "upload" ];then
+function cmd_upload
+{
     if [ "$filetype" != "ipa" ]; then
         problem_encountered "Can only upload ipa files"
     fi
-    assert_ipa
     profile="$bd/$ad/embedded.mobileprovision"
     if [ "$profile" = "" ];then
         problem_encountered "No Provisioning profile"
@@ -889,13 +776,175 @@ if [ "$cmd" = "u" -o "$cmd" = "upload" ];then
     q="$(security add-generic-password -s Xcode:itunesconnect.apple.com -a $username -w $password -U -T $validator 2>&1)"
     echo "uploading..."
 #    output="$(xcrun -sdk iphoneos Validation -online -upload -verbose $ipa 2>/dev/null)"
-    xcrun -sdk iphoneos Validation -online -upload -verbose "$ipa" 2>/dev/null
+    xcrun -sdk iphoneos Validation -online -upload -verbose "$bd/$ipa" 2>/dev/null
     q="$(security delete-generic-password  -s Xcode:itunesconnect.apple.com 2>&1)"
 #    echo "$output" | while read line; do
 #        if [ "$line" != "${line#warning}" -o "$line" != "${line#didCompleteUploadForApplication}" ]; then
 #            echo "$line"
 #        fi
 #    done
+}
+
+#### MAIN ####
+#if the first arg is an ipa file, use the ipas directory as the basedirectory ($bd) and the ipa as the ($ipa)
+#if the first arg is a path, use that path as the bd, otherwise use the working directory as the bd
+#if the first arg is a mobileprovision file, use that file as the profile ($profile) and the profiles directory as the bd
+#if the first arg is an Info.plist file, use that file as the $(infoplist) and the Info.plists directory as the bd
+#otherwise use the first ipa file (alphabetically) in the bd as the ipa.
+
+## COMMANDS THAT DONT NEED AN IPA OR PATH ##
+
+#first arg should be the command ($cmd) 
+cmd="$1"
+
+#if there was no command, exit
+if [ "$cmd" = "" ];then
+    problem_encountered "no command"
+else
+    shift
+fi
+
+#if cmd was "help" or "h" show the usage page
+if [ "$cmd" = "help" -o "$cmd" = "h" ];then
+    cmd_help $@
+    script_done
+fi
+
+#if the cmd is "c" or "certs" or "certificates", display the information about certificates in the keychain
+#if there is a following argument, it limits the certificates shown to ones matching this substring
+if [ "$cmd" = "c" -o "$cmd" = "certs" -o "$cmd" = "certficiates" ];then
+    cmd_certs $@
+    script_done
+fi
+
+#if the cmd is "get" or "g", move following args to the working directory if they are mobileprovision files.  If no args specified, pull all mobileprovision files from the ~/Downloads/ folder
+if [ "$cmd" = "get" -o "$cmd" = "g" ];then
+    cmd_get $@
+    script_done
+fi
+
+#if the cmd is "account" or "a", modify the accounts plist (for use in linking certificates to iTunesConnect accounts)
+if [ "$cmd" = "account" -o "$cmd" = "accounts" -o "$cmd" = "a" ];then
+    cmd_account $@
+    script_done
+fi
+
+# get ipa/profile/info.plist/directory for the following commands that need one of these.
+
+wd="$(pwd)"
+bd="$(pwd)"
+ipa=
+filetype=
+profile=
+infoplist=
+if [ "${1%.ipa}" != "$1" -o "${1%.app*}" != "$1" -o "${1%.xcarchive*}" != "$1" ];then
+    bd="$(dirname "${1}")"
+	ipa="$(basename "${1}")"
+	shift
+	cd "$bd"
+	bd="$(pwd)"
+elif [ "${1%.mobileprovision}" != "$1" ];then
+	bd="$(dirname "${1}")"
+    profile="$(basename "${1}")"
+    shift
+    cd "$bd"
+    bd=$(pwd)
+	profile="$bd/$profile"
+elif [ "${1%Info.plist}" != "$1" ];then
+	bd="$(dirname "${1}")"
+    infoplist="$(basename "${1}")"
+    shift
+    cd "$bd"
+    bd="$(pwd)"
+	infoplist="$bd/$infoplist"
+elif [ "${1: -1}" = "/" ];then
+	cd "$1"
+	bd="$(pwd)"
+	shift
+    ipa="$(ipa_in_wd)"
+elif [ "${1:0:1}" = "-" -o "$1" = "" ]; then
+    ipa="$(ipa_in_wd)"
+else
+    problem_encountered "invalid filetype"
+fi 
+filetype="${ipa##*.}"
+echo "ipa: $ipa filetype: $filetype"
+#make ad folder
+cd "$bd"
+ad=
+if [ "$filetype" = "xcarchive" ]; then
+    mkdir .ipa_payload && mkdir .ipa_payload/Payload
+    cd "$ipa"
+    tmp="$(find ./ -iname "*.app*" -maxdepth 3 -mindepth 3)"
+    cd "$bd"
+    tmpd="$ipa$(dirname "${tmp:2}")/"
+    tmpa="$(basename "${tmp}")"
+    cp -r "$tmpd$tmpa" ".ipa_payload/Payload/$tmpa/"
+    ad=".ipa_payload/Payload/$tmpa"
+elif [ "$filetype" = "app" ]; then
+    mkdir .ipa_payload && mkdir .ipa_payload/Payload
+    cp -r "$ipa" ".ipa_payload/Payload/$ipa/"
+    ad=".ipa_payload/Payload/$ipa"
+elif [ "$filetype" = "ipa" ]; then
+    unzip -q "$ipa" -d .ipa_payload 
+    if [ ! -d ".ipa_payload/Payload" ];then
+        problem_encountered "problem unzipping ipa folder"
+    fi
+    cd .ipa_payload/Payload
+    app="$(find ./ -type d -maxdepth 1 -iname "*.app*")"
+    ad=".ipa_payload/Payload/${app:3}"
+fi
+
+echo "ipa: $ipa ad: $ad"
+
+## COMMANDS THAT NEED AN IPA, profile or info.plist##
+
+#profile command
+if [ "$cmd" = "p" -o "$cmd" = "prof" -o "$cmd" = "profile" ];then
+	#if the first arg wasn't a profile, then an ipa file is necessary
+	if [ "$profile" = "" ];then
+		assert_ipa mobileprovision
+		profile="$bd/$ad/embedded.mobileprovision"
+	fi
+	profile="$(security cms -D -i "$profile")"
+    cmd_profile $@	
+    script_done
+fi
+
+#Info.plist command
+if [ "$cmd" = "i" -o "$cmd" = "info" ];then
+	if [ "$infoplist" = "" ];then
+		assert_ipa Info.plist
+        infoplist="$bd/$ad/Info.plist"
+    fi
+    cmd_info $@
+    script_done
+fi
+
+## COMMANDS THAT NEED AN IPA
+assert_ipa
+
+#verify command, to see if an ipa is signed
+if [ "$cmd" = "v" -o "$cmd" = "verify" ]; then
+	cmd_verify $@
+    script_done
+fi
+
+#summary command, to show info.plist and profile information in brief summary
+if [ "$cmd" = "s" -o "$cmd" = "summary" ]; then
+    cmd_summary $@
+    script_done
+fi
+
+#resign command, to resign an ipa
+if [ "$cmd" = "r" -o "$cmd" = "resign" ];then
+    cmd_resign $@
+    script_done
+fi
+
+#if cmd is "upload" or "u" try to upload the ipa to iTunesConnect
+if [ "$cmd" = "u" -o "$cmd" = "upload" ];then
+    cmd_upload $@
     script_done
 fi
 #cmd was not a valid command
