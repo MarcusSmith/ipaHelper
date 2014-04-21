@@ -4,7 +4,7 @@
 function assert_ipa
 {
 if [ "$ipa" = "" ];then
-	message="missing file"
+	message="missing app file"
 	if [ "$1" != "" ];then
 		message="$message or $1"
 	fi
@@ -580,19 +580,19 @@ filetype="${ipa##*.}"
 echo "ipa: $ipa filetype: $filetype"
 #make ad folder
 cd "$bd"
-tmpd=
 ad=
 if [ "$filetype" = "xcarchive" ]; then
+    mkdir .ipa_payload && mkdir .ipa_payload/Payload
     cd "$ipa"
     tmp="$(find ./ -iname "*.app*" -maxdepth 3 -mindepth 3)"
     cd "$bd"
     tmpd="$ipa$(dirname "${tmp:2}")/"
-    filetype="app"
-    ipa="$(basename "${tmp}")"
-fi
-if [ "$filetype" = "app" ]; then
+    tmpa="$(basename "${tmp}")"
+    cp -r "$tmpd$tmpa" ".ipa_payload/Payload/$tmpa/"
+    ad=".ipa_payload/Payload/$tmpa"
+elif [ "$filetype" = "app" ]; then
     mkdir .ipa_payload && mkdir .ipa_payload/Payload
-    cp -r "$tmpd$ipa" ".ipa_payload/Payload/$ipa/"
+    cp -r "$ipa" ".ipa_payload/Payload/$ipa/"
     ad=".ipa_payload/Payload/$ipa"
 elif [ "$filetype" = "ipa" ]; then
     unzip -q "$ipa" -d .ipa_payload 
@@ -605,7 +605,6 @@ elif [ "$filetype" = "ipa" ]; then
 fi
 
 echo "ipa: $ipa ad: $ad"
-script_done
 
 ## COMMANDS THAT DO NEED AN IPA (or profile or info.plist)##
 
@@ -614,7 +613,6 @@ if [ "$cmd" = "p" -o "$cmd" = "prof" -o "$cmd" = "profile" ];then
 	#if the first arg wasn't a profile, then an ipa file is necessary
 	if [ "$profile" = "" ];then
 		assert_ipa mobileprovision
-		ad="$(make_ad)"
 		profile="$bd/$ad/embedded.mobileprovision"
 	fi
 	profile="$(security cms -D -i "$profile")"
@@ -663,7 +661,6 @@ fi
 if [ "$cmd" = "i" -o "$cmd" = "info" ];then
 	if [ "$infoplist" = "" ];then
 		assert_ipa Info.plist
-    	ad="$(make_ad)"
         infoplist="$bd/$ad/Info.plist"
     fi
 	if [ "$1" = "-E" ]; then
@@ -720,7 +717,6 @@ fi
 #verify command, to see if an ipa is signed
 if [ "$cmd" = "v" -o "$cmd" = "verify" ]; then
 	assert_ipa
-	ad="$(make_ad)"
 	cd "$(dirname "$bd/$ad")"
 	base="$(basename "${ad}")"	
 	codesign --verify -vvvv "$base"
@@ -730,7 +726,6 @@ fi
 #summary command, to show info.plist and profile information in brief summary
 if [ "$cmd" = "s" -o "$cmd" = "summary" ]; then
     assert_ipa
-    ad="$(make_ad)"
     plutil -convert xml1 "$bd/$ad/Info.plist"
     info="$(cat "$bd/$ad/Info.plist")"
     profile="$(security cms -D -i "$bd/$ad/embedded.mobileprovision")"
@@ -744,7 +739,6 @@ fi
 #resign command, to resign an ipa
 if [ "$cmd" = "r" -o "$cmd" = "resign" ];then
 	assert_ipa
-	ad="$(make_ad)"
 	profile="$(profile_from_args $@)"
 	if [ "$profile" = "" ];then
 		problem_encountered "No Provisioning profile"
@@ -865,7 +859,6 @@ if [ "$cmd" = "u" -o "$cmd" = "upload" ];then
         problem_encountered "Can only upload ipa files"
     fi
     assert_ipa
-    ad="$(make_ad)"
     profile="$bd/$ad/embedded.mobileprovision"
     if [ "$profile" = "" ];then
         problem_encountered "No Provisioning profile"
