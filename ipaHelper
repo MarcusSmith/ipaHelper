@@ -566,13 +566,15 @@ elif [ "${1%Info.plist}" != "$1" ];then
     cd "$bd"
     bd="$(pwd)"
 	infoplist="$bd/$infoplist"
-else
-    if [ "${1: -1}" = "/" ];then
-		cd "$1"
-		bd="$(pwd)"
-		shift
-	fi
+elif [ "${1: -1}" = "/" ];then
+	cd "$1"
+	bd="$(pwd)"
+	shift
     ipa="$(ipa_in_wd)"
+elif [ "${1:0:1}" = "-" -o "$1" = "" ]; then
+    ipa="$(ipa_in_wd)"
+else
+    problem_encountered "invalid filetype"
 fi 
 filetype="${ipa##*.}"
 echo "ipa: $ipa filetype: $filetype"
