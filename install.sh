@@ -5,4 +5,4 @@ dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 sudo cp "$dir/ipaHelper" /usr/bin/
 sudo cp "$dir/ipaHelper.1" /usr/share/man/man1/
 
-exit 0
+#exit 0
