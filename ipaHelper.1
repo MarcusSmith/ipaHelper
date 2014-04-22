@@ -15,27 +15,27 @@ substring
 .B ]
 .br
 .B ipaHelper profile [
-ipa or mobileprovision file
+file
 .B ] [
 options
 .B ]
 .br
 .B ipaHelper info [
-ipa or Info.plist file
+file
 .B ] [
 options
 .B ]
 .br
 .B ipaHelper summary [
-ipa file
+file
 .B ]
 .br
 .B ipaHelper verify [
-ipa file
+file
 .B ]
 .br
 .B ipaHelper resign [
-ipa file
+file
 .B ] [
 options
 .B ]
@@ -81,15 +81,15 @@ If a substring is provided, only certificates containing this substring are disp
 .B PROFILE
 
 .B ipaHelper profile [
-ipa or mobileprovision file
+file
 .B ] [
 options
 .B ]
 .br
 
-Checks the profile of an .ipa file, or shows the information about a .mobileprovision file
+Checks the profile of an ipa, app, or xcarchive file, or shows the information about a .mobileprovision file
 
-If no .mobileprovision or .ipa file is provided, the first (alphabetically) ipa file in the working directory is used.
+If no file is provided, the first (alphabetically) ipa file in the working directory is used.
             
 If no options are present, a summary of the provisioning profile is displayed.
                 
@@ -129,7 +129,7 @@ in the profile
 .B INFO
 
 .B ipaHelper info [
-ipa or Info.plist file
+file
 .B ] [
 -E
 .B ] [
@@ -137,9 +137,9 @@ options
 .B ]
 .br
 
-Checks the Info.plist of an .ipa file, or shows the information about an Info.plist file
+Checks the Info.plist of an ipa, app, or xcarchive file, or shows the information about an Info.plist file
 
-If no Info.plist or .ipa file is provided, the first (alphabetically) ipa file in the working directory is used.
+If no file is provided, the first (alphabetically) ipa file in the working directory is used.
          
 If no options are present, a summary of the Info.plist is displayed.
                 
@@ -170,39 +170,39 @@ in the Info.plist
 .B SUMMARY
 
 .B ipaHelper summary [
-ipa file
+file
 .B ]
 .br
 
-Displays profile and info.plist information about the ipa file.
+Displays profile and info.plist information about an ipa, app, or xcarchive file.
 
-If no ipa file is provided the first (alphabetically) ipa file in the working directory is used.
+If no file is provided the first (alphabetically) ipa file in the working directory is used.
 
 .B VERIFY
 
 .B ipaHelper verify [
-ipa file
+file
 .B ]
 .br
 
 Checks to make sure the necessary code signing components are in place for an ipa file.
 
-If no ipa file is provided the first (alphabetically) ipa file in the working directory is used.
+If no file is provided the first (alphabetically) ipa file in the working directory is used.
 
 .B RESIGN
 
 .B ipaHelper resign [
-ipa file
+file
 .B ] [
 options
 .B ]
 .br
 
-Removes the code signature from the ipa file, and replaces it either with the first profile (alphabetically) in the directory with the ipa file.
+Removes the code signature from an ipa, app, or xcarchive file, and replaces it either with the first profile (alphabetically) in the directory with the file.
 
-Resigns the ipa file using the certificate on the profile and entitlements matching the profile, zips the resigned ipa file with the output filename.  If no output filename is provided, [ipa filename]-resigned.ipa is used.
+Resigns the file using the certificate on the profile and entitlements matching the profile, zips the resigned ipa file with the output filename.  If no output filename is provided, [filename]-resigned.ipa is used.
     
-If no .ipa file is provided, the first (alphabetically) ipa file in the working directory is used.
+If no file is provided, the first (alphabetically) ipa file in the working directory is used.
         
 .B Resign Options:
         
@@ -224,10 +224,10 @@ for resigning the ipa
 .br
     resign the ipa file as  
 .I filename
-instead of [ipa filename]-resigned.ipa
+instead of [filename]-resigned.ipa
 
 .B -d, --double-check 
-    display information about the ipa, its Info.plist, and the provisioning profile and have be given an option to continue with the resign or quit
+    display information about the file, its Info.plist, and the provisioning profile and have be given an option to continue with the resign or quit
 
 .B ACCOUNT
 
