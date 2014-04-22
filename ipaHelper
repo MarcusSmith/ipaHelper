@@ -348,16 +348,60 @@ while [ "$1" != "" ];do
 done
 }
 
+function dontclean_from_args
+{
+while [ "$1" != "" ];do
+	case "$1" in
+		-dc | --dont-clean ) 	echo "dc"
+								break;;
+		* )						shift
+	esac
+done
+}
+
+function JSON_from_args
+{
+while [ "$1" != "" ];do
+	case "$1" in
+		--json ) 	echo "json"
+					break;;
+		* )			shift
+	esac
+done
+}
+
 function ql_from_args
 {
 while [ "$1" != "" ];do
-    case "$1" in
-        -d | --double-check )   echo "ql"
-                                break;;
-        * )                     shift
-    esac
+	case "$1" in
+		--ql ) 	    echo "ql"
+					break;;
+		* )			shift
+	esac
 done
 }
+
+function convert_to_JSON
+{
+echo -n "{"
+while read line; do
+    if [ "${line:0:1}" != "*" ]; then
+        while [ "${line:0:1}" = " " ]; do
+            line="${line:1}"
+        done
+        echo -n '"'
+        echo -n "${line//: /":"}"
+        echo -n '",'
+    fi
+done <<< "$1"
+if [ "$2" = "ql" ]; then
+    echo -n '"'
+    echo -n 'AppDirectory":"'
+    echo -n "$bd/$ad"
+    echo -n '",'
+fi
+}
+
 
 #Make Entitlements.plist - $1 is the full profile text
 function make_entitlements_from_profile
@@ -612,7 +656,12 @@ function cmd_summary
     plutil -convert xml1 "$bd/.Info.plist"
     info="$(cat "$bd/.Info.plist")"
     profile="$(security cms -D -i "$bd/$ad/embedded.mobileprovision")"
-    echo "******************** $ipa ********************"
+    filesize="$(du -sh $bd/$ipa | cut -f 1)"
+    filesize="${filesize/M/ MB}"
+    filesize="${filesize/K/ KB}"
+    echo '**********************************************************'
+    echo "               File: $ipa"
+    echo "           Filesize: $filesize"
     parse_info "$info"
     parse_profile "$profile"
     echo '**********************************************************'
@@ -921,12 +970,6 @@ if [ "$cmd" = "i" -o "$cmd" = "info" ];then
     script_done
 fi
 
-#print app directory for quicklook plugin
-if [ "$cmd" = "ql" ]; then
-    echo "$bd/$ad"
-    exit 0
-fi
-
 ## COMMANDS THAT NEED AN IPA
 assert_ipa
 
@@ -938,8 +981,21 @@ fi
 
 #summary command, to show info.plist and profile information in brief summary
 if [ "$cmd" = "s" -o "$cmd" = "summary" ]; then
-    cmd_summary $@
-    script_done
+    summary="$(cmd_summary)"
+    if [ "$(JSON_from_args $@)" = "json" ]; then
+        ql=
+        if [ "$(ql_from_args $@)" = "ql" ]; then
+           ql=ql 
+        fi
+        summary="$(convert_to_JSON "$summary" $ql)"
+        summary="${summary%,}}"
+    fi
+    echo "$summary"
+    if [ "$(dontclean_from_args $@)" = "dc" ]; then
+        exit 0
+    else
+        script_done
+    fi
 fi
 
 #resign command, to resign an ipa
