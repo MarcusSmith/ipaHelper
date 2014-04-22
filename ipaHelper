@@ -915,7 +915,11 @@ elif [ "${1:0:1}" = "-" -o "$1" = "" ]; then
     ipa="$(ipa_in_wd)"
 else
     problem_encountered "invalid filetype"
-fi 
+fi
+clean_up
+if [ "$cmd" = "clean" ]; then
+    exit 0
+fi
 filetype="${ipa##*.}"
 #echo "ipa: $ipa filetype: $filetype"
 #make ad folder
