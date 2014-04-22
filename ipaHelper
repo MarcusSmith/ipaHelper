@@ -87,11 +87,11 @@ function help_profile
 {
 echo '*****PROFILE*****
 
-ipaHelper profile [ ipa or mobileprovision file ] [ options ]
+ipaHelper profile [ file ] [ options ]
 
-Checks the profile of an ipa file, or shows the information about a mobileprovision file
+Checks the profile of an ipa, app, or xcarchive file, or shows the information about a mobileprovision file
 
-If no .mobileprovision or ipa file is provided, the first (alphabetically) ipa file in the working directory is used.
+If no file is provided, the first (alphabetically) ipa file in the working directory is used.
             
 If no options are present, a summary of the provisioning profile is displayed.
                 
@@ -119,11 +119,11 @@ function help_info
 {
 echo '*****INFO*****
 
-ipaHelper info [ ipa or Info.plist file ] [ -E ] [ options ]
+ipaHelper info [ file ] [ -E ] [ options ]
 
-Checks the Info.plist of an .ipa file, or shows the information about an Info.plist file
+Checks the Info.plist of an ipa, app, or xcarchive file, or shows the information about an Info.plist file
 
-If no Info.plist or ipa file is provided, the first (alphabetically) ipa file in the working directory is used.
+If no file is provided, the first (alphabetically) ipa file in the working directory is used.
             
 If no options are present, a summary of the Info.plist is displayed.
                 
@@ -145,11 +145,11 @@ function help_summary
 {
 echo '*****SUMMARY*****
 
-ipaHelper summary [ ipa file ]
+ipaHelper summary [ file ]
 
-Displays profile and info.plist information about the ipa file.
+Displays profile and info.plist information about an ipa, app, or xcarchive file.
 
-If no ipa file is provided the first (alphabetically) ipa file in the working directory is used.
+If no file is provided the first (alphabetically) ipa file in the working directory is used.
 '
 }
 
@@ -157,11 +157,11 @@ function help_verify
 {
 echo '*****VERIFY*****
 
-ipaHelper verify [ ipa file ]
+ipaHelper verify [ file ]
 
-Checks to make sure the necessary code signing components are in place for an ipa file.
+Checks to make sure the necessary code signing components are in place for an ipa, app, or xcarchive file.
 
-If no ipa file is provided the first (alphabetically) ipa file in the working directory is used.
+If no file is provided the first (alphabetically) ipa file in the working directory is used.
 '
 }
 
@@ -169,19 +169,19 @@ function help_resign
 {
 echo '*****RESIGN*****
 
-ipaHelper resign [ ipa file ] [ options ]
+ipaHelper resign [ file ] [ options ]
 
-Removes the code signature from the ipa file, and replaces it either with the first profile (alphabetically) in the directory with the ipa file.
+Removes the code signature from an ipa, app, or xcarchive file, and replaces it either with the first profile (alphabetically) in the directory with the file.
 
-Resigns the ipa file using the certificate on the profile, zips the resigned ipa file with the name [ipa filename]-resigned.ipa.
+Resigns the file using the certificate on the profile, zips the resigned ipa file with the name [filename]-resigned.ipa.
     
-If no .ipa file is provided, the first (alphabetically) ipa file in the working directory is used.
+If no file is provided, the first (alphabetically) ipa file in the working directory is used.
         
 Options:
         
 [-p | --profile] takes a specific profile as an argument, uses this profile for resigning the ipa
         
-[-d | --double-check] displays information about the ipa, its Info.plist, and the provisioning profile and offers a choice to continue or quit
+[-d | --double-check] displays information about the file, its Info.plist, and the provisioning profile and offers a choice to continue or quit
 
 [-o | --output ] takes an output file as an argument, zips the resigned ipa file using this name instead of [ipa filename]-resigned.ipa
 '
@@ -215,7 +215,7 @@ Uploads the ipa file to iTunesConnect.  Asks for an iTunesConnect username if no
 
 Asks for a password for this account.
 
-If no .ipa file is provided, the first (alphabetically) ipa file in the working directory is used.
+If no ipa file is provided, the first (alphabetically) ipa file in the working directory is used.
 '
 }
 
