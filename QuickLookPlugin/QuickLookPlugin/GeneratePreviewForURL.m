@@ -41,26 +41,18 @@ OSStatus GeneratePreviewForURL(void *thisInterface, QLPreviewRequestRef preview,
         NSLog(@"key: %@, value:%@", key, obj);
     }];
     
-    NSURL *iconURL = [NSURL URLWithString:[NSString stringWithFormat:@"%@/Icon.png", summaryDictionary[@"AppDirectory"]]];
+    //I'm sure I can refactor this
+    NSURL *iconURL = [NSURL URLWithString:[NSString stringWithFormat:@"%@/icon@2x.png", summaryDictionary[@"AppDirectory"]]];
     NSLog(@"iconURL: %@", iconURL);
     NSLog(@"path: %@", [iconURL path]);
     
     NSError* error = nil;
-//    NSData *iconData = [NSData dataWithContentsOfURL:iconURL options:NSDataReadingUncached error:&error];
     NSData *iconData = [NSData dataWithContentsOfFile:[iconURL path] options:NSDataReadingUncached error:&error];
     NSImage *imageForSize = [[NSImage alloc] initWithData: iconData];
+    CGFloat iconOffset = imageForSize.size.width;
+    imageForSize = nil;
     
-    if (error) {
-        NSLog(@"Error: %@", error);
-    } else {
-        NSLog(@"Data has loaded successfully.");
-    }
-    
-    NSLog(@"icon data: %@", iconData);
-    
-//	NSImage *icon = [[NSImage alloc] initWithData: iconData];
-    
-    //Got the image!!
+    //Got the icon image and the summary dictionary, time to clean up
     
     NSTask *cleanTask = [[NSTask alloc] init];
     [cleanTask setLaunchPath:@"/usr/bin/ipaHelper"];
@@ -68,33 +60,70 @@ OSStatus GeneratePreviewForURL(void *thisInterface, QLPreviewRequestRef preview,
     
     pipe = [NSPipe pipe];
     [cleanTask setStandardOutput: pipe];
-    //The magic line that keeps your log where it belongs
     [cleanTask setStandardInput:[NSPipe pipe]];
     
     NSLog(@"Launching Task");
     [cleanTask launch];
     
-    CGContextRef cgContext = QLPreviewRequestCreateContext(preview, CGSizeMake(640, 320), NO, NULL);
+    CGSize contextSize = CGSizeMake(512.0, 512.0);
+    CGFloat margin = 20.0;
     
-    if(cgContext) {
+    // Make context for ql plugin
+    CGContextRef context = QLPreviewRequestCreateContext(preview, contextSize, NO, NULL);
+    
+    //Make it pretty
+    if(context) {
         
-        CGDataProviderRef imgDataProvider = CGDataProviderCreateWithCFData ((__bridge CFDataRef)iconData);
-        CGImageRef iconImage = CGImageCreateWithPNGDataProvider(imgDataProvider, NULL, true, kCGRenderingIntentDefault);
+        if (iconData.length > 0) {
+            CGContextSaveGState(context);
+            
+            //Draw the icon if there was one
+            CGDataProviderRef imgDataProvider = CGDataProviderCreateWithCFData ((__bridge CFDataRef)iconData);
+            CGImageRef iconImage = CGImageCreateWithPNGDataProvider(imgDataProvider, NULL, true, kCGRenderingIntentDefault);
+            
+            CGRect iconRect = CGRectMake(margin, (contextSize.height - iconOffset - 40 - margin), iconOffset, iconOffset);
+            
+            CGContextDrawImage(context, iconRect, iconImage);
+            
+            CFRelease(iconImage);
+            
+            CGContextSetStrokeColorWithColor(context, CGColorCreateGenericRGB(0.5, 0.5, 0.5, 0.5));
+            CGContextSetLineWidth(context, 1.0);
+            CGContextStrokeRect(context, iconRect);
+            iconOffset += 2 * margin;
+            CGPoint points[4] = { CGPointMake(0.0, contextSize.height - 40.0), CGPointMake(contextSize.width, contextSize.height - 40.0),
+                CGPointMake(iconOffset, 0.0), CGPointMake(iconOffset, contextSize.height - 40.0)};
+            CGContextStrokeLineSegments(context, points, 4);
+            CGContextRestoreGState(context);
+            
+        }
+        else {
+            iconOffset = margin;
+            CGContextSaveGState(context);
+            CGContextSetStrokeColorWithColor(context, CGColorCreateGenericRGB(0.5, 0.5, 0.5, 0.5));
+            CGContextSetLineWidth(context, 1.0);
+            CGPoint points[2] = { CGPointMake(0.0, contextSize.height - 40.0), CGPointMake(contextSize.width, contextSize.height - 40.0)};
+            CGContextStrokeLineSegments(context, points, 2);
+        }
         
-        CGContextDrawImage(cgContext,CGRectMake(0, 320 - imageForSize.size.height, imageForSize.size.width, imageForSize.size.width), iconImage);
+        NSGraphicsContext *nsContext = [NSGraphicsContext graphicsContextWithGraphicsPort:(void *)context flipped:NO];
+        [NSGraphicsContext setCurrentContext:nsContext];
+
+        NSMutableParagraphStyle *style = [[NSParagraphStyle defaultParagraphStyle] mutableCopy];
+        [style setAlignment:NSCenterTextAlignment];
         
-        QLPreviewRequestFlushContext(preview, cgContext);
+        NSString *fileName = summaryDictionary[@"App ID Name"];
+        [fileName drawInRect:NSMakeRect(iconOffset, contextSize.height - 30.0, contextSize.width - iconOffset, 20.0) withAttributes:@{NSFontAttributeName: [NSFont systemFontOfSize:20.0],
+                                                                                                                                        NSForegroundColorAttributeName: [NSColor blackColor],
+                                                                                                                                        NSParagraphStyleAttributeName: style,
+                                                                                                                                        }];
         
-        CFRelease(cgContext);
-        CFRelease(iconImage);
+        
+        QLPreviewRequestFlushContext(preview, context);
+        CFRelease(context);
+        
+        
     }
-    
-//    CIImage *icon = [UIImage imageWithData:[NSData dataWithContentsOfURL:[NSURL URLWithString:MyURL]]];
-    
-    
-//    QLPreviewRequestFlushContext(preview, cgContext);
-    
-//    QLPreviewRequestSetDataRepresentation(preview,(__bridge CFDataRef)data,kUTTypePlainText,NULL);
     
     return noErr;
 }
