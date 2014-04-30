@@ -4,6 +4,8 @@
 #import <Cocoa/Cocoa.h>
 
 OSStatus GeneratePreviewForURL(void *thisInterface, QLPreviewRequestRef preview, CFURLRef url, CFStringRef contentTypeUTI, CFDictionaryRef options);
+/// Takes an array of dictionaries, each of which contain a "key" key and "value" key, and draws them in the rect in the context.  Returns the height of what it drew.
+CGFloat drawArrayInRectInContext(NSArray *array, CGRect rect, CGContextRef context, CGFloat lineSpacing, CGFloat fontSize);
 void CancelPreviewGeneration(void *thisInterface, QLPreviewRequestRef preview);
 
 /* -----------------------------------------------------------------------------
@@ -13,8 +15,7 @@ void CancelPreviewGeneration(void *thisInterface, QLPreviewRequestRef preview);
    ----------------------------------------------------------------------------- */
 
 OSStatus GeneratePreviewForURL(void *thisInterface, QLPreviewRequestRef preview, CFURLRef url, CFStringRef contentTypeUTI, CFDictionaryRef options)
-{    
-    //My attempt
+{
     NSURL *ipaURL = (__bridge NSURL *)url;
     
     NSTask *task = [[NSTask alloc] init];
@@ -50,6 +51,7 @@ OSStatus GeneratePreviewForURL(void *thisInterface, QLPreviewRequestRef preview,
     NSData *iconData = [NSData dataWithContentsOfFile:[iconURL path] options:NSDataReadingUncached error:&error];
     NSImage *imageForSize = [[NSImage alloc] initWithData: iconData];
     CGFloat iconOffset = imageForSize.size.width;
+    NSLog(@"icon size: %f", iconOffset);
     imageForSize = nil;
     
     //Got the icon image and the summary dictionary, time to clean up
@@ -65,8 +67,8 @@ OSStatus GeneratePreviewForURL(void *thisInterface, QLPreviewRequestRef preview,
     NSLog(@"Launching Task");
     [cleanTask launch];
     
-    CGSize contextSize = CGSizeMake(512.0, 512.0);
-    CGFloat margin = 20.0;
+    CGSize contextSize = CGSizeMake(576.0, 256.0);
+    CGFloat margin = 10.0;
     
     // Make context for ql plugin
     CGContextRef context = QLPreviewRequestCreateContext(preview, contextSize, NO, NULL);
@@ -74,50 +76,99 @@ OSStatus GeneratePreviewForURL(void *thisInterface, QLPreviewRequestRef preview,
     //Make it pretty
     if(context) {
         
+        iconOffset = iconOffset == 0.0 ? 114 : iconOffset;
+        CGRect iconRect = CGRectMake(margin, (contextSize.height - iconOffset - margin), iconOffset, iconOffset);
+        
         if (iconData.length > 0) {
-            CGContextSaveGState(context);
-            
             //Draw the icon if there was one
             CGDataProviderRef imgDataProvider = CGDataProviderCreateWithCFData ((__bridge CFDataRef)iconData);
             CGImageRef iconImage = CGImageCreateWithPNGDataProvider(imgDataProvider, NULL, true, kCGRenderingIntentDefault);
             
-            CGRect iconRect = CGRectMake(margin, (contextSize.height - iconOffset - 40 - margin), iconOffset, iconOffset);
-            
             CGContextDrawImage(context, iconRect, iconImage);
             
             CFRelease(iconImage);
-            
-            CGContextSetStrokeColorWithColor(context, CGColorCreateGenericRGB(0.5, 0.5, 0.5, 0.5));
-            CGContextSetLineWidth(context, 1.0);
-            CGContextStrokeRect(context, iconRect);
-            iconOffset += 2 * margin;
-            CGPoint points[4] = { CGPointMake(0.0, contextSize.height - 40.0), CGPointMake(contextSize.width, contextSize.height - 40.0),
-                CGPointMake(iconOffset, 0.0), CGPointMake(iconOffset, contextSize.height - 40.0)};
-            CGContextStrokeLineSegments(context, points, 4);
-            CGContextRestoreGState(context);
-            
         }
-        else {
-            iconOffset = margin;
-            CGContextSaveGState(context);
-            CGContextSetStrokeColorWithColor(context, CGColorCreateGenericRGB(0.5, 0.5, 0.5, 0.5));
-            CGContextSetLineWidth(context, 1.0);
-            CGPoint points[2] = { CGPointMake(0.0, contextSize.height - 40.0), CGPointMake(contextSize.width, contextSize.height - 40.0)};
-            CGContextStrokeLineSegments(context, points, 2);
-        }
+        
+//        CGContextSaveGState(context);
+//        CGContextSetStrokeColorWithColor(context, CGColorCreateGenericRGB(0.5, 0.5, 0.5, 0.25));
+//        CGContextSetLineWidth(context, 1.0);
+//        CGContextStrokeRect(context, iconRect);
+//        CGContextRestoreGState(context);
+        
+        CGFloat sectionWidth = iconOffset + 2 * margin;
         
         NSGraphicsContext *nsContext = [NSGraphicsContext graphicsContextWithGraphicsPort:(void *)context flipped:NO];
         [NSGraphicsContext setCurrentContext:nsContext];
 
         NSMutableParagraphStyle *style = [[NSParagraphStyle defaultParagraphStyle] mutableCopy];
-        [style setAlignment:NSCenterTextAlignment];
+        [style setAlignment:NSLeftTextAlignment];
         
-        NSString *fileName = summaryDictionary[@"App ID Name"];
-        [fileName drawInRect:NSMakeRect(iconOffset, contextSize.height - 30.0, contextSize.width - iconOffset, 20.0) withAttributes:@{NSFontAttributeName: [NSFont systemFontOfSize:20.0],
-                                                                                                                                        NSForegroundColorAttributeName: [NSColor blackColor],
-                                                                                                                                        NSParagraphStyleAttributeName: style,
-                                                                                                                                        }];
+        NSString *title = (NSString *)summaryDictionary[@"CFBundleName"];
+        NSDictionary *titleAttributes = @{NSFontAttributeName: [NSFont systemFontOfSize:20.0],
+                                          NSForegroundColorAttributeName: [NSColor blackColor],
+                                          NSParagraphStyleAttributeName: style,
+                                          };
         
+        NSRect testRect = [title boundingRectWithSize:NSMakeSize(500.0, 100.0) options:NSStringDrawingUsesLineFragmentOrigin attributes:titleAttributes];
+        
+        CGFloat titleHeight = testRect.size.height;
+
+        [title drawInRect:NSMakeRect(margin + sectionWidth, contextSize.height - margin * 0.5 - titleHeight, contextSize.width - margin * 2 - sectionWidth, titleHeight) withAttributes:titleAttributes];
+        
+        title = nil;
+        
+        NSString *filetype = ipaURL.pathExtension;
+        NSString *kind;
+        if ([filetype isEqualToString:@"ipa"]) {
+            kind = @"iOS App";
+        }
+        else if ([filetype isEqualToString:@"app"]) {
+            kind = @"Application";
+        }
+        else if ([filetype isEqualToString:@"xcarchive"]) {
+            kind = @"Xcode Archive";
+        }
+        //TODO: Make new QL Plugin for mobileprovision
+//        else if ([filetype isEqualToString:@"mobileprovision"]) {
+//            kind = @"Developer Provisioning Profile";
+//        }
+        filetype = nil;
+        
+//        @{@"key":@"",@"value":(NSString *)summaryDictionary[@""]}
+        
+        NSArray *fileInfo = @[@{@"key":@"Name:",@"value":(NSString *)summaryDictionary[@"File"]},
+                              @{@"key":@"Kind:",@"value":kind},
+                              @{@"key":@"Size:",@"value":(NSString *)summaryDictionary[@"Filesize"]}
+                              ];
+        
+        
+        drawArrayInRectInContext(fileInfo, CGRectMake(margin, margin, iconOffset, contextSize.height - margin * 3 - iconOffset), context, 4.0, 8.0);
+        
+        kind = nil;
+        fileInfo = nil;
+        
+        NSArray *appInfo = @[@{@"key":@"Bundle ID:",@"value":(NSString *)summaryDictionary[@"CFBundleIdentifier"]},
+                             @{@"key":@"Display Name:",@"value":(NSString *)summaryDictionary[@"CFBundleDisplayName"]},
+                             @{@"key":@"Short Version:",@"value":(NSString *)summaryDictionary[@"ShortBundleVersion"]},
+                             @{@"key":@"Bundle Version:",@"value":(NSString *)summaryDictionary[@"CFBundleVersion"]},
+                             ];
+        NSArray *profileInfo = @[@{@"key":@"Profile Name:",@"value":(NSString *)summaryDictionary[@"App ID Name"]},
+                                 @{@"key":@"Certificate Name:",@"value":(NSString *)summaryDictionary[@"Certificate Name"]},
+                                 @{@"key":@"Team Name:",@"value":(NSString *)summaryDictionary[@"Team Name"]},
+                                 @{@"key":@"Application ID:",@"value":(NSString *)summaryDictionary[@"App Identifier"]},
+                                 @{@"key":@"Profile Expires:",@"value":(NSString *)summaryDictionary[@"Expiration Date"]},
+                                 @{@"key":@"Profile UUID:",@"value":(NSString *)summaryDictionary[@"UUID"]},
+                                 ];
+        
+        NSMutableArray *combinedArrays = [NSMutableArray arrayWithArray:appInfo];
+//        [combinedArrays addObject:@{@"key":@"",@"value":@""}];
+        [combinedArrays addObject:@{@"key":@"",@"value":@""}];
+        [combinedArrays addObjectsFromArray:profileInfo];
+        
+        drawArrayInRectInContext(combinedArrays.copy, CGRectMake(margin + sectionWidth, margin, sectionWidth * 3 - 2 * margin, contextSize.height - titleHeight - margin * 2.5), context, 4.0, 10.0);
+        
+        profileInfo = nil;
+        summaryDictionary = nil;
         
         QLPreviewRequestFlushContext(preview, context);
         CFRelease(context);
@@ -126,6 +177,65 @@ OSStatus GeneratePreviewForURL(void *thisInterface, QLPreviewRequestRef preview,
     }
     
     return noErr;
+}
+
+CGFloat drawArrayInRectInContext(NSArray *array, CGRect rect, CGContextRef context, CGFloat lineSpacing, CGFloat fontSize)
+{
+    NSGraphicsContext *nsContext = [NSGraphicsContext graphicsContextWithGraphicsPort:(void *)context flipped:NO];
+    [NSGraphicsContext setCurrentContext:nsContext];
+    
+//    NSMutableParagraphStyle *rightStyle = [[NSParagraphStyle defaultParagraphStyle] mutableCopy];
+//    [rightStyle setAlignment:NSRightTextAlignment];
+    
+    NSMutableParagraphStyle *leftStyle = [[NSParagraphStyle defaultParagraphStyle] mutableCopy];
+    [leftStyle setAlignment:NSLeftTextAlignment];
+    [leftStyle setLineBreakMode:NSLineBreakByWordWrapping];
+    [leftStyle setLineSpacing:0.0];
+    
+    
+    NSDictionary *keyFontAttributes = @{NSFontAttributeName: [NSFont systemFontOfSize:fontSize],
+                                        NSForegroundColorAttributeName: [NSColor colorWithRed:0.5 green:0.5 blue:0.5 alpha:1.0],
+                                        NSParagraphStyleAttributeName: leftStyle,
+                                        
+                                        };
+    
+    NSDictionary *valueFontAttributes = @{  NSFontAttributeName: [NSFont systemFontOfSize:fontSize],
+                                            NSForegroundColorAttributeName: [NSColor blackColor],
+                                            NSParagraphStyleAttributeName: leftStyle,
+                                            };
+    
+    __block CGFloat longestKey;
+    __block CGFloat keyHeight;
+    
+    NSArray *keyArray = [array.copy valueForKey:@"key"];
+    
+    [keyArray enumerateObjectsUsingBlock:^(NSString *key, NSUInteger idx, BOOL *stop) {
+        NSRect testRect = [key boundingRectWithSize:NSMakeSize(500.0, 100.0) options:NSStringDrawingUsesLineFragmentOrigin attributes:keyFontAttributes];
+        if (testRect.size.width > longestKey) {
+            longestKey = testRect.size.width;
+        }
+        if (testRect.size.height > keyHeight) {
+            keyHeight = testRect.size.height;
+        }
+    }];
+    
+    __block CGFloat currentY = rect.size.height + rect.origin.y;
+    CGFloat startingY = currentY;
+    CGFloat horizontalSpacing = 4.0;
+    CGFloat startingValuePosition = rect.origin.x + longestKey + horizontalSpacing;
+    CGFloat valueWidth = rect.size.width - longestKey - horizontalSpacing;
+    
+    [array.copy enumerateObjectsUsingBlock:^(NSDictionary *dict, NSUInteger idx, BOOL *stop) {
+        NSString *key = dict[@"key"];
+        NSString *value = dict[@"value"];
+        [key drawInRect:NSMakeRect(rect.origin.x, currentY - keyHeight, longestKey, keyHeight) withAttributes:keyFontAttributes];
+        NSRect valueRect = [value boundingRectWithSize:NSMakeSize(valueWidth, 500.0) options:NSStringDrawingUsesLineFragmentOrigin attributes:valueFontAttributes];
+        CGFloat valueTextHeight = valueRect.size.height;
+        [value drawInRect:NSMakeRect(startingValuePosition, currentY - valueTextHeight, valueWidth, valueTextHeight) withAttributes:valueFontAttributes];
+        currentY -= valueTextHeight + lineSpacing;
+    }];
+    
+    return startingY - currentY;
 }
 
 void CancelPreviewGeneration(void *thisInterface, QLPreviewRequestRef preview)
