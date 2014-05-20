@@ -145,11 +145,17 @@ function help_summary
 {
 echo '*****SUMMARY*****
 
-ipaHelper summary [ file ]
+ipaHelper summary [ file ] [ options ]
 
 Displays profile and info.plist information about an ipa, app, or xcarchive file.
 
 If no file is provided the first (alphabetically) ipa file in the working directory is used.
+
+Options:
+        
+[--json] returns the summary information in a JSON dictionary.  Also adds the a key "AppDirectory" for the temporary unzipped app.
+        
+[-dc | --dont-clean] does not remove the temporary app directory after returning summary information
 '
 }
 
@@ -370,17 +376,6 @@ while [ "$1" != "" ];do
 done
 }
 
-function ql_from_args
-{
-while [ "$1" != "" ];do
-	case "$1" in
-		--ql ) 	    echo "ql"
-					break;;
-		* )			shift
-	esac
-done
-}
-
 function convert_to_JSON
 {
 echo -n "{"
@@ -394,12 +389,10 @@ while read line; do
         echo -n '",'
     fi
 done <<< "$1"
-if [ "$2" = "ql" ]; then
-    echo -n '"'
-    echo -n 'AppDirectory":"'
-    echo -n "$bd/$ad"
-    echo -n '",'
-fi
+echo -n '"'
+echo -n 'AppDirectory":"'
+echo -n "$bd/$ad"
+echo -n '",'
 }
 
 
@@ -987,11 +980,7 @@ fi
 if [ "$cmd" = "s" -o "$cmd" = "summary" ]; then
     summary="$(cmd_summary)"
     if [ "$(JSON_from_args $@)" = "json" ]; then
-        ql=
-        if [ "$(ql_from_args $@)" = "ql" ]; then
-           ql=ql 
-        fi
-        summary="$(convert_to_JSON "$summary" $ql)"
+        summary="$(convert_to_JSON "$summary")"
         summary="${summary%,}}"
     fi
     echo "$summary"

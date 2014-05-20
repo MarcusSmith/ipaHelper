@@ -99,6 +99,14 @@ display the CFBundleIdentifier
 Displays profile and info.plist information about an ipa, app or xcarchive *file*.
 If no *file* is provided the first (alphabetically) ipa file in the working directory is used.
 
+**Summary Options:**
+
+**--json**  
+return the summary information in a JSON dictionary.  Also adds the a key "AppDirectory" for the temporary unzipped app
+        
+**-dc, --dont-clean**  
+do not remove the temporary app directory after returning summary information
+
 #### VERIFY ####
 
 **ipaHelper verify \[** *file* **\]**
