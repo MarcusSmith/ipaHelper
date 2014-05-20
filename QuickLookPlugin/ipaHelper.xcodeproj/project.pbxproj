@@ -33,7 +33,7 @@
 		4552E81D192BA56400C4D9E3 /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
-			dstPath = "~/Developer/Marcus/ipaHelper/Install";
+			dstPath = "~/Developer/Marcus/ipaHelper/ipaHelperInstall.app/Installation";
 			dstSubfolderSpec = 0;
 			files = (
 				4552E81E192BA57000C4D9E3 /* ipaHelper.qlgenerator in CopyFiles */,
