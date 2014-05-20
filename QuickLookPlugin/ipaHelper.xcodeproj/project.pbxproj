@@ -16,6 +16,7 @@
 		452F811718F71F3F00E76451 /* GenerateThumbnailForURL.m in Sources */ = {isa = PBXBuildFile; fileRef = 452F811618F71F3F00E76451 /* GenerateThumbnailForURL.m */; };
 		452F811918F71F3F00E76451 /* GeneratePreviewForURL.m in Sources */ = {isa = PBXBuildFile; fileRef = 452F811818F71F3F00E76451 /* GeneratePreviewForURL.m */; };
 		452F811B18F71F3F00E76451 /* main.c in Sources */ = {isa = PBXBuildFile; fileRef = 452F811A18F71F3F00E76451 /* main.c */; };
+		4552E81E192BA57000C4D9E3 /* ipaHelper.qlgenerator in CopyFiles */ = {isa = PBXBuildFile; fileRef = 452F810518F71F3F00E76451 /* ipaHelper.qlgenerator */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -26,6 +27,16 @@
 			dstSubfolderSpec = 0;
 			files = (
 				4505CCFC18F734B5006D8046 /* ipaHelper.qlgenerator in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		4552E81D192BA56400C4D9E3 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "~/Developer/Marcus/ipaHelper/Install";
+			dstSubfolderSpec = 0;
+			files = (
+				4552E81E192BA57000C4D9E3 /* ipaHelper.qlgenerator in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -132,6 +143,7 @@
 				452F810218F71F3F00E76451 /* Resources */,
 				452F810318F71F3F00E76451 /* Rez */,
 				4505CCFB18F73221006D8046 /* CopyFiles */,
+				4552E81D192BA56400C4D9E3 /* CopyFiles */,
 			);
 			buildRules = (
 			);
