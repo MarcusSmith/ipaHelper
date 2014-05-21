@@ -14,17 +14,21 @@ if [ $? != 0 ]; then
     error=Y
     echo "Error copying man page"
 fi
-
-if [ ! -d "~/Library/Quicklook" ]; then
+if [ ! -d ~/Library/Quicklook ]; then
     mkdir ~/Library/Quicklook
 fi
-cp -r "$dir/ipaHelper.qlgenerator" ~/Library/Quicklook/ipaHelper.qlgenerator
+if [ -d ~/Library/Quicklook/ipaHelper.qlgenerator ]; then
+    sudo rm -rf ~/Library/Quicklook/ipaHelper.qlgenerator
+fi
+sudo cp -r "$dir/ipaHelper.qlgenerator" ~/Library/Quicklook/ipaHelper.qlgenerator
 if [ $? != 0 ]; then
     error=Y
     echo "Error copying quicklook generator"
 fi
-
-cp -r "$dir/Resign.workflow" ~/Library/Services/Resign.workflow
+if [ -d ~/Library/Services/Resign.workflow ]; then
+    sudo rm -rf ~/Library/Services/Resign.workflow
+fi
+sudo cp -r "$dir/Resign.workflow/" ~/Library/Services/Resign.workflow
 if [ $? != 0 ]; then
     error=Y
     echo "Error copying Resign service"

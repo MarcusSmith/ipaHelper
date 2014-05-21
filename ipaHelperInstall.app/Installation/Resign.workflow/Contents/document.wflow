@@ -227,7 +227,7 @@
 					<key>COMMAND_STRING</key>
 					<string>profile="${@: -1}"
 while [ "$2" != "" ]; do
-	ipaHelper resign "$1" -p "$profile" 2&gt;&amp;1
+	ipaHelper resign "$1" -f -p "$profile" 2&gt;&amp;1
 	shift
 done
 </string>
@@ -343,14 +343,14 @@ done
 					</dict>
 				</dict>
 				<key>isViewVisible</key>
-				<false/>
+				<true/>
 				<key>location</key>
 				<string>590.500000:512.000000</string>
 				<key>nibPath</key>
 				<string>/System/Library/Automator/Run Shell Script.action/Contents/Resources/English.lproj/main.nib</string>
 			</dict>
 			<key>isViewVisible</key>
-			<false/>
+			<true/>
 		</dict>
 		<dict>
 			<key>action</key>
@@ -453,7 +453,7 @@ done
 				<key>isViewVisible</key>
 				<false/>
 				<key>location</key>
-				<string>590.500000:470.000000</string>
+				<string>590.500000:329.000000</string>
 				<key>nibPath</key>
 				<string>/System/Library/Automator/Set Value of Variable.action/Contents/Resources/Base.lproj/main.nib</string>
 			</dict>
@@ -529,6 +529,8 @@ done
 				</array>
 				<key>Class Name</key>
 				<string>AMDisplayNotificationAction</string>
+				<key>IgnoresInput</key>
+				<true/>
 				<key>InputUUID</key>
 				<string>7F0A93BF-3532-4AA2-A9FB-D09547C75510</string>
 				<key>Keywords</key>
@@ -586,7 +588,7 @@ done
 				<key>isViewVisible</key>
 				<true/>
 				<key>location</key>
-				<string>590.500000:428.000000</string>
+				<string>590.500000:287.000000</string>
 				<key>nibPath</key>
 				<string>/System/Library/Automator/Display Notification.action/Contents/Resources/Base.lproj/main.nib</string>
 			</dict>
@@ -596,26 +598,26 @@ done
 	</array>
 	<key>connectors</key>
 	<dict>
-		<key>10E87CD5-986B-4F18-B5D6-825D95E2128D</key>
+		<key>DEFF0685-9A19-4DFF-BAC7-2DC71DF0D482</key>
 		<dict>
 			<key>from</key>
-			<string>5B1D209F-DFC4-4478-B64B-9795616593E6 - 5B1D209F-DFC4-4478-B64B-9795616593E6</string>
+			<string>95D0D9B8-8781-4F48-87DD-C758C3DB074B - 95D0D9B8-8781-4F48-87DD-C758C3DB074B</string>
 			<key>to</key>
-			<string>354B148D-ACBA-4C96-83E6-472D32432EFE - 354B148D-ACBA-4C96-83E6-472D32432EFE</string>
+			<string>5B1D209F-DFC4-4478-B64B-9795616593E6 - 5B1D209F-DFC4-4478-B64B-9795616593E6</string>
 		</dict>
-		<key>1D2E214C-CEEF-46E2-87F7-91D1F9D7BCAD</key>
+		<key>F8A71D77-6212-4CC8-8234-0DA1C1695A5F</key>
 		<dict>
 			<key>from</key>
 			<string>354B148D-ACBA-4C96-83E6-472D32432EFE - 354B148D-ACBA-4C96-83E6-472D32432EFE</string>
 			<key>to</key>
 			<string>F5BAC43B-726D-4661-939E-810EAABB201A - F5BAC43B-726D-4661-939E-810EAABB201A</string>
 		</dict>
-		<key>28BFB6E8-6EB1-4948-8A8D-3146586DEDD4</key>
+		<key>FAD5A683-4232-4C36-A90A-D789BF859254</key>
 		<dict>
 			<key>from</key>
-			<string>95D0D9B8-8781-4F48-87DD-C758C3DB074B - 95D0D9B8-8781-4F48-87DD-C758C3DB074B</string>
-			<key>to</key>
 			<string>5B1D209F-DFC4-4478-B64B-9795616593E6 - 5B1D209F-DFC4-4478-B64B-9795616593E6</string>
+			<key>to</key>
+			<string>354B148D-ACBA-4C96-83E6-472D32432EFE - 354B148D-ACBA-4C96-83E6-472D32432EFE</string>
 		</dict>
 	</dict>
 	<key>variables</key>

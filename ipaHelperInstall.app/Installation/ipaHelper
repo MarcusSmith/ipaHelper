@@ -1,5 +1,13 @@
 #!/bin/bash
 
+#take the name of the process as $1 (eg: "unzipping file" or "resiging app"), if there was an error, exit the script with the text "Error $1"
+function check_status
+{
+if [ $? -ne 0 ]; then
+    problem_encountered "Error $1"
+fi
+}
+
 #if $ipa is "" then there's a problem, exit. if $1 is passed in, it is another possible required item (instead of the ipa file)
 function assert_ipa
 {
@@ -34,7 +42,7 @@ exit 0
 function problem_encountered
 {
 if [ "$1" != "" ];then
-	echo "**** $1 ****" >&2
+	echo "$1" >&2
 fi
 clean_up
 echo 'type "help" for usage page' >&2
@@ -795,9 +803,11 @@ function cmd_resign
 	cd "$bd"
 	rm -rf "$ad/_CodeSignature/"
 	cp "$profile" "$bd/$ad/embedded.mobileprovision"
-    codesign -f -s "$cert" $entitlementsstring $bundlestring "$ad"
+    codesign -f -s "$cert" $entitlementsstring $bundlestring "$ad" 2>/dev/null
+    check_status "resigning the app"
     cd .ipa_payload
-    zip -qr "$newipa" Payload/
+    zip -qr "$newipa" Payload/ 2>/dev/null
+    check_status "zipping the resigned app"
     echo "Resign Successful"
 }
 
@@ -944,13 +954,15 @@ if [ "$filetype" = "xcarchive" ]; then
     tmpd="$ipa$(dirname "${tmp:2}")/"
     tmpa="$(basename "${tmp}")"
     cp -r "$tmpd$tmpa" ".ipa_payload/Payload/$tmpa/"
+    check_status "accessing app file in xcarchive"
     ad=".ipa_payload/Payload/$tmpa"
 elif [ "$filetype" = "app" ]; then
     mkdir .ipa_payload && mkdir .ipa_payload/Payload
     cp -r "$ipa" ".ipa_payload/Payload/$ipa/"
     ad=".ipa_payload/Payload/$ipa"
 elif [ "$filetype" = "ipa" ]; then
-    unzip -q "$ipa" -d .ipa_payload 
+    unzip -q "$ipa" -d .ipa_payload 2>/dev/null
+    check_status "unzipping ipa file"
     if [ ! -d ".ipa_payload/Payload" ];then
         problem_encountered "problem unzipping ipa folder"
     fi
