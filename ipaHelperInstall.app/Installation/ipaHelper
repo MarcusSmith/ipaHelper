@@ -186,7 +186,9 @@ If no file is provided, the first (alphabetically) ipa file in the working direc
 Options:
         
 [-p | --profile] takes a specific profile as an argument, uses this profile for resigning the ipa
-        
+
+[-f | --force] will overwrite output file on resign without asking.  Will not resign if App ID and Bundle IDs do not match.
+
 [-d | --double-check] displays information about the file, its Info.plist, and the provisioning profile and offers a choice to continue or quit
 
 [-o | --output ] takes an output file as an argument, zips the resigned ipa file using this name instead of [ipa filename]-resigned.ipa
@@ -350,6 +352,17 @@ while [ "$1" != "" ];do
 		-d | --double-check ) 	echo "dc"
 								break;;
 		* )						shift
+	esac
+done
+}
+
+function force_from_args
+{
+while [ "$1" != "" ];do
+	case "$1" in
+		-f | --force ) 	echo "force"
+						break;;
+		* )				shift
 	esac
 done
 }
@@ -686,8 +699,9 @@ function cmd_resign
     echo "$tent" > .Entitlements.plist
     #check to see if there was an output file
     newipa="$(output_from_args $@)"
+    force="$(force_from_args $@)"
     #see if this output file already exists
-    if [ -f "$newipa" ]; then
+    if [ -f "$newipa" -a "$force" != "force" ]; then
         echo "$(basename "$newipa") already exists."
         input=
         while [ "$input" != "o" ]; do
@@ -736,6 +750,9 @@ function cmd_resign
         matching=Y
     fi
 	if [ "$matching" = "N" ]; then
+        if [ "$force" = "force" ]; then
+            problem_encountered "App ID and Bundle ID do not match"
+        fi
 		echo '**********************************************************'
 		echo "The profile's App ID: $appid and the"
 		echo "ipa file's Bundle ID: $bundleid do not match."

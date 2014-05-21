@@ -133,6 +133,9 @@ resign the ipa file as *filename* instead of \[*ipa filename*\]-resigned.ipa
 **-d, --double-check**  
 display information about the file, its Info.plist, and the provisioning profile and have be given an option to continue with the resign or quit
 
+**-f, --force**
+overwrite output file on resign without asking.  Will not resign if App ID and Bundle IDs do not match
+
 #### ACCOUNT ####
 
 **ipaHelper account \[** *options* **\]**
