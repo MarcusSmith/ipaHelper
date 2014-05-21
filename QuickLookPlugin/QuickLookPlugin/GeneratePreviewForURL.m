@@ -43,11 +43,12 @@ OSStatus GeneratePreviewForURL(void *thisInterface, QLPreviewRequestRef preview,
     }];
     
     //I'm sure I can refactor this
-    NSURL *iconURL = [NSURL URLWithString:[NSString stringWithFormat:@"%@/icon@2x.png", summaryDictionary[@"AppDirectory"]]];
+    NSURL *iconURL = [NSURL URLWithString:[[NSString stringWithFormat:@"%@/icon@2x.png", summaryDictionary[@"AppDirectory"]] stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
     NSLog(@"iconURL: %@", iconURL);
     NSLog(@"path: %@", [iconURL path]);
     
     NSError* error = nil;
+    NSLog(@"Icon URL Path: %@", [iconURL path]);
     NSData *iconData = [NSData dataWithContentsOfFile:[iconURL path] options:NSDataReadingUncached error:&error];
     NSImage *imageForSize = [[NSImage alloc] initWithData: iconData];
     CGFloat iconOffset = imageForSize.size.width;

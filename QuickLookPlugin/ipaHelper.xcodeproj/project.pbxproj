@@ -22,7 +22,7 @@
 /* Begin PBXCopyFilesBuildPhase section */
 		4505CCFB18F73221006D8046 /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
+			buildActionMask = 12;
 			dstPath = "~/Library/QuickLook";
 			dstSubfolderSpec = 0;
 			files = (
@@ -32,7 +32,7 @@
 		};
 		4552E81D192BA56400C4D9E3 /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
+			buildActionMask = 12;
 			dstPath = "~/Developer/Marcus/ipaHelper/ipaHelperInstall.app/Installation";
 			dstSubfolderSpec = 0;
 			files = (
