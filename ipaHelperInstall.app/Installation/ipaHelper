@@ -97,7 +97,7 @@ echo '*****PROFILE*****
 
 ipaHelper profile [ file ] [ options ]
 
-Checks the profile of an ipa, app, or xcarchive file, or shows the information about a mobileprovision file
+Checks the profile of an ipa, app, xcarchive, or zip file containing an app file, or shows the information about a mobileprovision file
 
 If no file is provided, the first (alphabetically) ipa file in the working directory is used.
             
@@ -129,7 +129,7 @@ echo '*****INFO*****
 
 ipaHelper info [ file ] [ -E ] [ options ]
 
-Checks the Info.plist of an ipa, app, or xcarchive file, or shows the information about an Info.plist file
+Checks the Info.plist of an ipa, app, xcarchive, or zip file containing an app file, or shows the information about an Info.plist file
 
 If no file is provided, the first (alphabetically) ipa file in the working directory is used.
             
@@ -155,7 +155,7 @@ echo '*****SUMMARY*****
 
 ipaHelper summary [ file ] [ options ]
 
-Displays profile and info.plist information about an ipa, app, or xcarchive file.
+Displays profile and info.plist information about an ipa, app, xcarchive, or zip file containing an app file.
 
 If no file is provided the first (alphabetically) ipa file in the working directory is used.
 
@@ -173,7 +173,7 @@ echo '*****VERIFY*****
 
 ipaHelper verify [ file ]
 
-Checks to make sure the necessary code signing components are in place for an ipa, app, or xcarchive file.
+Checks to make sure the necessary code signing components are in place for an ipa, app, xcarchive, or zip file containing an app file
 
 If no file is provided the first (alphabetically) ipa file in the working directory is used.
 '
@@ -185,9 +185,9 @@ echo '*****RESIGN*****
 
 ipaHelper resign [ file ] [ options ]
 
-Removes the code signature from an ipa, app, or xcarchive file, and replaces it either with the first profile (alphabetically) in the directory with the file.
+Removes the code signature from an ipa, app, xcarchive, or zip file containing an app file, and replaces it either with the first profile (alphabetically) in the directory with the file.
 
-Resigns the file using the certificate on the profile, zips the resigned ipa file with the name [filename]-resigned.ipa.
+Resigns the file using the certificate on the profile, zips the resigned ipa file with the name [filename]-resigned.[filetype]. Zips as the same filetype as the input file by default, except that xcarchive files are resigned as app files.
     
 If no file is provided, the first (alphabetically) ipa file in the working directory is used.
         
@@ -348,7 +348,7 @@ done
 if [ "$tmp" != "" ]; then
     return
 fi
-echo "$bd/${ipa%.*}-resigned.ipa"
+echo "$bd/${ipa%.*}-resigned.$filetype"
 }
 
 
@@ -707,6 +707,13 @@ function cmd_resign
     echo "$tent" > .Entitlements.plist
     #check to see if there was an output file
     newipa="$(output_from_args $@)"
+    newfiletype="${newipa##*.}"
+    if [ "$newfiletype" = "xcarchive" ]; then
+        newipa="${newipa%.*}.app"
+        newfiletype="app"
+    elif [ "$newfiletype" != "ipa" -a "$newfiletype" != "app" -a "$newfiletype" != "zip" ]; then
+        problem_encountered "Invalid output type"
+    fi
     force="$(force_from_args $@)"
     #see if this output file already exists
     if [ -f "$newipa" -a "$force" != "force" ]; then
@@ -801,14 +808,25 @@ function cmd_resign
 		fi
 	fi
 	cd "$bd"
-	rm -rf "$ad/_CodeSignature/"
+    rm -rf "$ad/_CodeSignature/"
 	cp "$profile" "$bd/$ad/embedded.mobileprovision"
     codesign -f -s "$cert" $entitlementsstring $bundlestring "$ad" 2>/dev/null
     check_status "resigning the app"
-    cd .ipa_payload
-    zip -qr "$newipa" Payload/ 2>/dev/null
-    check_status "zipping the resigned app"
-    echo "Resign Successful"
+    if [ "$newfiletype" = "ipa" ]; then
+        cd .ipa_payload
+        zip -qr "$newipa" Payload/ 2>/dev/null
+        check_status "zipping the resigned app"
+        echo "Resign Successful"
+    elif [ "$newfiletype" = "zip" ]; then
+        cd .ipa_payload/Payload
+        zip -qr "$newipa" *.app/ 2>/dev/null
+        check_status "zipping the resigned zip"
+        echo "Resign Successful"
+    elif [ "$newfiletype" = "app" ]; then
+        cp -r "$bd/$ad" "$newipa"
+        check_status "coping resigned app"
+        echo "Resign Successful"
+    fi
 }
 
 function cmd_upload
@@ -907,7 +925,7 @@ ipa=
 filetype=
 profile=
 infoplist=
-if [ "${1%.ipa}" != "$1" -o "${1%.app*}" != "$1" -o "${1%.xcarchive*}" != "$1" ];then
+if [ "${1%.ipa}" != "$1" -o "${1%.app*}" != "$1" -o "${1%.xcarchive*}" != "$1"  -o "${1%.zip*}" != "$1" ];then
     bd="$(dirname "${1}")"
 	ipa="$(basename "${1}")"
 	shift
@@ -953,7 +971,7 @@ if [ "$filetype" = "xcarchive" ]; then
     cd "$bd"
     tmpd="$ipa$(dirname "${tmp:2}")/"
     tmpa="$(basename "${tmp}")"
-    cp -r "$tmpd$tmpa" ".ipa_payload/Payload/$tmpa/"
+    cp -r "$tmpd$tmpa" ".ipa_payload/Payload/$tmpa/" 2>/dev/null
     check_status "accessing app file in xcarchive"
     ad=".ipa_payload/Payload/$tmpa"
 elif [ "$filetype" = "app" ]; then
@@ -968,6 +986,20 @@ elif [ "$filetype" = "ipa" ]; then
     fi
     cd .ipa_payload/Payload
     app="$(find ./ -type d -maxdepth 1 -iname "*.app*")"
+    ad=".ipa_payload/Payload/${app:3}"
+elif [ "$filetype" = "zip" ]; then
+    mkdir .ipa_payload
+    unzip -q "$ipa" -d .ipa_payload/Payload 2>/dev/null
+    check_status "unzipping ipa file"
+    if [ ! -d ".ipa_payload/Payload" ];then
+        problem_encountered "problem unzipping ipa folder"
+    fi
+    cd .ipa_payload/Payload
+    app="$(find ./ -type d -iname "*.app*")"
+    app="$(echo "$app" | while read -r line; do if [ "$line" = "${line%.dSYM}" ]; then echo "$line"; break; fi; done)"
+    if [ "$app" = "" ]; then
+        problem_encountered "zip file does not contain app file"
+    fi
     ad=".ipa_payload/Payload/${app:3}"
 fi
 

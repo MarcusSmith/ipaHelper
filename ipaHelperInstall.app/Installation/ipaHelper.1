@@ -89,7 +89,7 @@ options
 .B ]
 .br
 
-Checks the profile of an ipa, app, or xcarchive file, or shows the information about a .mobileprovision file
+Checks the profile of an ipa, app, xcarchive, or zip file containing an app file, or shows the information about a .mobileprovision file
 
 If no file is provided, the first (alphabetically) ipa file in the working directory is used.
             
@@ -139,7 +139,7 @@ options
 .B ]
 .br
 
-Checks the Info.plist of an ipa, app, or xcarchive file, or shows the information about an Info.plist file
+Checks the Info.plist of an ipa, app, xcarchive, or zip file containing an app file, or shows the information about an Info.plist file
 
 If no file is provided, the first (alphabetically) ipa file in the working directory is used.
          
@@ -176,7 +176,7 @@ file
 .B ]
 .br
 
-Displays profile and info.plist information about an ipa, app, or xcarchive file.
+Displays profile and info.plist information about an ipa, app, xcarchive, or zip file containing an app file.
 
 If no file is provided the first (alphabetically) ipa file in the working directory is used.
 
@@ -210,9 +210,9 @@ options
 .B ]
 .br
 
-Removes the code signature from an ipa, app, or xcarchive file, and replaces it either with the first profile (alphabetically) in the directory with the file.
+Removes the code signature from an ipa, app, xcarchive, or zip file containing an app file, and replaces it either with the first profile (alphabetically) in the directory with the file.
 
-Resigns the file using the certificate on the profile and entitlements matching the profile, zips the resigned ipa file with the output filename.  If no output filename is provided, [filename]-resigned.ipa is used.
+Resigns the file using the certificate on the profile and entitlements matching the profile, zips the resigned ipa file with the output filename.  If no output filename is provided, [filename]-resigned.[filetype] is used.  The same filetype as the input filetype is used by default, except xcarchives resign as app files.
     
 If no file is provided, the first (alphabetically) ipa file in the working directory is used.
         

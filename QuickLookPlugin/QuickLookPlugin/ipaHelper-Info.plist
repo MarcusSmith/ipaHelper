@@ -14,6 +14,7 @@
 				<string>com.apple.itunes.ipa</string>
 				<string>com.apple.application-bundle</string>
 				<string>com.apple.xcode.archive</string>
+				<string>public.zip-archive</string>
 			</array>
 		</dict>
 	</array>

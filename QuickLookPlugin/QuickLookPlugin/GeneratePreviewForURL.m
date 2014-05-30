@@ -50,6 +50,13 @@ OSStatus GeneratePreviewForURL(void *thisInterface, QLPreviewRequestRef preview,
     NSError* error = nil;
     NSLog(@"Icon URL Path: %@", [iconURL path]);
     NSData *iconData = [NSData dataWithContentsOfFile:[iconURL path] options:NSDataReadingUncached error:&error];
+    NSLog(@"Error loading image: %@", error);
+//    if (!iconData) {
+//        NSString *defaultIconFilepath = [[[NSBundle mainBundle] resourcePath] stringByAppendingString:@"/QuickLookPlugin/ipaIcon.jpg"];
+//        NSLog(@"%@", defaultIconFilepath);
+//        iconData = [NSData dataWithContentsOfFile:defaultIconFilepath options:NSDataReadingUncached error:&error];
+//        NSLog(@"Error loading image: %@", error);
+//    }
     NSImage *imageForSize = [[NSImage alloc] initWithData: iconData];
     CGFloat iconOffset = imageForSize.size.width;
     NSLog(@"icon size: %f", iconOffset);
@@ -80,7 +87,7 @@ OSStatus GeneratePreviewForURL(void *thisInterface, QLPreviewRequestRef preview,
         iconOffset = iconOffset == 0.0 ? 114 : iconOffset;
         CGRect iconRect = CGRectMake(margin, (contextSize.height - iconOffset - margin), iconOffset, iconOffset);
         
-        if (iconData.length > 0) {
+        if (iconData.length) {
             //Draw the icon if there was one
             CGDataProviderRef imgDataProvider = CGDataProviderCreateWithCFData ((__bridge CFDataRef)iconData);
             CGImageRef iconImage = CGImageCreateWithPNGDataProvider(imgDataProvider, NULL, true, kCGRenderingIntentDefault);
@@ -128,6 +135,9 @@ OSStatus GeneratePreviewForURL(void *thisInterface, QLPreviewRequestRef preview,
         }
         else if ([filetype isEqualToString:@"xcarchive"]) {
             kind = @"Xcode Archive";
+        }
+        else if ([filetype isEqualToString:@"zip"]) {
+            kind = @"ZIP Archive";
         }
         //TODO: Make new QL Plugin for mobileprovision
 //        else if ([filetype isEqualToString:@"mobileprovision"]) {

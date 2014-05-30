@@ -38,7 +38,7 @@ If *substring* is provided, only certificates containing this *substring* are di
 
 **ipaHelper profile \[** *file* **\] \[** *options* **\]**
 
-Checks the profile of an ipa, app or xcarchive *file*, or shows the information about a mobileprovision *file*
+Checks the profile of an ipa, app, xcarchive, or zip *file* containing an app file, or shows the information about a mobileprovision *file*
 If no *file* is provided, the first (alphabetically) ipa file in the working directory is used. If no options are present, a summary of the provisioning profile is displayed.
 
 **Profile Options**
@@ -71,7 +71,7 @@ display the expiration date for the profile
 
 **ipaHelper info \[** *file* **\] \[** *-E* **\] \[** *options* **\]**
 
-Checks the Info.plist of an ipa, app or xcarchive *file*, or shows the information about and Info.plist *file*
+Checks the Info.plist of an ipa, app, xcarchive, or zip *file* containing an app file, or shows the information about and Info.plist *file*
 If no *file* is provided, the first (alphabetically) ipa file in the working directory is used.
 If no options are present, a summary of the Info.plist is displayed.
 
@@ -96,7 +96,7 @@ display the CFBundleIdentifier
 
 **ipaHelper summary \[** *file* **\]**
 
-Displays profile and info.plist information about an ipa, app or xcarchive *file*.
+Displays profile and info.plist information about an ipa, app, xcarchive, or zip *file* containing an app file.
 If no *file* is provided the first (alphabetically) ipa file in the working directory is used.
 
 **Summary Options:**
@@ -111,14 +111,14 @@ do not remove the temporary app directory after returning summary information
 
 **ipaHelper verify \[** *file* **\]**
 
-Checks to make sure the necessary code signing components are in place for an ipa, app or xcarchive *file*.
+Checks to make sure the necessary code signing components are in place for an ipa, app, xcarchive, or zip *file* containing an app file.
 If no *file* is provided the first (alphabetically) ipa file in the working directory is used.
 
 #### RESIGN ####
 
 **ipaHelper resign \[** *file* **\] \[** *options* **\]**
 
-Removes  the  code  signature from an ipa, app or xcarchive *file*, and replaces it either with the first profile (alphabetically) in the directory with *file* or a specified profile.
+Removes  the  code  signature from an ipa, app, xcarchive, or zip *file* containing an app file, and replaces it either with the first profile (alphabetically) in the directory with *file* or a specified profile.
 Resigns *file* using the certificate on the profile and entitlements matching the profile, zips the resigned ipa file with the output filename.  If no output filename is provided, \[*filename*\]-resigned.ipa is used.
 If no *file* is provided, the first (alphabetically) ipa file in the working directory is used.
 
