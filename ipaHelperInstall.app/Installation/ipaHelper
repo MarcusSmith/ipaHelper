@@ -670,7 +670,7 @@ function cmd_summary
     plutil -convert xml1 "$bd/.Info.plist"
     info="$(cat "$bd/.Info.plist")"
     profile="$(security cms -D -i "$bd/$ad/embedded.mobileprovision")"
-    filesize="$(du -sh $bd/$ipa | cut -f 1)"
+    filesize="$(du -sh "$bd/$ipa" | cut -f 1)"
     filesize="${filesize/M/ MB}"
     filesize="${filesize/K/ KB}"
     echo '**********************************************************'
@@ -808,9 +808,9 @@ function cmd_resign
 		fi
 	fi
 	cd "$bd"
-    rm -rf "$ad/_CodeSignature/"
+    rm -rf "$ad/_CodeSignature/" "$ad/CodeResources" 2>/dev/null
 	cp "$profile" "$bd/$ad/embedded.mobileprovision"
-    codesign -f -s "$cert" $entitlementsstring $bundlestring "$ad" 2>/dev/null
+    codesign -f -s "$cert" $entitlementsstring $bundlestring --resource-rules "$ad/ResourceRules.plist" "$ad" 2>/dev/null
     check_status "resigning the app"
     if [ "$newfiletype" = "ipa" ]; then
         cd .ipa_payload
