@@ -359,9 +359,49 @@ while [ "$1" != "" ];do
 	case "$1" in
 		-d | --double-check ) 	echo "dc"
 								break;;
-		* )						shift
+		* )						shift;;
 	esac
 done
+}
+
+function edit_from_args
+{
+while [ "$1" != "" ];do
+	case "$1" in
+		-E*)        tmp="${1##-E}"
+                    if  [ "${tmp:0:1}" = "=" ]; then
+                        echo "${tmp#=}"
+                    elif [ "$tmp" = "" ]; then
+                        if [ "$EDITOR" = "" ]; then
+                            echo "vim"
+                        else
+                            echo "$EDITOR"
+                        fi
+                    fi
+                    break;;
+        --edit*)    tmp="${1##--edit}"
+                    if  [ "${tmp:0:1}" = "=" ]; then
+                        echo "${tmp#=}"
+                    elif [ "$tmp" = "" ]; then
+                        if [ "$EDITOR" = "" ]; then
+                            echo "vim"
+                        else
+                            echo "$EDITOR"
+                        fi
+                    fi
+                    break;;
+		* )		    shift;;
+	esac
+done
+}
+
+# $1 is the file, $2 is the editor
+function edit_file_with
+{
+if [ "$2" != "" -a "$1" != "" ]; then
+    "$2" "$1" 2>/dev/null
+    check_status "editing file"
+fi
 }
 
 function force_from_args
@@ -614,7 +654,8 @@ function cmd_profile
 
 function cmd_info
 {
-if [ "$1" = "-E" ]; then
+edit="$(edit_from_args $@)"
+if [ "$edit" != "" ]; then
         xml=Y
         #check to see if the info.plist is a binary
         plist="$(cat $infoplist)"
@@ -622,13 +663,15 @@ if [ "$1" = "-E" ]; then
             xml=N
             plutil -convert xml1 "$infoplist"
         fi
-        vi "$infoplist"
+        edit_file_with "$infoplist" "$edit"
         #convert back to binary if it was binary
         if [ "$xml" = "N" ]; then
             plutil -convert binary1 "$infoplist"
         fi
-        cd "$bd/.ipa_payload"
-        zip -qr "$bd/$ipa Payload/"
+        if [ "$ipa" != "" ]; then
+            cd "$bd/.ipa_payload"
+            zip -qr "$bd/$ipa" Payload/
+        fi
 else
     cp "$infoplist" "$bd/.Info.plist"
 	infoplist="$bd/.Info.plist"
@@ -842,6 +885,35 @@ function cmd_resign
         check_status "coping resigned app"
         echo "Resign Successful"
     fi
+}
+
+#take the .ipa_payload folder in directory: $1 and zip/copy it to file $2
+function cmd_rezip
+{
+filetype="${2##*.}"
+newfile="$2"
+if [ "$filetype" = "xcarchive" ]; then
+    newfile="${2%.*}.app"
+    filetype="app"
+elif [ "$filetype" != "ipa" -a "$filetype" != "app" -a "$filetype" != "zip" ]; then
+    problem_encountered "Invalid file type"
+fi
+cd $1
+if [ ! -d .ipa_payload ]; then
+    problem_encountered "Nothing to zip"
+fi
+if [ "$filetype" = "ipa" ]; then
+    cd .ipa_payload
+    zip -qr "$newfile" Payload/ 2>/dev/null
+    check_status "zipping the ipa file"
+elif [ "$filetype" = "zip" ]; then
+    cd .ipa_payload/Payload
+    zip -qr "$newfile" *.app/ 2>/dev/null
+    check_status "zipping the zip file"
+elif [ "$filetype" = "app" ]; then
+    cp -r "$.ipa_payload/Payload/*.app/" "$newfile"
+    check_status "coping the app file"
+fi
 }
 
 function cmd_upload
