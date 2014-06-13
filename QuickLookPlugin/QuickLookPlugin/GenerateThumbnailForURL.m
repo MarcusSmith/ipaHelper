@@ -2,11 +2,11 @@
 #include <CoreServices/CoreServices.h>
 #include <QuickLook/QuickLook.h>
 #import <Cocoa/Cocoa.h>
-//#import <WebKit/WebKit.h>
 
 OSStatus GenerateThumbnailForURL(void *thisInterface, QLThumbnailRequestRef thumbnail, CFURLRef url, CFStringRef contentTypeUTI, CFDictionaryRef options, CGSize maxSize);
 void addRoundedRectToPath(CGContextRef context, CGRect rect, float ovalWidth, float ovalHeight);
 void CancelThumbnailGeneration(void *thisInterface, QLThumbnailRequestRef thumbnail);
+NSURL *lastURL;
 
 /* -----------------------------------------------------------------------------
     Generate a thumbnail for file
@@ -17,6 +17,7 @@ void CancelThumbnailGeneration(void *thisInterface, QLThumbnailRequestRef thumbn
 OSStatus GenerateThumbnailForURL(void *thisInterface, QLThumbnailRequestRef thumbnail, CFURLRef url, CFStringRef contentTypeUTI, CFDictionaryRef options, CGSize maxSize)
 {
     NSURL *ipaURL = (__bridge NSURL *)url;
+    lastURL = ipaURL.copy;
     
     NSTask *task = [[NSTask alloc] init];
     [task setLaunchPath:@"/usr/bin/ipaHelper"];
@@ -115,4 +116,15 @@ void addRoundedRectToPath(CGContextRef context, CGRect rect, float ovalWidth, fl
 void CancelThumbnailGeneration(void *thisInterface, QLThumbnailRequestRef thumbnail)
 {
     // Implement only if supported
+    if (lastURL) {
+        NSTask *cleanTask = [[NSTask alloc] init];
+        [cleanTask setLaunchPath:@"/usr/bin/ipaHelper"];
+        [cleanTask setArguments:[NSArray arrayWithObjects:@"clean", [lastURL path], nil]];
+        
+        NSPipe *pipe = [NSPipe pipe];
+        [cleanTask setStandardOutput: pipe];
+        [cleanTask setStandardInput:[NSPipe pipe]];
+        
+        [cleanTask launch];
+    }
 }
