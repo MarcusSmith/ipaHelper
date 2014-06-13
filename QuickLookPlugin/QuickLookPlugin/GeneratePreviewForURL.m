@@ -163,8 +163,8 @@ OSStatus GeneratePreviewForURL(void *thisInterface, QLPreviewRequestRef preview,
                              @{@"key":@"Short Version:",@"value":(NSString *)summaryDictionary[@"ShortBundleVersion"]},
                              @{@"key":@"Bundle Version:",@"value":(NSString *)summaryDictionary[@"CFBundleVersion"]},
                              ];
-        NSArray *profileInfo = @[@{@"key":@"Profile Name:",@"value":(NSString *)summaryDictionary[@"App ID Name"]},
-                                 @{@"key":@"Certificate Name:",@"value":(NSString *)summaryDictionary[@"Certificate Name"]},
+        NSArray *profileInfo = @[@{@"key":@"App ID Name:",@"value":(NSString *)summaryDictionary[@"App ID Name"]},
+                                 @{@"key":@"Profile Name:",@"value":(NSString *)summaryDictionary[@"Profile Name"]},
                                  @{@"key":@"Team Name:",@"value":(NSString *)summaryDictionary[@"Team Name"]},
                                  @{@"key":@"Application ID:",@"value":(NSString *)summaryDictionary[@"App Identifier"]},
                                  @{@"key":@"Profile Expires:",@"value":(NSString *)summaryDictionary[@"Expiration Date"]},
@@ -172,7 +172,6 @@ OSStatus GeneratePreviewForURL(void *thisInterface, QLPreviewRequestRef preview,
                                  ];
         
         NSMutableArray *combinedArrays = [NSMutableArray arrayWithArray:appInfo];
-//        [combinedArrays addObject:@{@"key":@"",@"value":@""}];
         [combinedArrays addObject:@{@"key":@"",@"value":@""}];
         [combinedArrays addObjectsFromArray:profileInfo];
         

@@ -286,7 +286,7 @@ function parse_profile
 {
 echo "        App ID Name: $(value_for_key "$1" "AppIDName")"
 echo "     App Identifier: $(value_for_key "$1" "application-identifier")"
-echo "   Certificate Name: $(value_for_key "$1" "Name")"
+echo "       Profile Name: $(value_for_key "$1" "Name")"
 echo "          Team Name: $(value_for_key "$1" "TeamName")"
 echo "    Expiration Date: $(date -j -f "%Y-%m-%dT%H:%M:%SZ" $(value_for_key "$1" "ExpirationDate") +"%b %e, %Y")"
 echo "               UUID: $(value_for_key "$1" "UUID")"
@@ -765,29 +765,44 @@ function cmd_resign
         matching=Y
     fi
 	if [ "$matching" = "N" ]; then
-        if [ "$force" = "force" ]; then
-            problem_encountered "App ID and Bundle ID do not match"
-        fi
-		echo '**********************************************************'
-		echo "The profile's App ID: $appid and the"
-		echo "ipa file's Bundle ID: $bundleid do not match."
-		echo '**********************************************************'
-        input=
-        while [ "$input" != "y" ]; do
-            case "$input" in
-                [nN]* ) echo ""
-                        script_done;;
-                [yY]* ) break;;
-                * )     echo -n "Continue with resign? (y or n):" 
-                        read -n 1 input;;
-            esac
-        done
-        echo ""
         newbundleID=
-        while [ "$newbundleID" = "" ]; do
-            echo -n "sign with bundleID:"
-            read newbundleID
-        done
+        if [ "$force" = "force" ]; then
+            if [ "${trimmedappid: -1}" = "*" ]; then
+                trimmedappid="${trimmedappid%?}"
+                if [ "${trimmedappid: -1}" = "." ]; then
+                    newbundleID="${trimmedappid}${bundleid##*.}"
+                else
+                    match="${trimmedappid##*.}"
+                    if [ "${bundleid##*$match}" != "$bundleid" ]; then
+                        newbundleID="${trimmedappid}${bundleid##*$match}"
+                    else
+                        newbundleID="${trimmedappid}.${bundleid##*.}"
+                    fi
+                fi
+            else
+                newbundleID="$trimmedappid"
+            fi
+        else
+		    echo '**********************************************************'
+		    echo "The profile's App ID: $appid and the"
+		    echo "ipa file's Bundle ID: $bundleid do not match."
+		    echo '**********************************************************'
+            input=
+            while [ "$input" != "y" ]; do
+                case "$input" in
+                    [nN]* ) echo ""
+                            script_done;;
+                    [yY]* ) break;;
+                    * )     echo -n "Continue with resign? (y or n):" 
+                            read -n 1 input;;
+                esac
+            done
+            echo ""
+            while [ "$newbundleID" = "" ]; do
+                echo -n "sign with bundleID:"
+                read newbundleID
+            done
+        fi
         xml=Y
 		#check to see if the info.plist is a binary
 		plist="$(cat "$bd/$ad/Info.plist")"

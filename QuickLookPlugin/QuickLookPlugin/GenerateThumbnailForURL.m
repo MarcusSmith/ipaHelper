@@ -30,7 +30,6 @@ OSStatus GenerateThumbnailForURL(void *thisInterface, QLThumbnailRequestRef thum
     NSFileHandle *file;
     file = [pipe fileHandleForReading];
     
-    NSLog(@"Launching Task");
     [task launch];
     
     NSData *data;
@@ -56,7 +55,6 @@ OSStatus GenerateThumbnailForURL(void *thisInterface, QLThumbnailRequestRef thum
     [cleanTask setStandardOutput: pipe];
     [cleanTask setStandardInput:[NSPipe pipe]];
     
-    NSLog(@"Launching Task");
     [cleanTask launch];
     
     CGSize contextSize = CGSizeMake(iconSize, iconSize);
