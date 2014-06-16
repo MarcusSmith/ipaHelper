@@ -669,8 +669,7 @@ if [ "$edit" != "" ]; then
             plutil -convert binary1 "$infoplist"
         fi
         if [ "$ipa" != "" ]; then
-            cd "$bd/.ipa_payload"
-            zip -qr "$bd/$ipa" Payload/
+            cmd_rezip "$bd" "$bd/$ipa"
         fi
 else
     cp "$infoplist" "$bd/.Info.plist"
@@ -751,10 +750,7 @@ function cmd_resign
     #check to see if there was an output file
     newipa="$(output_from_args $@)"
     newfiletype="${newipa##*.}"
-    if [ "$newfiletype" = "xcarchive" ]; then
-        newipa="${newipa%.*}.app"
-        newfiletype="app"
-    elif [ "$newfiletype" != "ipa" -a "$newfiletype" != "app" -a "$newfiletype" != "zip" ]; then
+    if [ "$newfiletype" != "ipa" -a "$newfiletype" != "app" -a "$newfiletype" != "zip" -a "$newfiletype" != "xcarchive" ]; then
         problem_encountered "Invalid output type"
     fi
     force="$(force_from_args $@)"
@@ -866,25 +862,18 @@ function cmd_resign
 		fi
 	fi
 	cd "$bd"
-    rm -rf "$ad/_CodeSignature/" "$ad/CodeResources" 2>/dev/null
+    rm -rf "$ad/_CodeSignature/" 2>/dev/null
 	cp "$profile" "$bd/$ad/embedded.mobileprovision"
-    codesign -f -s "$cert" $entitlementsstring $bundlestring --resource-rules "$ad/ResourceRules.plist" "$ad" 2>/dev/null
-    check_status "resigning the app"
-    if [ "$newfiletype" = "ipa" ]; then
-        cd .ipa_payload
-        zip -qr "$newipa" Payload/ 2>/dev/null
-        check_status "zipping the resigned app"
-        echo "Resign Successful"
-    elif [ "$newfiletype" = "zip" ]; then
-        cd .ipa_payload/Payload
-        zip -qr "$newipa" *.app/ 2>/dev/null
-        check_status "zipping the resigned zip"
-        echo "Resign Successful"
-    elif [ "$newfiletype" = "app" ]; then
-        cp -r "$bd/$ad" "$newipa"
-        check_status "coping resigned app"
-        echo "Resign Successful"
+    if [ -f "$ad/ResourceRules.plist" ]; then
+        rm -rf "$ad/CodeResources" 2>/dev/null    
+        codesign -f -s "$cert" $entitlementsstring $bundlestring --resource-rules "$ad/ResourceRules.plist" "$ad" 2>/dev/null
+    else
+        echo "Warning: no ResourceRules.plist"
+        codesign -f -s "$cert" $entitlementsstring $bundlestring "$ad" 2>/dev/null
     fi
+    check_status "resigning the app"
+    cmd_rezip "$bd" "$newipa"
+    echo "Resign Successful"
 }
 
 #take the .ipa_payload folder in directory: $1 and zip/copy it to file $2
@@ -898,6 +887,7 @@ if [ "$filetype" = "xcarchive" ]; then
 elif [ "$filetype" != "ipa" -a "$filetype" != "app" -a "$filetype" != "zip" ]; then
     problem_encountered "Invalid file type"
 fi
+echo "newfile: $newfile, bd: $1"
 cd $1
 if [ ! -d .ipa_payload ]; then
     problem_encountered "Nothing to zip"
@@ -911,7 +901,7 @@ elif [ "$filetype" = "zip" ]; then
     zip -qr "$newfile" *.app/ 2>/dev/null
     check_status "zipping the zip file"
 elif [ "$filetype" = "app" ]; then
-    cp -r "$.ipa_payload/Payload/*.app/" "$newfile"
+    cp -r .ipa_payload/Payload/*.app/ "$newfile"
     check_status "coping the app file"
 fi
 }
