@@ -237,14 +237,14 @@ If no ipa file is provided, the first (alphabetically) ipa file in the working d
 
 function clean_up
 {
-if [ -d "$bd/.ipa_payload" ]; then
-    rm -rf "$bd/.ipa_payload"
+if [ -d "/tmp/ipa_payload" ]; then
+    rm -rf "/tmp/ipa_payload"
 fi
-if [ -f "$bd/.Info.plist" ]; then
-	rm "$bd/.Info.plist"
+if [ -f "/tmp/Info.plist" ]; then
+	rm "/tmp/Info.plist"
 fi
-if [ -f "$bd/.Entitlements.plist" ]; then
-	rm "$bd/.Entitlements.plist" 
+if [ -f "/tmp/Entitlements.plist" ]; then
+	rm "/tmp/Entitlements.plist" 
 fi
 }
 
@@ -452,7 +452,7 @@ while read line; do
 done <<< "$1"
 echo -n '"'
 echo -n 'AppDirectory":"'
-echo -n "$bd/$ad"
+echo -n "$ad"
 echo -n '",'
 }
 
@@ -669,11 +669,11 @@ if [ "$edit" != "" ]; then
             plutil -convert binary1 "$infoplist"
         fi
         if [ "$ipa" != "" ]; then
-            cmd_rezip "$bd" "$bd/$ipa"
+            cmd_rezip "$bd/$ipa"
         fi
 else
-    cp "$infoplist" "$bd/.Info.plist"
-	infoplist="$bd/.Info.plist"
+    cp "$infoplist" "/tmp/Info.plist"
+	infoplist="/tmp/Info.plist"
 	plutil -convert xml1 "$infoplist"
 	infoplist="$(cat "$infoplist")"
 	if [ "$1" = "" ];then
@@ -708,10 +708,10 @@ fi
 
 function cmd_summary
 {
-    cp "$bd/$ad/Info.plist" "$bd/.Info.plist"
-    plutil -convert xml1 "$bd/.Info.plist"
-    info="$(cat "$bd/.Info.plist")"
-    profile="$(security cms -D -i "$bd/$ad/embedded.mobileprovision")"
+    cp "$ad/Info.plist" "/tmp/Info.plist"
+    plutil -convert xml1 "/tmp/Info.plist"
+    info="$(cat "/tmp/Info.plist")"
+    profile="$(security cms -D -i "$ad/embedded.mobileprovision")"
     filesize="$(du -sh "$bd/$ipa" | cut -f 1)"
     filesize="${filesize/M/ MB}"
     filesize="${filesize/K/ KB}"
@@ -725,7 +725,7 @@ function cmd_summary
 
 function cmd_verify
 {
-	cd "$(dirname "$bd/$ad")"
+	cd "$(dirname "$ad")"
 	base="$(basename "${ad}")"	
 	codesign --verify -vvvv "$base"
 }
@@ -740,13 +740,13 @@ function cmd_resign
 	fullprofile="$(security cms -D -i "$profile")"
 	cert="$(value_for_key "$fullprofile" TeamName)"
 	appid="$(value_for_key "$fullprofile" application-identifier)"
-	cp "$bd/$ad/Info.plist" "$bd/.Info.plist"
-    plutil -convert xml1 "$bd/.Info.plist"
-    infoplist="$(cat "$bd/.Info.plist")"
+	cp "$ad/Info.plist" "/tmp/Info.plist"
+    plutil -convert xml1 "/tmp/Info.plist"
+    infoplist="$(cat "/tmp/Info.plist")"
 	bundleid="$(value_for_key "$infoplist" CFBundleIdentifier)"
-	entitlementsstring="--entitlements .Entitlements.plist"
+	entitlementsstring="--entitlements /tmp/Entitlements.plist"
     tent="$(make_entitlements_from_profile "$fullprofile")"
-    echo "$tent" > .Entitlements.plist
+    echo "$tent" > /tmp/Entitlements.plist
     #check to see if there was an output file
     newipa="$(output_from_args $@)"
     newfiletype="${newipa##*.}"
@@ -844,10 +844,10 @@ function cmd_resign
         fi
         xml=Y
 		#check to see if the info.plist is a binary
-		plist="$(cat "$bd/$ad/Info.plist")"
+		plist="$(cat "$ad/Info.plist")"
 		if [ "${plist:0:5}" != "<?xml" ]; then
 			xml=N
-			plutil -convert xml1 "$bd/$ad/Info.plist"
+			plutil -convert xml1 "$ad/Info.plist"
 		fi
 	    tmp="${infoplist#*<key>CFBundleIdentifier</key>}"
 		tmp="${tmp#*</}"
@@ -856,14 +856,13 @@ function cmd_resign
 		tmp="${tmp%>*}"
 		tfrt="$tmp>"	
 		bundlestring="-i ${appid#*.}"
-		echo "$tfrt$newbundleID$tbck" > "$bd/$ad/Info.plist"
+		echo "$tfrt$newbundleID$tbck" > "$ad/Info.plist"
 		if [ "$xml" = "N" ]; then
-			plutil -convert binary1 "$bd/$ad/Info.plist"
+			plutil -convert binary1 "$ad/Info.plist"
 		fi
 	fi
-	cd "$bd"
     rm -rf "$ad/_CodeSignature/" 2>/dev/null
-	cp "$profile" "$bd/$ad/embedded.mobileprovision"
+	cp "$profile" "$ad/embedded.mobileprovision"
     if [ -f "$ad/ResourceRules.plist" ]; then
         rm -rf "$ad/CodeResources" 2>/dev/null    
         codesign -f -s "$cert" $entitlementsstring $bundlestring --resource-rules "$ad/ResourceRules.plist" "$ad" 2>/dev/null
@@ -872,36 +871,34 @@ function cmd_resign
         codesign -f -s "$cert" $entitlementsstring $bundlestring "$ad" 2>/dev/null
     fi
     check_status "resigning the app"
-    cmd_rezip "$bd" "$newipa"
+    cmd_rezip "$newipa"
     echo "Resign Successful"
 }
 
-#take the .ipa_payload folder in directory: $1 and zip/copy it to file $2
+#take the .ipa_payload folder in the tmp directory and zip/copy it to file $1
 function cmd_rezip
 {
-filetype="${2##*.}"
-newfile="$2"
+filetype="${1##*.}"
+newfile="$1"
 if [ "$filetype" = "xcarchive" ]; then
-    newfile="${2%.*}.app"
+    newfile="${1%.*}.app"
     filetype="app"
 elif [ "$filetype" != "ipa" -a "$filetype" != "app" -a "$filetype" != "zip" ]; then
     problem_encountered "Invalid file type"
 fi
-echo "newfile: $newfile, bd: $1"
-cd $1
-if [ ! -d .ipa_payload ]; then
+if [ ! -d /tmp/ipa_payload ]; then
     problem_encountered "Nothing to zip"
 fi
 if [ "$filetype" = "ipa" ]; then
-    cd .ipa_payload
+    cd /tmp/ipa_payload
     zip -qr "$newfile" Payload/ 2>/dev/null
     check_status "zipping the ipa file"
 elif [ "$filetype" = "zip" ]; then
-    cd .ipa_payload/Payload
+    cd /tmp/ipa_payload/Payload
     zip -qr "$newfile" *.app/ 2>/dev/null
     check_status "zipping the zip file"
 elif [ "$filetype" = "app" ]; then
-    cp -r .ipa_payload/Payload/*.app/ "$newfile"
+    cp -r /tmp/ipa_payload/Payload/*.app/ "$newfile"
     check_status "coping the app file"
 fi
 }
@@ -911,7 +908,7 @@ function cmd_upload
     if [ "$filetype" != "ipa" ]; then
         problem_encountered "Can only upload ipa files"
     fi
-    profile="$bd/$ad/embedded.mobileprovision"
+    profile="$ad/embedded.mobileprovision"
     if [ "$profile" = "" ];then
         problem_encountered "No Provisioning profile"
     fi
@@ -940,18 +937,12 @@ function cmd_upload
     q="$(security delete-generic-password  -s Xcode:itunesconnect.apple.com 2>&1)"
     q="$(security add-generic-password -s Xcode:itunesconnect.apple.com -a $username -w $password -U -T $validator 2>&1)"
     echo "uploading..."
-#    output="$(xcrun -sdk iphoneos Validation -online -upload -verbose $ipa 2>/dev/null)"
     xcrun -sdk iphoneos Validation -online -upload -verbose "$bd/$ipa" 2>/dev/null
     q="$(security delete-generic-password  -s Xcode:itunesconnect.apple.com 2>&1)"
-#    echo "$output" | while read line; do
-#        if [ "$line" != "${line#warning}" -o "$line" != "${line#didCompleteUploadForApplication}" ]; then
-#            echo "$line"
-#        fi
-#    done
 }
 
 #### MAIN ####
-#if the first arg is an ipa file, use the ipas directory as the basedirectory ($bd) and the ipa as the ($ipa)
+#if the first arg is an ipa/app/zip/xcarchive file, use the ipas directory as the basedirectory ($bd) and the ipa as the ($ipa)
 #if the first arg is a path, use that path as the bd, otherwise use the working directory as the bd
 #if the first arg is a mobileprovision file, use that file as the profile ($profile) and the profiles directory as the bd
 #if the first arg is an Info.plist file, use that file as the $(infoplist) and the Info.plists directory as the bd
@@ -1037,50 +1028,50 @@ if [ "$cmd" = "clean" ]; then
     exit 0
 fi
 filetype="${ipa##*.}"
-#echo "ipa: $ipa filetype: $filetype"
 #make ad folder
 cd "$bd"
 ad=
 if [ "$filetype" = "xcarchive" ]; then
-    mkdir .ipa_payload && mkdir .ipa_payload/Payload
+    mkdir /tmp/ipa_payload && mkdir /tmp/ipa_payload/Payload
     cd "$ipa"
     tmp="$(find ./ -iname "*.app*" -maxdepth 3 -mindepth 3)"
     cd "$bd"
     tmpd="$ipa$(dirname "${tmp:2}")/"
     tmpa="$(basename "${tmp}")"
-    cp -r "$tmpd$tmpa" ".ipa_payload/Payload/$tmpa/" 2>/dev/null
+    cp -r "$tmpd$tmpa" "/tmp/ipa_payload/Payload/$tmpa/" 2>/dev/null
     check_status "accessing app file in xcarchive"
-    ad=".ipa_payload/Payload/$tmpa"
+    ad="/tmp/ipa_payload/Payload/$tmpa"
 elif [ "$filetype" = "app" ]; then
-    mkdir .ipa_payload && mkdir .ipa_payload/Payload
-    cp -r "$ipa" ".ipa_payload/Payload/$ipa/"
-    ad=".ipa_payload/Payload/$ipa"
+    mkdir /tmp/ipa_payload && mkdir /tmp/ipa_payload/Payload
+    cp -r "$ipa" "/tmp/ipa_payload/Payload/$ipa/"
+    ad="/tmp/ipa_payload/Payload/$ipa"
 elif [ "$filetype" = "ipa" ]; then
-    unzip -q "$ipa" -d .ipa_payload 2>/dev/null
+    unzip -q "$ipa" -d /tmp/ipa_payload 2>/dev/null
     check_status "unzipping ipa file"
-    if [ ! -d ".ipa_payload/Payload" ];then
+    if [ ! -d "/tmp/ipa_payload/Payload" ];then
         problem_encountered "problem unzipping ipa folder"
     fi
-    cd .ipa_payload/Payload
+    cd /tmp/ipa_payload/Payload
     app="$(find ./ -type d -maxdepth 1 -iname "*.app*")"
-    ad=".ipa_payload/Payload/${app:3}"
+    ad="/tmp/ipa_payload/Payload/${app:3}"
 elif [ "$filetype" = "zip" ]; then
-    mkdir .ipa_payload
-    unzip -q "$ipa" -d .ipa_payload/Payload 2>/dev/null
+    mkdir /tmp/ipa_payload
+    unzip -q "$ipa" -d /tmp/ipa_payload/Payload 2>/dev/null
     check_status "unzipping ipa file"
-    if [ ! -d ".ipa_payload/Payload" ];then
+    if [ ! -d "/tmp/ipa_payload/Payload" ];then
         problem_encountered "problem unzipping ipa folder"
     fi
-    cd .ipa_payload/Payload
+    cd /tmp/ipa_payload/Payload
     app="$(find ./ -type d -iname "*.app*")"
     app="$(echo "$app" | while read -r line; do if [ "$line" = "${line%.dSYM}" ]; then echo "$line"; break; fi; done)"
     if [ "$app" = "" ]; then
         problem_encountered "zip file does not contain app file"
     fi
-    ad=".ipa_payload/Payload/${app:3}"
+    ad="/tmp/ipa_payload/Payload/${app:3}"
 fi
 
 #echo "ipa: $ipa ad: $ad"
+#script_done
 
 ## COMMANDS THAT NEED AN IPA, profile or info.plist##
 
@@ -1089,7 +1080,7 @@ if [ "$cmd" = "p" -o "$cmd" = "prof" -o "$cmd" = "profile" ];then
 	#if the first arg wasn't a profile, then an ipa file is necessary
 	if [ "$profile" = "" ];then
 		assert_ipa mobileprovision
-		profile="$bd/$ad/embedded.mobileprovision"
+		profile="$ad/embedded.mobileprovision"
 	fi
 	profile="$(security cms -D -i "$profile")"
     cmd_profile $@	
@@ -1100,7 +1091,7 @@ fi
 if [ "$cmd" = "i" -o "$cmd" = "info" ];then
 	if [ "$infoplist" = "" ];then
 		assert_ipa Info.plist
-        infoplist="$bd/$ad/Info.plist"
+        infoplist="$ad/Info.plist"
     fi
     cmd_info $@
     script_done
