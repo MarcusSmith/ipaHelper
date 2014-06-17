@@ -32,6 +32,12 @@ file
 options
 .B ]
 .br
+.B ipaHelper clean
+.br
+.B ipaHelper rezip [
+outputfile
+.B ]
+.br
 .B ipaHelper verify [
 file
 .B ]
@@ -133,8 +139,6 @@ in the profile
 .B ipaHelper info [
 file
 .B ] [
--E
-.B ] [
 options
 .B ]
 .br
@@ -147,8 +151,14 @@ If no options are present, a summary of the Info.plist is displayed.
                 
 .B Info Options:
 
-.B -E, --edit
-    edit the Info.plist in vim
+.B -e
+.I editor
+.B , --edit
+.I editor
+.br 
+    edit the Info.plist with
+.I editor.
+If no editor is provided, default $EDITOR is used
 
 .B -v, --verbose 
     display the entire Info.plist in xml format
@@ -189,6 +199,24 @@ If no file is provided the first (alphabetically) ipa file in the working direct
         
 .B -dc,  --dont-clean 
     do not remove the temporary app directory after returning summary information
+
+.B CLEAN
+
+.B ipaHelper clean
+
+Cleans temporary files left over from Summary command with the --dont-clean option
+
+.B REZIP
+
+.B ipaHelper rezip [
+outputfile
+.B ]
+
+Rezips left over temporary files from Summary command with the --dont-clean option as 
+.I outputfile
+
+.I Outputfile
+must be an app, ipa, or zip file.
 
 .B VERIFY
 

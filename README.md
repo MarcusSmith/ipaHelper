@@ -12,6 +12,8 @@ ipaHelper
 **ipaHelper profile \[** *file* **\] \[** *options* **\]**  
 **ipaHelper info \[** *file* **\] \[** *options* **\]**  
 **ipaHelper summary \[** *file* **\]**  
+**ipaHelper clean**  
+**ipaHelper rezip \[** *outputfile* **\]**  
 **ipaHelper verify \[** *file* **\]**  
 **ipaHelper resign \[** *file* **\] \[** *options* **\]**  
 **ipaHelper account \[** *options* **\]**  
@@ -69,7 +71,7 @@ display the expiration date for the profile
 
 #### INFO ####
 
-**ipaHelper info \[** *file* **\] \[** *-E* **\] \[** *options* **\]**
+**ipaHelper info \[** *file* **\] \[** *options* **\]**
 
 Checks the Info.plist of an ipa, app, xcarchive, or zip *file* containing an app file, or shows the information about and Info.plist *file*
 If no *file* is provided, the first (alphabetically) ipa file in the working directory is used.
@@ -77,8 +79,8 @@ If no options are present, a summary of the Info.plist is displayed.
 
 **Info Options:**
 
-**-E, --edit**  
-edit the Info.plist in vim
+**-e** *editor* **, --edit** *editor*    
+edit the Info.plist with *editor*. If no *editor* is provided, the default $EDITOR is used.
 
 **-v, --verbose**  
 display the entire Info.plist in xml format
@@ -105,7 +107,21 @@ If no *file* is provided the first (alphabetically) ipa file in the working dire
 return the summary information in a JSON dictionary.  Also adds the a key "AppDirectory" for the temporary unzipped app
         
 **-dc, --dont-clean**  
-do not remove the temporary app directory after returning summary information
+do not remove or zip the temporary app directory after returning summary information
+
+#### CLEAN ####
+
+**ipaHelper clean**
+
+Cleans temporary files left over from Summary command with the --dont-clean option
+
+#### REZIP ####
+
+**ipaHelper rezip \[** *outputfile* **\]**  
+
+Rezips left over temporary files from Summary command with the --dont-clean option as *outputfile*
+
+*Outputfile* must be an app, ipa, or zip file.
 
 #### VERIFY ####
 

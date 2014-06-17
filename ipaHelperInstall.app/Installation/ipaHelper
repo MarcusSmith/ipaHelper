@@ -63,8 +63,30 @@ Displays usage information for the different commands.
 If -v option is present it shows the usage information for all of the commands.
 '
 
-echo "Commands:   Get   Certs   Profile   Info   Summary   Verify   Resign   Account   Upload   Help"
+echo "Commands:   Get   Certs   Profile   Info   Summary   Clean   Rezip   Verify   Resign   Account   Upload   Help"
 echo
+}
+
+function help_clean 
+{
+echo '*****CLEAN*****
+
+ipaHelper clean
+
+Cleans temporary files left over from Summary command with the --dont-clean option
+'
+}
+
+function help_rezip
+{
+echo '*****REZIP*****
+
+ipaHelper rezip outputfile
+
+Rezips left over temporary files from Summary command with the --dont-clean option as outputfile.
+
+Outputfile must be an app, ipa, or zip file.
+'
 }
 
 function help_get
@@ -127,7 +149,7 @@ function help_info
 {
 echo '*****INFO*****
 
-ipaHelper info [ file ] [ -E ] [ options ]
+ipaHelper info [ file ] [ options ]
 
 Checks the Info.plist of an ipa, app, xcarchive, or zip file containing an app file, or shows the information about an Info.plist file
 
@@ -137,7 +159,7 @@ If no options are present, a summary of the Info.plist is displayed.
                 
 Options:
 
-[-E | --edit] edit the mobileprovision file in vim
+[-e | --edit] takes an editor as an argument and edits the Info.plist in this editor.  Uses default $EDITOR if no editor provided.
                 
 [-v | --verbose] display the entire Info.plist in xml format
                 
@@ -368,29 +390,17 @@ function edit_from_args
 {
 while [ "$1" != "" ];do
 	case "$1" in
-		-E*)        tmp="${1##-E}"
-                    if  [ "${tmp:0:1}" = "=" ]; then
-                        echo "${tmp#=}"
-                    elif [ "$tmp" = "" ]; then
-                        if [ "$EDITOR" = "" ]; then
-                            echo "vim"
+        -e | --edit )   if  [ "$2" != "" ]; then
+                            echo "$2"
                         else
-                            echo "$EDITOR"
+                            if [ "$EDITOR" = "" ]; then
+                                echo "vim"
+                            else
+                                echo "$EDITOR"
+                            fi
                         fi
-                    fi
-                    break;;
-        --edit*)    tmp="${1##--edit}"
-                    if  [ "${tmp:0:1}" = "=" ]; then
-                        echo "${tmp#=}"
-                    elif [ "$tmp" = "" ]; then
-                        if [ "$EDITOR" = "" ]; then
-                            echo "vim"
-                        else
-                            echo "$EDITOR"
-                        fi
-                    fi
-                    break;;
-		* )		    shift;;
+                        break;;
+		* )		        shift;;
 	esac
 done
 }
@@ -399,7 +409,7 @@ done
 function edit_file_with
 {
 if [ "$2" != "" -a "$1" != "" ]; then
-    "$2" "$1" 2>/dev/null
+    "$2" "$1"
     check_status "editing file"
 fi
 }
@@ -493,6 +503,8 @@ elif [ "$1" = "-v" ]; then
     help_profile
     help_info
     help_summary
+    help_clean
+    help_rezip
     help_verify
     help_resign
     help_account
@@ -500,6 +512,8 @@ elif [ "$1" = "-v" ]; then
 else
     while [ "$1" != "" ]; do
         case "$1" in
+            [cC]lean )  help_clean;;
+            [rR]ezip )  help_rezip;;
             [hH]* ) help_help;;
             [gG]* ) help_get;;
             [cC]* ) help_certs;;
@@ -516,6 +530,7 @@ else
     done
 fi
 }
+
 
 function cmd_certs
 {
@@ -1124,6 +1139,12 @@ fi
 #resign command, to resign an ipa
 if [ "$cmd" = "r" -o "$cmd" = "resign" ];then
     cmd_resign $@
+    script_done
+fi
+
+#rezip command, to zip up uncleaned files into an ipa file
+if [ "$cmd" = "rezip" ]; then
+    cmd_rezip "$bd/$ipa"
     script_done
 fi
 
