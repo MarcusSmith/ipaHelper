@@ -87,7 +87,7 @@ only display profiles matching *pattern*
 only display profiles with exact matches to the bundle ID, and not matching wildcard profiles
 
 **-a, --all**  
-display all profiles in the users library.  Ignores --matching and --no-wildcard options
+display all profiles in the users library.  Ignores --no-wildcard option
 
 **--json**  
 return the profile information in a JSON dictionary

@@ -161,7 +161,7 @@ Options:
 
 [-n | --no-wildcard] only shows profiles with exact matches to the bundle ID, and not matching wildcard profiles.
 
-[-a | --all] displays all profiles in the library.  Ignores --matching and --no-wildcard options.
+[-a | --all] displays all profiles in the library.  Ignores --no-wildcard option.
 
 [--json] returns the profile information in a JSON dictionary.
 '
@@ -347,7 +347,9 @@ done
 function parse_profile2
 {
 fullprofile="$(security cms -D -i "$1")"
-echo "$fullprofile" | grep 'TeamName\|application-identifier\|<key>Name</key>\|UUID' -A 1 | grep 'string' | awk '{split($0,a,"</?string>"); print a[2]}' | tr '\n' '|' 
+echo "$fullprofile" | grep 'application-identifier\|<key>Name</key>\|UUID' -A 1 | grep 'string' | awk '{split($0,a,"</?string>"); print a[2]}' | tr '\n' '|' 
+team="$(echo -n "$fullprofile" | grep 'TeamName' -A 1 | grep 'string' | awk '{split($0,a,"</?string>"); print a[2]}' | tr -d '\n')"
+echo -n "${team}|"
 echo -n "$(profile_type "$fullprofile")|"
 expiration="$(echo -n "$fullprofile" | grep 'ExpirationDate' -A 1 | grep 'date' | awk '{split($0,a,"</?date>"); print a[2]}')"
 echo -n "$(date -j -f "%Y-%m-%dT%H:%M:%SZ" "$expiration" +"%b %e, %Y")|"
@@ -408,14 +410,14 @@ done
 function profiles_to_JSON
 {
 echo '{"profiles":['
-echo "$1" | awk '{split($0,a,"|"); print "{\"Profile\":\""a[2]"\",\"App ID\":\""a[1]"\",\"Team\":\""a[3]"\",\"Type\":\""a[5]"\",\"Expires\":\""a[6]"\",\"UUID\":\""a[4]"\",\"File\":\""a[7]"\"}"}'
+echo "$1" | awk '{split($0,a,"|"); print "{\"Profile\":\""a[2]"\",\"App ID\":\""a[1]"\",\"Team\":\""a[4]"\",\"Type\":\""a[5]"\",\"Expires\":\""a[6]"\",\"UUID\":\""a[3]"\",\"File\":\""a[7]"\"}"}'
 echo "]}"
 }
 
 #converts profiles ($1) to human readable format
 function profiles_to_readable
 {
-echo "$1" | awk '{split($0,a,"|"); print "***** PROFILE *****"; print "Profile:"a[2]; print " App ID:"a[1]; print "   Team:"a[3];  print "   Type:"a[5];  print "Expires:"a[6]; print "   UUID:"a[4]; print "   File:"a[7]; }'
+echo "$1" | awk '{split($0,a,"|"); print "***** PROFILE *****"; print "Profile:"a[2]; print " App ID:"a[1]; print "   Team:"a[4];  print "   Type:"a[5];  print "Expires:"a[6]; print "   UUID:"a[3]; print "   File:"a[7]; }'
 }
 
 #returns profile name from a list of resign args
@@ -912,17 +914,19 @@ function cmd_summary
 
 function cmd_find
 {
-cp "$ad/Info.plist" "/tmp/Info.plist"
-plutil -convert xml1 "/tmp/Info.plist"
-info="$(cat "/tmp/Info.plist")"
-bundleid="$(value_for_key "$info" "CFBundleIdentifier")"
-library="$(library_profiles)"
 all="$(all_from_args $@)"
 if [ "$all" = "" ]; then
-    matching="$(matching_from_args $@)"
-    if [ "$matching" != "" ]; then
-        library="$(echo "$library" | grep -i "$matching")"
-    fi
+    cp "$ad/Info.plist" "/tmp/Info.plist"
+    plutil -convert xml1 "/tmp/Info.plist"
+    info="$(cat "/tmp/Info.plist")"
+    bundleid="$(value_for_key "$info" "CFBundleIdentifier")"
+fi
+library="$(library_profiles)"
+matching="$(matching_from_args $@)"
+if [ "$matching" != "" ]; then
+    library="$(echo "$library" | grep -i "$matching")"
+fi
+if [ "$all" = "" ]; then
     profiles="$(profiles_direct_match "$library" "$bundleid")"
     nw="$(nowildcard_from_args $@)"
     if [ "$nw" != "nw" ]; then 
@@ -1302,7 +1306,7 @@ fi
 #echo "ipa: $ipa ad: $ad"
 #script_done
 
-## COMMANDS THAT NEED AN IPA, profile or info.plist##
+## COMMANDS THAT MAY NEED AN IPA##
 
 #profile command
 if [ "$cmd" = "p" -o "$cmd" = "prof" -o "$cmd" = "profile" ];then
@@ -1326,14 +1330,17 @@ if [ "$cmd" = "i" -o "$cmd" = "info" ];then
     script_done
 fi
 
-## COMMANDS THAT NEED AN IPA
-assert_ipa
-
 #find command, to find profiles in library matching the app's bundle ID
 if [ "$cmd" = "find" ]; then
+    if [ "$(all_from_args $@)" = "" ]; then
+        assert_ipa "--all option"
+    fi
     cmd_find $@
     script_done
 fi
+
+## COMMANDS THAT NEED AN IPA
+assert_ipa
 
 #verify command, to see if an ipa is signed
 if [ "$cmd" = "v" -o "$cmd" = "verify" ]; then
