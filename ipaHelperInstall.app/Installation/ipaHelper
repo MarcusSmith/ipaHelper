@@ -8,7 +8,7 @@ if [ $? -ne 0 ]; then
 fi
 }
 
-#if $ipa is "" then there's a problem, exit. if $1 is passed in, it is another possible required item (instead of the ipa file)
+#if $ipa is "" then theres a problem, exit. if $1 is passed in, it is another possible required item (instead of the ipa file)
 function assert_ipa
 {
 if [ "$ipa" = "" ];then
@@ -604,6 +604,37 @@ echo '</dict>'
 echo '</plist>'
 }
 
+function make_resource_rules
+{
+echo '<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+<key>rules</key>
+<dict>
+<key>.*</key>
+<true/>
+<key>Info.plist</key>
+<dict>
+<key>omit</key>
+<true/>
+<key>weight</key>
+<real>10</real>
+</dict>
+<key>ResourceRules.plist</key>
+<dict>
+<key>omit</key>
+<true/>
+<key>weight</key>
+<real>100</real>
+</dict>
+</dict>
+</dict>
+</plist>
+'
+}
+
+
 function make_plist
 {
     echo '<?xml version="1.0" encoding="UTF-8"?>'
@@ -1038,15 +1069,12 @@ function cmd_resign
 			plutil -convert binary1 "$ad/Info.plist"
 		fi
 	fi
-    rm -rf "$ad/_CodeSignature/" 2>/dev/null
+    rm -rf "$ad/_CodeSignature/" "$ad/ResourceRules.plist" 2>/dev/null
 	cp "$profile" "$ad/embedded.mobileprovision"
-    if [ -f "$ad/ResourceRules.plist" ]; then
-        rm -rf "$ad/CodeResources" 2>/dev/null    
-        codesign -f -s "$cert" $entitlementsstring $bundlestring --resource-rules "$ad/ResourceRules.plist" "$ad" 2>/dev/null
-    else
-        echo "Warning: no ResourceRules.plist"
-        codesign -f -s "$cert" $entitlementsstring $bundlestring "$ad" 2>/dev/null
+    if [ ! -f "$ad/ResourceRules.plist" ]; then
+        make_resource_rules > $ad/ResourceRules.plist
     fi
+    codesign -f -s "$cert" $entitlementsstring $bundlestring --resource-rules "$ad/ResourceRules.plist" "$ad" 2>/dev/null
     check_status "resigning the app"
     cmd_rezip "$newipa"
     echo "Resign Successful"
