@@ -145,6 +145,28 @@ Options:
 '
 }
 
+function help_find
+{
+echo '*****FIND*****
+
+ipaHelper find [file] [options]
+
+Looks for profiles saved in the users library matching the bundle ID of the ipa, app, xcarchive or zip file containing an app file. 
+
+If no file is provided, the first (alphabetically) ipa file in the working directory is used.
+
+Options:
+
+[-m | --matching] takes a pattern as an argument, only displays profiles matching this pattern.
+
+[-n | --no-wildcard] only shows profiles with exact matches to the bundle ID, and not matching wildcard profiles.
+
+[-a | --all] displays all profiles in the library.  Ignores --matching and --no-wildcard options.
+
+[--json] returns the profile information in a JSON dictionary.
+'
+}
+
 function help_info
 {
 echo '*****INFO*****
@@ -348,14 +370,8 @@ wildcards="$(wildcard_profiles "$1")"
 echo "$wildcards" | while read profile; do
     tmp="${profile%%|*}"
     tmp="${tmp#*.}"
-    if [ "${2: -1}" = "*" ]; then
-        if [[ "${2%?}"* = "${tmp%?}"* ]]; then
-            echo "$profile"
-        fi
-    else
-        if [[ "$2" = "${tmp%?}"* ]]; then
-            echo "$profile"
-        fi
+    if [[ "$2" = "${tmp%?}"* ]]; then
+        echo "$profile"
     fi
 done
 }
@@ -457,6 +473,17 @@ while [ "$1" != "" ];do
 done
 }
 
+function all_from_args
+{
+while [ "$1" != "" ];do
+	case "$1" in
+		-a | --all ) 	echo "all"
+						break;;
+		* )				shift;;
+	esac
+done
+}
+
 function nowildcard_from_args
 {
 while [ "$1" != "" ];do
@@ -472,7 +499,7 @@ function matching_from_args
 {
 while [ "$1" != "" ];do
 	case "$1" in
-        -m | --matches )   if  [ "$2" != "" -a "${2:0:1}" != "-" ]; then
+        -m | --matching )   if  [ "$2" != "" -a "${2:0:1}" != "-" ]; then
                                 echo "$2"
                             fi
                             break;;
@@ -596,6 +623,7 @@ elif [ "$1" = "-v" ]; then
     help_get
     help_certs
     help_profile
+    help_find
     help_info
     help_summary
     help_clean
@@ -607,18 +635,19 @@ elif [ "$1" = "-v" ]; then
 else
     while [ "$1" != "" ]; do
         case "$1" in
-            [cC]lean )  help_clean;;
-            [rR]ezip )  help_rezip;;
-            [hH]* ) help_help;;
-            [gG]* ) help_get;;
-            [cC]* ) help_certs;;
-            [pP]* ) help_profile;;
-            [iI]* ) help_info;;
-            [sS]* ) help_summary;;
-            [vV]* ) help_verify;;
-            [rR]* ) help_resign;;
-            [aA]* ) help_account;;
-            [uU]* ) help_upload;;
+            [cC]lean )      help_clean;;
+            [rR]ezip )      help_rezip;;
+            [hH]elp* )      help_help;;
+            [gG]et* )       help_get;;
+            [cC]erts )      help_certs;;
+            [pP]rofile* )   help_profile;;
+            [fF]ind* )      help_find;;
+            [iI]nfo* )      help_info;;
+            [sS]ummary* )   help_summary;;
+            [vV]erify* )    help_verify;;
+            [rR]esign* )    help_resign;;
+            [aA]ccount* )   help_account;;
+            [uU]pload* )    help_upload;;
             * ) problem_encountered "Not a valid command";;
         esac
         shift
@@ -840,15 +869,28 @@ plutil -convert xml1 "/tmp/Info.plist"
 info="$(cat "/tmp/Info.plist")"
 bundleid="$(value_for_key "$info" "CFBundleIdentifier")"
 library="$(library_profiles)"
-matching="$(matching_from_args $@)"
-if [ "$matching" != "" ]; then
-    library="$(echo "$library" | grep -i "$matching")"
-fi
-profiles="$(profiles_direct_match "$library" "$bundleid")"
-nw="$(nowildcard_from_args $@)"
-if [ "$nw" != "nw" ]; then 
-    profiles="$profiles
+all="$(all_from_args $@)"
+if [ "$all" = "" ]; then
+    matching="$(matching_from_args $@)"
+    if [ "$matching" != "" ]; then
+        library="$(echo "$library" | grep -i "$matching")"
+    fi
+    profiles="$(profiles_direct_match "$library" "$bundleid")"
+    nw="$(nowildcard_from_args $@)"
+    if [ "$nw" != "nw" ]; then 
+        if [ "$profiles" != "" ]; then
+            profiles="$profiles
 $(profiles_wildcard_match "$library" "$bundleid")"
+        else
+            profiles="$(profiles_wildcard_match "$library" "$bundleid")"
+        fi
+    fi
+    if [ "$profiles" = "" ]; then
+        echo "No matching profiles"
+        script_done
+    fi
+else
+    profiles="$library"
 fi
 json="$(JSON_from_args $@)"
 if [ "$json" = "json" ]; then

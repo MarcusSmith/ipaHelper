@@ -10,6 +10,7 @@ ipaHelper
 **ipaHelper get \[** *mobileprovision files...*  **\]**  
 **ipaHelper certs \[** *substring* **\]**  
 **ipaHelper profile \[** *file* **\] \[** *options* **\]**  
+**ipaHelper find \[** *file* **\] \[** *options* **\]**  
 **ipaHelper info \[** *file* **\] \[** *options* **\]**  
 **ipaHelper summary \[** *file* **\]**  
 **ipaHelper clean**  
@@ -68,6 +69,28 @@ display the team name on the certificate
 
 **-x, --expiration**  
 display the expiration date for the profile
+
+#### FIND ####
+
+**ipaHelper find \[** *file* **\] \[** *options* **\]**  
+
+Looks for profiles saved in the users library matching the bundle ID of the ipa, app, xcarchive or zip file  containing  an  app file.
+
+If no file is provided, the first (alphabetically) ipa file in the working directory is used.
+
+**Find Options:**
+
+**-m** *pattern* **, --matching** *pattern*    
+only display profiles matching *pattern*
+
+**-n, --no-wildcard**  
+only display profiles with exact matches to the bundle ID, and not matching wildcard profiles
+
+**-a, --all**  
+display all profiles in the users library.  Ignores --matching and --no-wildcard options
+
+**--json**  
+return the profile information in a JSON dictionary
 
 #### INFO ####
 
