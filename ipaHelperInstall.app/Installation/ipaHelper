@@ -340,11 +340,18 @@ echo "               UUID: $(value_for_key "$1" "UUID")"
 function library_profiles
 {
 find ~/Library/MobileDevice/"Provisioning Profiles" -iname "*.mobileprovision" | while read profile; do 
-    fullprofile="$(security cms -D -i "$profile")"
-    echo "$fullprofile" | grep 'TeamName\|application-identifier\|<key>Name</key>' -A 1 | grep 'string' | awk '{split($0,a,"</?string>"); print a[2]}' | tr '\n' '|' 
-    echo -n "$(profile_type "$fullprofile")|"
-    echo "$profile"  
+    echo "$(parse_profile2 "$profile")"
 done
+}
+
+function parse_profile2
+{
+fullprofile="$(security cms -D -i "$1")"
+echo "$fullprofile" | grep 'TeamName\|application-identifier\|<key>Name</key>\|UUID' -A 1 | grep 'string' | awk '{split($0,a,"</?string>"); print a[2]}' | tr '\n' '|' 
+echo -n "$(profile_type "$fullprofile")|"
+expiration="$(echo -n "$fullprofile" | grep 'ExpirationDate' -A 1 | grep 'date' | awk '{split($0,a,"</?date>"); print a[2]}')"
+echo -n "$(date -j -f "%Y-%m-%dT%H:%M:%SZ" "$expiration" +"%b %e, %Y")|"
+echo "$1"  
 }
 
 function profile_type
@@ -401,14 +408,14 @@ done
 function profiles_to_JSON
 {
 echo '{"profiles":['
-echo "$1" | awk '{split($0,a,"|"); print "{\"App ID\":\""a[1]"\",\"Profile\":\""a[2]"\",\"Team\":\""a[3]"\",\"Type\":\""a[4]"\",\"File\":\""a[5]"\"}"}'
+echo "$1" | awk '{split($0,a,"|"); print "{\"Profile\":\""a[2]"\",\"App ID\":\""a[1]"\",\"Team\":\""a[3]"\",\"Type\":\""a[5]"\",\"Expires\":\""a[6]"\",\"UUID\":\""a[4]"\",\"File\":\""a[7]"\"}"}'
 echo "]}"
 }
 
-#conversta profiles ($1) to human readable format
+#converts profiles ($1) to human readable format
 function profiles_to_readable
 {
-echo "$1" | awk '{split($0,a,"|"); print "***** PROFILE *****"; print " App ID:"a[1]; print "Profile:"a[2]; print "   Team:"a[3];  print "   Type:"a[4];print "   File:"a[5]; }'
+echo "$1" | awk '{split($0,a,"|"); print "***** PROFILE *****"; print "Profile:"a[2]; print " App ID:"a[1]; print "   Team:"a[3];  print "   Type:"a[5];  print "Expires:"a[6]; print "   UUID:"a[4]; print "   File:"a[7]; }'
 }
 
 #returns profile name from a list of resign args
