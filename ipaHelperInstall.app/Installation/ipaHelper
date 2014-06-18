@@ -331,6 +331,7 @@ function parse_profile
 echo "        App ID Name: $(value_for_key "$1" "AppIDName")"
 echo "     App Identifier: $(value_for_key "$1" "application-identifier")"
 echo "       Profile Name: $(value_for_key "$1" "Name")"
+echo "       Profile Type: $(profile_type "$1")"
 echo "          Team Name: $(value_for_key "$1" "TeamName")"
 echo "    Expiration Date: $(date -j -f "%Y-%m-%dT%H:%M:%SZ" $(value_for_key "$1" "ExpirationDate") +"%b %e, %Y")"
 echo "               UUID: $(value_for_key "$1" "UUID")"
@@ -341,14 +342,23 @@ function library_profiles
 find ~/Library/MobileDevice/"Provisioning Profiles" -iname "*.mobileprovision" | while read profile; do 
     fullprofile="$(security cms -D -i "$profile")"
     echo "$fullprofile" | grep 'TeamName\|application-identifier\|<key>Name</key>' -A 1 | grep 'string' | awk '{split($0,a,"</?string>"); print a[2]}' | tr '\n' '|' 
-    type="$(echo "$fullprofile" | grep "task" -A 1 | tail -1)"
-    if [ "${type#*<}" = "true/>" ]; then
-        echo -n "Development|"
-    else
-        echo -n "Distribution|"
-    fi
+    echo -n "$(profile_type "$fullprofile")|"
     echo "$profile"  
 done
+}
+
+function profile_type
+{
+type="$(echo "$1" | grep "task" -A 1 | tail -1)"
+if [ "${type#*<}" = "true/>" ]; then
+    echo -n "Development"
+else
+    if [ "$(echo "$1" | grep "ProvisionedDevices")" != "" ]; then
+        echo -n "Adhoc Distribution"
+    else
+        echo -n "Distribution"
+    fi
+fi
 }
 
 # $1 is the profile list, $2 is the bundle ID to match

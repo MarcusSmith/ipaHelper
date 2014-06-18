@@ -24,7 +24,6 @@ OSStatus GeneratePreviewForURL(void *thisInterface, QLPreviewRequestRef preview,
     
     NSPipe *pipe = [NSPipe pipe];
     [task setStandardOutput: pipe];
-    //The magic line that keeps your log where it belongs
     [task setStandardInput:[NSPipe pipe]];
     
     NSFileHandle *file;
@@ -156,6 +155,7 @@ OSStatus GeneratePreviewForURL(void *thisInterface, QLPreviewRequestRef preview,
                              ];
         NSArray *profileInfo = @[@{@"key":@"App ID Name:",@"value":(NSString *)summaryDictionary[@"App ID Name"]},
                                  @{@"key":@"Profile Name:",@"value":(NSString *)summaryDictionary[@"Profile Name"]},
+                                 @{@"key":@"Profile Type:",@"value":(NSString *)summaryDictionary[@"Profile Type"]},
                                  @{@"key":@"Team Name:",@"value":(NSString *)summaryDictionary[@"Team Name"]},
                                  @{@"key":@"Application ID:",@"value":(NSString *)summaryDictionary[@"App Identifier"]},
                                  @{@"key":@"Profile Expires:",@"value":(NSString *)summaryDictionary[@"Expiration Date"]},
