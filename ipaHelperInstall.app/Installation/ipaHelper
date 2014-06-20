@@ -239,7 +239,11 @@ Options:
         
 [-p | --profile] takes a specific profile as an argument, uses this profile for resigning the ipa
 
-[-f | --force] will overwrite output file on resign without asking.  Will not resign if App ID and Bundle IDs do not match.
+[-f | --find] looks for a profile in the users library matching the ipas bundle ID
+
+[-m | --matching] takes a pattern as an argument.  restricts the find command to profiles matching the pattern.
+
+[-F | --force] will overwrite output file on resign without asking.  Will not resign if App ID and Bundle IDs do not match.
 
 [-d | --double-check] displays information about the file, its Info.plist, and the provisioning profile and offers a choice to continue or quit
 
@@ -337,11 +341,50 @@ echo "    Expiration Date: $(date -j -f "%Y-%m-%dT%H:%M:%SZ" $(value_for_key "$1
 echo "               UUID: $(value_for_key "$1" "UUID")"
 }
 
+# $1 is what is grepped. $2 is a new line delimited list of required matches
+function grep_loop
+{
+result="$1"
+while read search; do
+    result="$(echo "$result" | grep -i "$search")"
+done <<< "$2"
+echo "$result"
+}
 function library_profiles
 {
 find ~/Library/MobileDevice/"Provisioning Profiles" -iname "*.mobileprovision" | while read profile; do 
     echo "$(parse_profile2 "$profile")"
 done
+}
+
+#return first profile matching bundle ID $1 and criteria $2
+function first_library_match
+{
+library="$(find ~/Library/MobileDevice/"Provisioning Profiles" -iname "*.mobileprovision")"
+while read profile; do 
+    fullprofile="$(parse_profile2 "$profile")"
+    result="$(profiles_direct_match "$fullprofile" "$1")"
+    if [ "$result" != "" ]; then
+        result="$(grep_loop "$result" "$2")"
+    fi
+    if [ "$result" != "" ]; then
+        echo "$result"
+        break
+    fi
+done <<< "$library"
+if [ "$result" = "" ]; then
+    while read profile; do 
+        fullprofile="$(parse_profile2 "$profile")" 
+        result="$(profiles_wildcard_match "$fullprofile" "$1")"
+        if [ "$result" != "" ]; then
+            result="$(grep_loop "$result" "$2")"
+        fi
+        if [ "$result" != "" ]; then
+            echo "$result"
+            break
+        fi
+    done <<< "$library"
+fi
 }
 
 function parse_profile2
@@ -492,6 +535,17 @@ while [ "$1" != "" ];do
 done
 }
 
+function find_from_args
+{
+while [ "$1" != "" ];do
+	case "$1" in
+		-f | --find ) 	echo "find"
+					    break;;
+		* )			    shift;;
+	esac
+done
+}
+
 function all_from_args
 {
 while [ "$1" != "" ];do
@@ -518,9 +572,10 @@ function matching_from_args
 {
 while [ "$1" != "" ];do
 	case "$1" in
-        -m | --matching )   if  [ "$2" != "" -a "${2:0:1}" != "-" ]; then
+        -m | --matching )   while  [ "$2" != "" -a "${2:0:1}" != "-" ]; do
                                 echo "$2"
-                            fi
+                                shift
+                            done
                             break;;
 		* )		            shift;;
 	esac
@@ -559,7 +614,7 @@ function force_from_args
 {
 while [ "$1" != "" ];do
 	case "$1" in
-		-f | --force ) 	echo "force"
+		-F | --force ) 	echo "force"
 						break;;
 		* )				shift
 	esac
@@ -843,7 +898,7 @@ function cmd_profile
 
 function cmd_info
 {
-edit="$(edit_from_args $@)"
+edit="$(edit_from_args "$@")"
 if [ "$edit" != "" ]; then
         xml=Y
         #check to see if the info.plist is a binary
@@ -914,7 +969,7 @@ function cmd_summary
 
 function cmd_find
 {
-all="$(all_from_args $@)"
+all="$(all_from_args "$@")"
 if [ "$all" = "" ]; then
     cp "$ad/Info.plist" "/tmp/Info.plist"
     plutil -convert xml1 "/tmp/Info.plist"
@@ -922,13 +977,13 @@ if [ "$all" = "" ]; then
     bundleid="$(value_for_key "$info" "CFBundleIdentifier")"
 fi
 library="$(library_profiles)"
-matching="$(matching_from_args $@)"
+matching="$(matching_from_args "$@")"
 if [ "$matching" != "" ]; then
-    library="$(echo "$library" | grep -i "$matching")"
+    library="$(grep_loop "$library" "$matching")"
 fi
 if [ "$all" = "" ]; then
     profiles="$(profiles_direct_match "$library" "$bundleid")"
-    nw="$(nowildcard_from_args $@)"
+    nw="$(nowildcard_from_args "$@")"
     if [ "$nw" != "nw" ]; then 
         if [ "$profiles" != "" ]; then
             profiles="$profiles
@@ -944,7 +999,7 @@ $(profiles_wildcard_match "$library" "$bundleid")"
 else
     profiles="$library"
 fi
-json="$(JSON_from_args $@)"
+json="$(JSON_from_args "$@")"
 if [ "$json" = "json" ]; then
     profiles_to_JSON "$profiles"
 else
@@ -962,27 +1017,35 @@ function cmd_verify
 function cmd_resign
 {
     cd "$bd"
-	profile="$(profile_from_args $@)"
-	if [ "$profile" = "" ];then
+	cp "$ad/Info.plist" "/tmp/Info.plist"
+    plutil -convert xml1 "/tmp/Info.plist"
+    infoplist="$(cat "/tmp/Info.plist")"
+	bundleid="$(value_for_key "$infoplist" CFBundleIdentifier)"
+    find="$(find_from_args "$@")"
+    profile=
+    if [ "$find" = "find" ]; then
+        matching="$(matching_from_args "$@")"
+        profile="$(first_library_match "$bundleid" "$matching")"
+        profile="${profile##*|}"
+    else
+    	profile="$(profile_from_args "$@")"    
+    fi
+    if [ "$profile" = "" ];then
 		problem_encountered "No Provisioning profile"
 	fi
 	fullprofile="$(security cms -D -i "$profile")"
 	cert="$(value_for_key "$fullprofile" TeamName)"
 	appid="$(value_for_key "$fullprofile" application-identifier)"
-	cp "$ad/Info.plist" "/tmp/Info.plist"
-    plutil -convert xml1 "/tmp/Info.plist"
-    infoplist="$(cat "/tmp/Info.plist")"
-	bundleid="$(value_for_key "$infoplist" CFBundleIdentifier)"
 	entitlementsstring="--entitlements /tmp/Entitlements.plist"
     tent="$(make_entitlements_from_profile "$fullprofile")"
     echo "$tent" > /tmp/Entitlements.plist
     #check to see if there was an output file
-    newipa="$(output_from_args $@)"
+    newipa="$(output_from_args "$@")"
     newfiletype="${newipa##*.}"
     if [ "$newfiletype" != "ipa" -a "$newfiletype" != "app" -a "$newfiletype" != "zip" -a "$newfiletype" != "xcarchive" ]; then
         problem_encountered "Invalid output type"
     fi
-    force="$(force_from_args $@)"
+    force="$(force_from_args "$@")"
     #see if this output file already exists
     if [ -f "$newipa" -a "$force" != "force" ]; then
         echo "$(basename "$newipa") already exists."
@@ -998,7 +1061,7 @@ function cmd_resign
         done
         echo ""
     fi
-    dc="$(dc_from_args $@)"
+    dc="$(dc_from_args "$@")"
 	if [ "$dc" = "dc" ];then
         echo '*************************IPA File*************************'
         echo "          input file: $ipa"
@@ -1188,34 +1251,39 @@ else
 fi
 
 if [ "$cmd" = "test" ]; then
-    library="$(library_profiles)"
-    echo "$library"
+    matching="$(matching_from_args "$@")"
+    profile="$(first_library_match "$1" "$matching")"
+    if [ "$profile" != "" ]; then
+        echo "$profile"
+    else
+        echo "no matches"
+    fi    
     script_done    
 fi
 
 
 #if cmd was "help" or "h" show the usage page
 if [ "$cmd" = "help" -o "$cmd" = "h" ];then
-    cmd_help $@
+    cmd_help "$@"
     script_done
 fi
 
 #if the cmd is "c" or "certs" or "certificates", display the information about certificates in the keychain
 #if there is a following argument, it limits the certificates shown to ones matching this substring
 if [ "$cmd" = "c" -o "$cmd" = "certs" -o "$cmd" = "certficiates" ];then
-    cmd_certs $@
+    cmd_certs "$@"
     script_done
 fi
 
 #if the cmd is "get" or "g", move following args to the working directory if they are mobileprovision files.  If no args specified, pull all mobileprovision files from the ~/Downloads/ folder
 if [ "$cmd" = "get" -o "$cmd" = "g" ];then
-    cmd_get $@
+    cmd_get "$@"
     script_done
 fi
 
 #if the cmd is "account" or "a", modify the accounts plist (for use in linking certificates to iTunesConnect accounts)
 if [ "$cmd" = "account" -o "$cmd" = "accounts" -o "$cmd" = "a" ];then
-    cmd_account $@
+    cmd_account "$@"
     script_done
 fi
 
@@ -1316,7 +1384,7 @@ if [ "$cmd" = "p" -o "$cmd" = "prof" -o "$cmd" = "profile" ];then
 		profile="$ad/embedded.mobileprovision"
 	fi
 	profile="$(security cms -D -i "$profile")"
-    cmd_profile $@	
+    cmd_profile "$@"	
     script_done
 fi
 
@@ -1326,16 +1394,16 @@ if [ "$cmd" = "i" -o "$cmd" = "info" ];then
 		assert_ipa Info.plist
         infoplist="$ad/Info.plist"
     fi
-    cmd_info $@
+    cmd_info "$@"
     script_done
 fi
 
 #find command, to find profiles in library matching the app's bundle ID
 if [ "$cmd" = "find" ]; then
-    if [ "$(all_from_args $@)" = "" ]; then
+    if [ "$(all_from_args "$@")" = "" ]; then
         assert_ipa "--all option"
     fi
-    cmd_find $@
+    cmd_find "$@"
     script_done
 fi
 
@@ -1344,19 +1412,19 @@ assert_ipa
 
 #verify command, to see if an ipa is signed
 if [ "$cmd" = "v" -o "$cmd" = "verify" ]; then
-	cmd_verify $@
+	cmd_verify "$@"
     script_done
 fi
 
 #summary command, to show info.plist and profile information in brief summary
 if [ "$cmd" = "s" -o "$cmd" = "summary" ]; then
     summary="$(cmd_summary)"
-    if [ "$(JSON_from_args $@)" = "json" ]; then
+    if [ "$(JSON_from_args "$@")" = "json" ]; then
         summary="$(convert_to_JSON "$summary")"
         summary="${summary%,}}"
     fi
     echo "$summary"
-    if [ "$(dontclean_from_args $@)" = "dc" ]; then
+    if [ "$(dontclean_from_args "$@")" = "dc" ]; then
         exit 0
     else
         script_done
@@ -1365,7 +1433,7 @@ fi
 
 #resign command, to resign an ipa
 if [ "$cmd" = "r" -o "$cmd" = "resign" ];then
-    cmd_resign $@
+    cmd_resign "$@"
     script_done
 fi
 
@@ -1377,7 +1445,7 @@ fi
 
 #if cmd is "upload" or "u" try to upload the ipa to iTunesConnect
 if [ "$cmd" = "u" -o "$cmd" = "upload" ];then
-    cmd_upload $@
+    cmd_upload "$@"
     script_done
 fi
 #cmd was not a valid command
