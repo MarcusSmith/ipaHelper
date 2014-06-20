@@ -227,7 +227,7 @@
 					<key>COMMAND_STRING</key>
 					<string>profile="${@: -1}"
 while [ "$2" != "" ]; do
-	ipaHelper resign "$1" -f -p "$profile" 2&gt;&amp;1
+	ipaHelper resign "$1" --force -p "$profile" 2&gt;&amp;1
 	shift
 done
 </string>
@@ -598,21 +598,21 @@ done
 	</array>
 	<key>connectors</key>
 	<dict>
-		<key>DEFF0685-9A19-4DFF-BAC7-2DC71DF0D482</key>
+		<key>8E515776-B0F7-46D3-ABB1-994721DC5DEC</key>
 		<dict>
 			<key>from</key>
 			<string>95D0D9B8-8781-4F48-87DD-C758C3DB074B - 95D0D9B8-8781-4F48-87DD-C758C3DB074B</string>
 			<key>to</key>
 			<string>5B1D209F-DFC4-4478-B64B-9795616593E6 - 5B1D209F-DFC4-4478-B64B-9795616593E6</string>
 		</dict>
-		<key>F8A71D77-6212-4CC8-8234-0DA1C1695A5F</key>
+		<key>DC01EEF3-3C3F-4266-ACFB-C09AE47E369A</key>
 		<dict>
 			<key>from</key>
 			<string>354B148D-ACBA-4C96-83E6-472D32432EFE - 354B148D-ACBA-4C96-83E6-472D32432EFE</string>
 			<key>to</key>
 			<string>F5BAC43B-726D-4661-939E-810EAABB201A - F5BAC43B-726D-4661-939E-810EAABB201A</string>
 		</dict>
-		<key>FAD5A683-4232-4C36-A90A-D789BF859254</key>
+		<key>F3E967A3-BC17-480A-A394-C2BE2CF2A7BE</key>
 		<dict>
 			<key>from</key>
 			<string>5B1D209F-DFC4-4478-B64B-9795616593E6 - 5B1D209F-DFC4-4478-B64B-9795616593E6</string>
