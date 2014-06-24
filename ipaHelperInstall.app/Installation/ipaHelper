@@ -241,13 +241,14 @@ Options:
 
 [-f | --find] looks for a profile in the users library matching the ipas bundle ID
 
-[-m | --matching] takes a pattern as an argument.  restricts the find command to profiles matching the pattern.
+[-m | --matching] takes patterns as arguments.  restricts the find command to profiles matching the patterns.
 
-[-F | --force] will overwrite output file on resign without asking.  Will not resign if App ID and Bundle IDs do not match.
+[-o | --output ] takes an output file as an argument, zips the resigned ipa file using this name instead of [ipa filename]-resigned.ipa
 
 [-d | --double-check] displays information about the file, its Info.plist, and the provisioning profile and offers a choice to continue or quit
 
-[-o | --output ] takes an output file as an argument, zips the resigned ipa file using this name instead of [ipa filename]-resigned.ipa
+[-F | --force] will overwrite output file on resign without asking.  Uses the profiles App ID if the App ID and Bundle ID do not match.
+
 '
 }
 
@@ -468,15 +469,15 @@ function profile_from_args
 {
 tmp=
 while [ "$1" != "" ];do
-	case "$1" in
+    case "$1" in
 		-p | --profile )	if [ "${2:0:1}" = "-" -o "$2" = "" ];then
 		        				break
 				        	fi
 				        	cd "$wd"
 				        	tmp="$2"
 				        	if [[ "$2" = *"/"* ]]; then
-					    	cd $(dirname "${2}")
-					    	tmp=$(basename "${2}")
+					    	cd "$(dirname "$2")"
+					    	tmp="$(basename "$2")"
     				    	fi
     					    dir="$(pwd)"
     				    	echo "$dir/$tmp"
@@ -1156,7 +1157,7 @@ function cmd_resign
     rm -rf "$ad/_CodeSignature/" "$ad/ResourceRules.plist" 2>/dev/null
 	cp "$profile" "$ad/embedded.mobileprovision"
     if [ ! -f "$ad/ResourceRules.plist" ]; then
-        make_resource_rules > $ad/ResourceRules.plist
+        make_resource_rules > "$ad"/ResourceRules.plist
     fi
     codesign -f -s "$cert" $entitlementsstring $bundlestring --resource-rules "$ad/ResourceRules.plist" "$ad" 2>/dev/null
     check_status "resigning the app"

@@ -166,6 +166,12 @@ If no *file* is provided, the first (alphabetically) ipa file in the working dir
 **-p profile , --profile profile**  
 use profile for resigning the ipa
 
+**-f, --find**  
+look for a profile in the user's library matching the *file*'s bundle ID
+
+**-m** *patterns* **, --matching** *patterns*  
+restricts the *--find* option to only profiles matching *patterns*  
+
 **-o** *filename* **, --output** *filename*  
 resign the ipa file as *filename* instead of \[*ipa filename*\]-resigned.ipa
 
@@ -173,7 +179,7 @@ resign the ipa file as *filename* instead of \[*ipa filename*\]-resigned.ipa
 display information about the file, its Info.plist, and the provisioning profile and have be given an option to continue with the resign or quit
 
 **-f, --force**
-overwrite output file on resign without asking.  Will not resign if App ID and Bundle IDs do not match
+overwrite output file on resign without asking.  Uses the profiles App ID if the App ID and Bundle ID do not match.
 
 #### ACCOUNT ####
 

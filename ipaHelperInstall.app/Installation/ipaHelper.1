@@ -295,6 +295,17 @@ If no file is provided, the first (alphabetically) ipa file in the working direc
 .I profile
 for resigning the ipa
 
+.B -f, --find
+    looks for a profile in the users library matching the ipa files bundle ID
+
+.B -m
+.I patterns
+.B , --matching
+.I patterns
+.br
+    restricts the --find option to only profiles matching
+.I patterns
+
 .B -o
 .I filename
 .B ,
@@ -308,8 +319,8 @@ instead of [filename]-resigned.ipa
 .B -d, --double-check 
     display information about the file, its Info.plist, and the provisioning profile and have be given an option to continue with the resign or quit
 
-.B -f, --force
-    overwrites output file on resign without asking.  Will not resign if App ID and Bundle IDs do not match
+.B -F, --force
+    overwrites output file on resign without asking.  Uses the profiles App ID if the App ID and Bundle ID do not match.
 
 .B ACCOUNT
 
