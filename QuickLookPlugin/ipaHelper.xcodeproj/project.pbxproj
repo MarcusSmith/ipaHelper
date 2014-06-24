@@ -17,7 +17,6 @@
 		452F811918F71F3F00E76451 /* GeneratePreviewForURL.m in Sources */ = {isa = PBXBuildFile; fileRef = 452F811818F71F3F00E76451 /* GeneratePreviewForURL.m */; };
 		452F811B18F71F3F00E76451 /* main.c in Sources */ = {isa = PBXBuildFile; fileRef = 452F811A18F71F3F00E76451 /* main.c */; };
 		4552E81E192BA57000C4D9E3 /* ipaHelper.qlgenerator in CopyFiles */ = {isa = PBXBuildFile; fileRef = 452F810518F71F3F00E76451 /* ipaHelper.qlgenerator */; };
-		45AACBD61938B90700A32B0E /* ipaIcon.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 45AACBD51938B90700A32B0E /* ipaIcon.jpg */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -55,7 +54,6 @@
 		452F811818F71F3F00E76451 /* GeneratePreviewForURL.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = GeneratePreviewForURL.m; sourceTree = "<group>"; };
 		452F811A18F71F3F00E76451 /* main.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = main.c; sourceTree = "<group>"; };
 		452F811C18F71F3F00E76451 /* ipaHelper-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "ipaHelper-Prefix.pch"; sourceTree = "<group>"; };
-		45AACBD51938B90700A32B0E /* ipaIcon.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = ipaIcon.jpg; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -115,7 +113,6 @@
 		452F811118F71F3F00E76451 /* Supporting Files */ = {
 			isa = PBXGroup;
 			children = (
-				45AACBD51938B90700A32B0E /* ipaIcon.jpg */,
 				452F811218F71F3F00E76451 /* ipaHelper-Info.plist */,
 				452F811318F71F3F00E76451 /* InfoPlist.strings */,
 				452F811C18F71F3F00E76451 /* ipaHelper-Prefix.pch */,
@@ -189,7 +186,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				452F811518F71F3F00E76451 /* InfoPlist.strings in Resources */,
-				45AACBD61938B90700A32B0E /* ipaIcon.jpg in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

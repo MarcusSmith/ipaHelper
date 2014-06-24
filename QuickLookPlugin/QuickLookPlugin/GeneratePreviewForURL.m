@@ -42,14 +42,17 @@ OSStatus GeneratePreviewForURL(void *thisInterface, QLPreviewRequestRef preview,
     NSError* error = nil;
     NSData *iconData = [NSData dataWithContentsOfFile:[iconURL path] options:NSDataReadingUncached error:&error];
     
-//    if (!iconData) {
-//        NSString *defaultIconFilepath = [[[NSBundle mainBundle] resourcePath] stringByAppendingString:@"/QuickLookPlugin/ipaIcon.jpg"];
-//        NSLog(@"%@", defaultIconFilepath);
-//        iconData = [NSData dataWithContentsOfFile:defaultIconFilepath options:NSDataReadingUncached error:&error];
-//        NSLog(@"Error loading image: %@", error);
-//    }
+    NSImage *imageForSize;
     
-    NSImage *imageForSize = [[NSImage alloc] initWithData: iconData];
+    // If there is no icon, use the file type's default icon
+    if (!iconData) {
+        imageForSize = [[NSWorkspace sharedWorkspace] iconForFileType:[ipaURL pathExtension]];
+        iconData = [imageForSize.copy TIFFRepresentation];
+    }
+    else {
+        imageForSize = [[NSImage alloc] initWithData: iconData];
+    }
+    
     CGFloat iconOffset = imageForSize.size.width;
     imageForSize = nil;
     
@@ -65,7 +68,7 @@ OSStatus GeneratePreviewForURL(void *thisInterface, QLPreviewRequestRef preview,
     
     [cleanTask launch];
     
-    CGSize contextSize = CGSizeMake(576.0, 256.0);
+    CGSize contextSize = CGSizeMake(544.0, 240.0);
     CGFloat margin = 10.0;
     
     // Make context for ql plugin
@@ -74,24 +77,18 @@ OSStatus GeneratePreviewForURL(void *thisInterface, QLPreviewRequestRef preview,
     //Make it pretty
     if(context) {
         
-        iconOffset = iconOffset == 0.0 ? 114 : iconOffset;
+        // Stretch the icon to 114x114 if it is less than 114 pixels wide
+        iconOffset = iconOffset < 114.0 ? 114.0 : iconOffset;
         CGRect iconRect = CGRectMake(margin, (contextSize.height - iconOffset - margin), iconOffset, iconOffset);
         
         if (iconData.length) {
-            //Draw the icon if there was one
-            CGDataProviderRef imgDataProvider = CGDataProviderCreateWithCFData ((__bridge CFDataRef)iconData);
-            CGImageRef iconImage = CGImageCreateWithPNGDataProvider(imgDataProvider, NULL, true, kCGRenderingIntentDefault);
+            CGImageSourceRef source = CGImageSourceCreateWithData((__bridge CFDataRef)iconData, NULL);
+            CGImageRef iconImage =  CGImageSourceCreateImageAtIndex(source, 0, NULL);
             
             CGContextDrawImage(context, iconRect, iconImage);
             
             CFRelease(iconImage);
         }
-        
-//        CGContextSaveGState(context);
-//        CGContextSetStrokeColorWithColor(context, CGColorCreateGenericRGB(0.5, 0.5, 0.5, 0.25));
-//        CGContextSetLineWidth(context, 1.0);
-//        CGContextStrokeRect(context, iconRect);
-//        CGContextRestoreGState(context);
         
         CGFloat sectionWidth = iconOffset + 2 * margin;
         
