@@ -18,6 +18,10 @@ OSStatus GeneratePreviewForURL(void *thisInterface, QLPreviewRequestRef preview,
 {
     NSURL *ipaURL = (__bridge NSURL *)url;
     
+    NSLog(@"URL: %@", [ipaURL path]);
+    
+    NSString *filetype = ipaURL.pathExtension;
+    
     NSTask *task = [[NSTask alloc] init];
     [task setLaunchPath:@"/usr/bin/ipaHelper"];
     [task setArguments:[NSArray arrayWithObjects:@"summary", [ipaURL path], @"--json", @"--ql", @"--dont-clean", nil]];
@@ -68,7 +72,13 @@ OSStatus GeneratePreviewForURL(void *thisInterface, QLPreviewRequestRef preview,
     
     [cleanTask launch];
     
+    
     CGSize contextSize = CGSizeMake(544.0, 240.0);
+    
+    if ([filetype isEqualToString:@"mobileprovision"]) {
+        contextSize = CGSizeMake(600.0, 150.0);
+    }
+    
     CGFloat margin = 10.0;
     
     // Make context for ql plugin
@@ -99,6 +109,11 @@ OSStatus GeneratePreviewForURL(void *thisInterface, QLPreviewRequestRef preview,
         [style setAlignment:NSLeftTextAlignment];
         
         NSString *title = (NSString *)summaryDictionary[@"CFBundleName"];
+        
+        if ([filetype isEqualToString:@"mobileprovision"]) {
+            title = (NSString *)summaryDictionary[@"Profile Name"];
+        }
+        
         NSDictionary *titleAttributes = @{NSFontAttributeName: [NSFont systemFontOfSize:20.0],
                                           NSForegroundColorAttributeName: [NSColor blackColor],
                                           NSParagraphStyleAttributeName: style,
@@ -112,7 +127,6 @@ OSStatus GeneratePreviewForURL(void *thisInterface, QLPreviewRequestRef preview,
         
         title = nil;
         
-        NSString *filetype = ipaURL.pathExtension;
         NSString *kind;
         if ([filetype isEqualToString:@"ipa"]) {
             kind = @"iOS App";
@@ -126,32 +140,41 @@ OSStatus GeneratePreviewForURL(void *thisInterface, QLPreviewRequestRef preview,
         else if ([filetype isEqualToString:@"zip"]) {
             kind = @"ZIP Archive";
         }
-        //TODO: Make new QL Plugin for mobileprovision
-//        else if ([filetype isEqualToString:@"mobileprovision"]) {
-//            kind = @"Developer Provisioning Profile";
-//        }
-        filetype = nil;
-        
-//        @{@"key":@"",@"value":(NSString *)summaryDictionary[@""]}
+        else if ([filetype isEqualToString:@"mobileprovision"]) {
+            kind = @"Developer Provisioning Profile";
+        }
+//        filetype = nil;
         
         NSArray *fileInfo = @[@{@"key":@"Name:",@"value":(NSString *)summaryDictionary[@"File"]},
                               @{@"key":@"Kind:",@"value":kind},
                               @{@"key":@"Size:",@"value":(NSString *)summaryDictionary[@"Filesize"]}
                               ];
         
+        CGRect fileInfoRect = CGRectMake(margin, margin, iconOffset, contextSize.height - margin * 3 - iconOffset);
         
-        drawArrayInRectInContext(fileInfo, CGRectMake(margin, margin, iconOffset, contextSize.height - margin * 3 - iconOffset), context, 4.0, 8.0);
+        if ([filetype isEqualToString:@"mobileprovision"]) {
+            fileInfoRect = CGRectMake(sectionWidth * 3.5, contextSize.height - titleHeight - 2 * margin, iconOffset, contextSize.height - margin * 3 - iconOffset);
+        }
+        
+        drawArrayInRectInContext(fileInfo, fileInfoRect, context, 4.0, 8.0);
         
         kind = nil;
         fileInfo = nil;
         
-        NSArray *appInfo = @[@{@"key":@"Bundle ID:",@"value":(NSString *)summaryDictionary[@"CFBundleIdentifier"]},
-                             @{@"key":@"Display Name:",@"value":(NSString *)summaryDictionary[@"CFBundleDisplayName"]},
-                             @{@"key":@"Short Version:",@"value":(NSString *)summaryDictionary[@"ShortBundleVersion"]},
-                             @{@"key":@"Bundle Version:",@"value":(NSString *)summaryDictionary[@"CFBundleVersion"]},
-                             ];
-        NSArray *profileInfo = @[@{@"key":@"Profile Name:",@"value":(NSString *)summaryDictionary[@"Profile Name"]},
-                                 @{@"key":@"Application ID:",@"value":(NSString *)summaryDictionary[@"App Identifier"]},
+        NSArray *appInfo = @[];
+        
+        if (![filetype isEqualToString:@"mobileprovision"]) {
+            NSLog(@"Making app dictionary");
+            appInfo = @[@{@"key":@"Bundle ID:",@"value":(NSString *)summaryDictionary[@"CFBundleIdentifier"]},
+                        @{@"key":@"Display Name:",@"value":(NSString *)summaryDictionary[@"CFBundleDisplayName"]},
+                        @{@"key":@"Short Version:",@"value":(NSString *)summaryDictionary[@"ShortBundleVersion"]},
+                        @{@"key":@"Bundle Version:",@"value":(NSString *)summaryDictionary[@"CFBundleVersion"]},
+                        @{@"key":@"",@"value":@""},
+                        @{@"key":@"Profile Name:",@"value":(NSString *)summaryDictionary[@"Profile Name"]},
+                        ];
+        }
+        
+        NSArray *profileInfo = @[@{@"key":@"Application ID:",@"value":(NSString *)summaryDictionary[@"App Identifier"]},
                                  @{@"key":@"Team Name:",@"value":(NSString *)summaryDictionary[@"Team Name"]},
                                  @{@"key":@"Profile Type:",@"value":(NSString *)summaryDictionary[@"Profile Type"]},
                                  @{@"key":@"Profile Expires:",@"value":(NSString *)summaryDictionary[@"Expiration Date"]},
@@ -159,10 +182,10 @@ OSStatus GeneratePreviewForURL(void *thisInterface, QLPreviewRequestRef preview,
                                  ];
         
         NSMutableArray *combinedArrays = [NSMutableArray arrayWithArray:appInfo];
-        [combinedArrays addObject:@{@"key":@"",@"value":@""}];
         [combinedArrays addObjectsFromArray:profileInfo];
         
-        drawArrayInRectInContext(combinedArrays.copy, CGRectMake(margin + sectionWidth, margin, sectionWidth * 3 - 2 * margin, contextSize.height - titleHeight - margin * 2.5), context, 4.0, 10.0);
+//        drawArrayInRectInContext(combinedArrays.copy, CGRectMake(margin + sectionWidth, margin, sectionWidth * 3 - 2 * margin, contextSize.height - titleHeight - margin * 2.5), context, 4.0, 10.0);
+        drawArrayInRectInContext(combinedArrays.copy, CGRectMake(margin + sectionWidth, margin, sectionWidth * 2.5, contextSize.height - titleHeight - margin * 2.5), context, 4.0, 10.0);
         
         profileInfo = nil;
         summaryDictionary = nil;
@@ -180,9 +203,6 @@ CGFloat drawArrayInRectInContext(NSArray *array, CGRect rect, CGContextRef conte
 {
     NSGraphicsContext *nsContext = [NSGraphicsContext graphicsContextWithGraphicsPort:(void *)context flipped:NO];
     [NSGraphicsContext setCurrentContext:nsContext];
-    
-//    NSMutableParagraphStyle *rightStyle = [[NSParagraphStyle defaultParagraphStyle] mutableCopy];
-//    [rightStyle setAlignment:NSRightTextAlignment];
     
     NSMutableParagraphStyle *leftStyle = [[NSParagraphStyle defaultParagraphStyle] mutableCopy];
     [leftStyle setAlignment:NSLeftTextAlignment];

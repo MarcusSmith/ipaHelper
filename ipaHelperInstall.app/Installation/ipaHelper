@@ -951,17 +951,23 @@ fi
 
 function cmd_summary
 {
-    cp "$ad/Info.plist" "/tmp/Info.plist"
-    plutil -convert xml1 "/tmp/Info.plist"
-    info="$(cat "/tmp/Info.plist")"
-    profile="$ad/embedded.mobileprovision"
+    if [ "$ipa" != "" ]; then
+        cp "$ad/Info.plist" "/tmp/Info.plist"
+        plutil -convert xml1 "/tmp/Info.plist"
+        info="$(cat "/tmp/Info.plist")"
+        profile="$ad/embedded.mobileprovision"
+    else
+        ipa="$(basename "$profile")"
+    fi
     filesize="$(du -sh "$bd/$ipa" | cut -f 1)"
     filesize="${filesize/M/ MB}"
     filesize="${filesize/K/ KB}"
     echo '**********************************************************'
     echo "               File: $ipa"
     echo "           Filesize: $filesize"
-    parse_info "$info"
+    if [ "$info" != "" ]; then
+        parse_info "$info"
+    fi
     display_profile "$profile"
     echo '**********************************************************'
 }
@@ -1405,17 +1411,11 @@ if [ "$cmd" = "find" ]; then
     script_done
 fi
 
-## COMMANDS THAT NEED AN IPA
-assert_ipa
-
-#verify command, to see if an ipa is signed
-if [ "$cmd" = "v" -o "$cmd" = "verify" ]; then
-	cmd_verify "$@"
-    script_done
-fi
-
 #summary command, to show info.plist and profile information in brief summary
 if [ "$cmd" = "s" -o "$cmd" = "summary" ]; then
+    if [ "$profile" = "" ]; then
+        assert_ipa mobileprovision
+    fi
     summary="$(cmd_summary)"
     if [ "$(JSON_from_args "$@")" = "json" ]; then
         summary="$(convert_to_JSON "$summary")"
@@ -1427,6 +1427,15 @@ if [ "$cmd" = "s" -o "$cmd" = "summary" ]; then
     else
         script_done
     fi
+fi
+
+## COMMANDS THAT NEED AN IPA
+assert_ipa
+
+#verify command, to see if an ipa is signed
+if [ "$cmd" = "v" -o "$cmd" = "verify" ]; then
+	cmd_verify "$@"
+    script_done
 fi
 
 #resign command, to resign an ipa

@@ -15,6 +15,7 @@
 				<string>com.apple.application-bundle</string>
 				<string>com.apple.xcode.archive</string>
 				<string>public.zip-archive</string>
+				<string>com.apple.mobileprovision</string>
 			</array>
 		</dict>
 	</array>
