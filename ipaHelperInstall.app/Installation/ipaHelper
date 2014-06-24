@@ -331,15 +331,10 @@ echo " ShortBundleVersion: $(value_for_key "$1" "CFBundleShortVersionString")"
 }
 
 #returns useful information from a profile
-function parse_profile
+function display_profile
 {
-echo "        App ID Name: $(value_for_key "$1" "AppIDName")"
-echo "     App Identifier: $(value_for_key "$1" "application-identifier")"
-echo "       Profile Name: $(value_for_key "$1" "Name")"
-echo "       Profile Type: $(profile_type "$1")"
-echo "          Team Name: $(value_for_key "$1" "TeamName")"
-echo "    Expiration Date: $(date -j -f "%Y-%m-%dT%H:%M:%SZ" $(value_for_key "$1" "ExpirationDate") +"%b %e, %Y")"
-echo "               UUID: $(value_for_key "$1" "UUID")"
+fullprofile="$(parse_profile "$1")"
+echo "$fullprofile" | awk '{split($0,a,"|"); print "       Profile Name: "a[2]; print "     App Identifier: "a[1]; print "          Team Name: "a[4];  print "       Profile Type: "a[5];  print "    Expiration Date: "a[6]; print "               UUID: "a[3]; }'
 }
 
 # $1 is what is grepped. $2 is a new line delimited list of required matches
@@ -354,7 +349,7 @@ echo "$result"
 function library_profiles
 {
 find ~/Library/MobileDevice/"Provisioning Profiles" -iname "*.mobileprovision" | while read profile; do 
-    echo "$(parse_profile2 "$profile")"
+    echo "$(parse_profile "$profile")"
 done
 }
 
@@ -363,7 +358,7 @@ function first_library_match
 {
 library="$(find ~/Library/MobileDevice/"Provisioning Profiles" -iname "*.mobileprovision")"
 while read profile; do 
-    fullprofile="$(parse_profile2 "$profile")"
+    fullprofile="$(parse_profile "$profile")"
     result="$(profiles_direct_match "$fullprofile" "$1")"
     if [ "$result" != "" ]; then
         result="$(grep_loop "$result" "$2")"
@@ -375,7 +370,7 @@ while read profile; do
 done <<< "$library"
 if [ "$result" = "" ]; then
     while read profile; do 
-        fullprofile="$(parse_profile2 "$profile")" 
+        fullprofile="$(parse_profile "$profile")" 
         result="$(profiles_wildcard_match "$fullprofile" "$1")"
         if [ "$result" != "" ]; then
             result="$(grep_loop "$result" "$2")"
@@ -388,7 +383,7 @@ if [ "$result" = "" ]; then
 fi
 }
 
-function parse_profile2
+function parse_profile
 {
 fullprofile="$(security cms -D -i "$1")"
 echo "$fullprofile" | grep 'application-identifier\|<key>Name</key>\|UUID' -A 1 | grep 'string' | awk '{split($0,a,"</?string>"); print a[2]}' | tr '\n' '|' 
@@ -859,18 +854,19 @@ function cmd_profile
 {
 	if [ "$1" = "" ];then
 		echo '*********************************************************'
-		parse_profile "$profile"
+		display_profile "$profile"
 		echo '*********************************************************'
 		script_done
 	fi
+	fullprofile="$(security cms -D -i "$profile")"
 	while [ "$1" != "" ];do
 		case "$1" in
-			-v | --verbose )	    echo "$profile";;
-            -i | --id )             echo "Application Identifier: $(value_for_key "$profile" "application-identifier")";;
-            -c | --certificate )    echo "Certificate Name: $(value_for_key "$profile" "Name")";;
-			-t | --team )		    echo "Team Name: $(value_for_key "$profile" "TeamName")";;
-            -x | --expiration )     echo "Expiration Date: $(date -j -f "%Y-%m-%dT%H:%M:%SZ" $(value_for_key "$profile" "ExpirationDate") +"%b %e, %Y")";;
-			-e | --entitlements )	tmp="${profile##*Entitlements}"
+			-v | --verbose )	    echo "$fullprofile";;
+            -i | --id )             echo "Application Identifier: $(value_for_key "$fullprofile" "application-identifier")";;
+            -c | --certificate )    echo "Certificate Name: $(value_for_key "$fullprofile" "Name")";;
+			-t | --team )		    echo "Team Name: $(value_for_key "$fullprofile" "TeamName")";;
+            -x | --expiration )     echo "Expiration Date: $(date -j -f "%Y-%m-%dT%H:%M:%SZ" $(value_for_key "$fullprofile" "ExpirationDate") +"%b %e, %Y")";;
+			-e | --entitlements )	tmp="${fullprofile##*Entitlements}"
 					            	tmp="${tmp#*<dict>}"
 					            	tmp="${tmp%%</dict>*}"
 					            	tmp="${tmp//?[[:space:]]</<}"
@@ -882,14 +878,14 @@ function cmd_profile
 					            	if [ "$1" = "" ];then
 						             	problem_encountered "key option needs a parameter"
 						            fi
-						            echo "$1: $(value_for_key "$profile" "$1")";;
+						            echo "$1: $(value_for_key "$fullprofile" "$1")";;
             -l | --list)            echo '****************** KEYS ******************'
                                     while read line; do 
                                         if [ "${line#*<key>}" != "$line" ]; then 
                                             tmp="${line%%</key>*}" 
                                             echo "${tmp##*<key>}"  
                                         fi 
-                                    done <<< "$profile"
+                                    done <<< "$fullprofile"
                                     echo '******************************************';;
             * )			            problem_encountered "Invalid Option";;
 		esac
@@ -956,7 +952,7 @@ function cmd_summary
     cp "$ad/Info.plist" "/tmp/Info.plist"
     plutil -convert xml1 "/tmp/Info.plist"
     info="$(cat "/tmp/Info.plist")"
-    profile="$(security cms -D -i "$ad/embedded.mobileprovision")"
+    profile="$ad/embedded.mobileprovision"
     filesize="$(du -sh "$bd/$ipa" | cut -f 1)"
     filesize="${filesize/M/ MB}"
     filesize="${filesize/K/ KB}"
@@ -964,7 +960,7 @@ function cmd_summary
     echo "               File: $ipa"
     echo "           Filesize: $filesize"
     parse_info "$info"
-    parse_profile "$profile"
+    display_profile "$profile"
     echo '**********************************************************'
 }
 
@@ -1070,7 +1066,7 @@ function cmd_resign
         echo '************************Info.plist************************'
         parse_info "$infoplist"
         echo '*************************Profile**************************'   
-        parse_profile "$fullprofile"
+        display_profile "$profile"
         echo '**********************************************************'
         input=
 		while [ "$input" != "y" ];do
@@ -1384,7 +1380,6 @@ if [ "$cmd" = "p" -o "$cmd" = "prof" -o "$cmd" = "profile" ];then
 		assert_ipa mobileprovision
 		profile="$ad/embedded.mobileprovision"
 	fi
-	profile="$(security cms -D -i "$profile")"
     cmd_profile "$@"	
     script_done
 fi
