@@ -403,8 +403,10 @@ if [ "${type#*<}" = "true/>" ]; then
 else
     if [ "$(echo "$1" | grep "ProvisionedDevices")" != "" ]; then
         echo -n "Adhoc Distribution"
+    elif [ "$(echo "$1" | grep "ProvisionsAllDevices")" != "" ]; then
+        echo -n "Universal Distribution"
     else
-        echo -n "Distribution"
+        echo -n "App Store Distribution"
     fi
 fi
 }
