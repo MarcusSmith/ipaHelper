@@ -260,6 +260,8 @@ ipaHelper account [ options ]
 
 Displays information about which certificates are linked with which iTunesConnect accounts.
 
+If no options are provided, then all certificates and their linked accounts are displayed.
+
 Options:
 
 [-g | --get] takes a certificate as an argument, returns the iTunesConnect account linked to that certificate

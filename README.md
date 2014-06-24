@@ -187,6 +187,8 @@ overwrite output file on resign without asking.  Uses the profiles App ID if the
 
 Displays information about which certificates are linked with which iTunesConnect accounts.
 
+If no options are provided, then all certificates and their linked accounts are displayed.
+
 **Account Options:**
 
 **-g** *certificate* **, --get** *certificate*  
