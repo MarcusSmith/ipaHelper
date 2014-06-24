@@ -63,7 +63,7 @@ Displays usage information for the different commands.
 If -v option is present it shows the usage information for all of the commands.
 '
 
-echo "Commands:   Get   Certs   Profile   Info   Summary   Clean   Rezip   Verify   Resign   Account   Upload   Help"
+echo "Commands:   Get   Certs   Profile   Find   Info   Summary   Clean   Rezip   Verify   Resign   Account   Upload   Help"
 echo
 }
 
