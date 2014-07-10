@@ -73,10 +73,14 @@ OSStatus GeneratePreviewForURL(void *thisInterface, QLPreviewRequestRef preview,
     [cleanTask launch];
     
     
-    CGSize contextSize = CGSizeMake(544.0, 240.0);
+    CGSize contextSize = CGSizeMake(544.0, 248.0);
     
     if ([filetype isEqualToString:@"mobileprovision"]) {
         contextSize = CGSizeMake(600.0, 150.0);
+    }
+    
+    if (!summaryDictionary[@"App Identifier"]) {
+        contextSize = CGSizeMake(600.0, 200.0);
     }
     
     CGFloat margin = 10.0;
@@ -169,17 +173,24 @@ OSStatus GeneratePreviewForURL(void *thisInterface, QLPreviewRequestRef preview,
                         @{@"key":@"Display Name:",@"value":(NSString *)summaryDictionary[@"CFBundleDisplayName"]},
                         @{@"key":@"Short Version:",@"value":(NSString *)summaryDictionary[@"ShortBundleVersion"]},
                         @{@"key":@"Bundle Version:",@"value":(NSString *)summaryDictionary[@"CFBundleVersion"]},
+                        @{@"key":@"Code Signature:",@"value":(NSString *)summaryDictionary[@"Code Signature"]},
                         @{@"key":@"",@"value":@""},
                         @{@"key":@"Profile Name:",@"value":(NSString *)summaryDictionary[@"Profile Name"]},
                         ];
         }
         
-        NSArray *profileInfo = @[@{@"key":@"Application ID:",@"value":(NSString *)summaryDictionary[@"App Identifier"]},
-                                 @{@"key":@"Team Name:",@"value":(NSString *)summaryDictionary[@"Team Name"]},
-                                 @{@"key":@"Profile Type:",@"value":(NSString *)summaryDictionary[@"Profile Type"]},
-                                 @{@"key":@"Profile Expires:",@"value":(NSString *)summaryDictionary[@"Expiration Date"]},
-                                 @{@"key":@"Profile UUID:",@"value":(NSString *)summaryDictionary[@"UUID"]},
-                                 ];
+        NSArray *profileInfo;
+        if (summaryDictionary[@"App Identifier"]) {
+            profileInfo = @[@{@"key":@"Application ID:",@"value":(NSString *)summaryDictionary[@"App Identifier"]},
+                            @{@"key":@"Team Name:",@"value":(NSString *)summaryDictionary[@"Team Name"]},
+                            @{@"key":@"Profile Type:",@"value":(NSString *)summaryDictionary[@"Profile Type"]},
+                            @{@"key":@"Profile Expires:",@"value":(NSString *)summaryDictionary[@"Expiration Date"]},
+                            @{@"key":@"Profile UUID:",@"value":(NSString *)summaryDictionary[@"UUID"]},
+                            ];
+        }
+        else {
+            profileInfo = [NSArray array];
+        }
         
         NSMutableArray *combinedArrays = [NSMutableArray arrayWithArray:appInfo];
         [combinedArrays addObjectsFromArray:profileInfo];
