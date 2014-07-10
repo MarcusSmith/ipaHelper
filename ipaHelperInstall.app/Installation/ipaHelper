@@ -335,6 +335,10 @@ echo " ShortBundleVersion: $(value_for_key "$1" "CFBundleShortVersionString")"
 #returns useful information from a profile
 function display_profile
 {
+if [ ! -f "$1" ]; then
+    echo "       Profile Name: No embedded profile"
+    return
+fi
 fullprofile="$(parse_profile "$1")"
 echo "$fullprofile" | awk '{split($0,a,"|"); print "       Profile Name: "a[2]; print "     App Identifier: "a[1]; print "          Team Name: "a[4];  print "       Profile Type: "a[5];  print "    Expiration Date: "a[6]; print "               UUID: "a[3]; }'
 }
@@ -964,14 +968,17 @@ function cmd_summary
     filesize="$(du -sh "$bd/$ipa" | cut -f 1)"
     filesize="${filesize/M/ MB}"
     filesize="${filesize/K/ KB}"
-    echo '**********************************************************'
+    echo '********************************************************************'
     echo "               File: $ipa"
     echo "           Filesize: $filesize"
     if [ "$info" != "" ]; then
         parse_info "$info"
     fi
+    codesignature="$(cmd_verify 2>&1 | awk '{split($0,a,": "); print a[2]}' | tr '\n' ',' | sed 's/,/, /g')"
+    codesignature="${codesignature%??}"
+    echo "     Code Signature: $codesignature"
     display_profile "$profile"
-    echo '**********************************************************'
+    echo '********************************************************************'
 }
 
 function cmd_find
