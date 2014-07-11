@@ -1,11 +1,101 @@
-ipaHelper
+# ipaHelper #
 ==========
 
-### NAME ###
+Tools and script for examining and resigning ipa files
 
-**ipaHelper** -- script to help with examining and resigning ipa files
+## Installation ##
 
-### SYNOPSIS ###
+To install, double click `ipaHelperInstall.app` and enter your system password.
+
+`ipaHelperInstall.app` copies: 
+
+- `ipaHelper` Bash script into */usr/bin/*  
+- man page for `ipaHelper` into */usr/share/man/man1/*  
+- `ipaHelper.qlgenerator` QuickLook plugin into *~/Library/Quicklook/*
+- `Resign.workflow` resign Automator service into *~/Library/Services/* 
+
+You may need to restart your computer for the QuickLook plugin and Automator service to work
+
+## QuickLook Plugin ##
+
+The `ipaHelper.qlgenerator` QuickLook plugin uses the `ipaHelper` script to quickly display a summary of relevant information for:
+
+- ipa files
+- app files
+- xcarchive files
+- zip files containing an app file one level deep
+- provisioning profiles
+
+When in finder with a file of one of these file types selected just hit spacebar to display the QuickLook summary.
+
+## Resign Automator Service ##
+
+The Resign service uses the `ipaHelper` script to resign the following file types:
+
+- ipa files
+- app files
+- xcarchive files
+- zip files containing an app file one level deep
+
+To use the Resign service, right click a **file** of one of these file types and select **"Resign with..."** from the service menu.  Then select a **provisioning profile** to resign the **file** with.
+
+The Resign service uses the following `ipaHelper` command:
+
+	ipaHelper resign [file] --force -p [provisioning profile] 2>&1
+	
+Using the --force option, the Resign service will force match the **file**'s bundle ID to the **profile**'s App ID.
+
+The resigned file will be named *filename*-resigned.*filetype*,for example:
+
+**MyApp.ipa** would be resigned as **MyApp-resigned.ipa**
+
+xcarchive files will only be resigned as app files, for example:
+
+**MyXCArchive.xcarchive** would be resigned as **MyXCArchive-resigned.app**
+
+## ipaHelper Script ##
+
+### BASIC USAGE ###
+
+#### Get a summary of a file ####
+
+	$ ipaHelper summary /path/to/the/file.ipa
+
+The **Summary** command works for .app, .ipa, .xcarchive, .mobileprovision, and .zip files (if the .zip file has an .app file one level deep)
+
+#### Resign an app with a profile downloaded from the Apple Developer Portal ####
+
+	Download the correct provisioning profile from developer.apple.com (the profile should be downloaded into your Downloads folder)
+
+	$ cd /path/to/the/app  
+	$ ipaHelper get [theProfile] 
+	$ ipaHelper resign [theApp] -p [theProfile]
+
+The **resign** command works on .app, .ipa, .xcarchive, and .zip files (if the .zip file has an .app file one level deep)
+
+The **p** option is not necessary if there is only one provisioning profile in the same directory as the app.  The **get** command moves all provisioning profiles from the *Downloads* folder into your working directory if a specific profile is not given.
+
+#### Resign an app with a profile in your library that matches the app's bundle ID ####
+
+	$ ipaHelper resign [theApp] --find --double-check
+
+The **double-check** option is not necessary, but it is a good idea to double check that the profile found by the **find** option is the one you want.
+
+#### Resign an app with a profile in your library matching the app and other criteria ####
+
+	$ ipaHelper resign [theApp] --find --matching [criteria1] [criteria2] --double-check
+
+The **matching** command could be used to specify "distribution" to make sure it is not matched to a development profile.  Or a specific name of a profile, if there are several matching the same bundle ID.
+
+#### Resign an ipa file and upload it to iTunesConnect ####
+
+	$ ipaHelper account --set [YourDistributionCertificateName] [youriTunesConnectAccount@email.com]
+	$ ipaHelper resign [the.ipa] --find --matching App Store Distribution
+	$ ipaHelper upload [the-resigned.ipa]
+	
+The **account** command with the **set** option only needs to be run once, not every time.  If there is no account set for the certificate that an app is signed with, you will be prompted for both an account and password.  The app must be the only one in your account in the "waiting for upload" state for the **upload** command to work.
+
+### USAGE ###
 
 **ipaHelper get \[** *mobileprovision files...*  **\]**  
 **ipaHelper certs \[** *substring* **\]**  
