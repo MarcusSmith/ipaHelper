@@ -38,7 +38,13 @@ OSStatus GeneratePreviewForURL(void *thisInterface, QLPreviewRequestRef preview,
     NSData *data;
     data = [file readDataToEndOfFile];
     
-    NSDictionary *summaryDictionary = [NSJSONSerialization JSONObjectWithData:data options:NSJSONReadingMutableContainers  error:nil];
+    NSError *jsonError;
+    
+    NSDictionary *summaryDictionary = [NSJSONSerialization JSONObjectWithData:data options:NSJSONReadingMutableContainers  error:&jsonError];
+    
+    if (jsonError) {
+        NSLog(@"Error loading json: %@", jsonError);
+    }
     
     //I'm sure I can refactor this
     NSURL *iconURL = [NSURL URLWithString:[[NSString stringWithFormat:@"%@/icon@2x.png", summaryDictionary[@"AppDirectory"]] stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
@@ -47,6 +53,8 @@ OSStatus GeneratePreviewForURL(void *thisInterface, QLPreviewRequestRef preview,
     NSData *iconData = [NSData dataWithContentsOfFile:[iconURL path] options:NSDataReadingUncached error:&error];
     
     NSImage *imageForSize;
+    
+    NSLog(@"About to make Image Data");
     
     // If there is no icon, use the file type's default icon
     if (!iconData) {
