@@ -1027,7 +1027,7 @@ function cmd_verify
 {
 	cd "$(dirname "$ad")"
 	base="$(basename "${ad}")"	
-	codesign --verify -vvvv "$base"
+	codesign --verify --no-strict -vvvv "$base"
 }
 
 function cmd_resign
