@@ -7,6 +7,7 @@ OSStatus GeneratePreviewForURL(void *thisInterface, QLPreviewRequestRef preview,
 /// Takes an array of dictionaries, each of which contain a "key" key and "value" key, and draws them in the rect in the context.  Returns the height of what it drew.
 CGFloat drawArrayInRectInContext(NSArray *array, CGRect rect, CGContextRef context, CGFloat lineSpacing, CGFloat fontSize);
 void CancelPreviewGeneration(void *thisInterface, QLPreviewRequestRef preview);
+NSURL *ipaURL;
 
 /* -----------------------------------------------------------------------------
    Generate a preview for file
@@ -16,7 +17,7 @@ void CancelPreviewGeneration(void *thisInterface, QLPreviewRequestRef preview);
 
 OSStatus GeneratePreviewForURL(void *thisInterface, QLPreviewRequestRef preview, CFURLRef url, CFStringRef contentTypeUTI, CFDictionaryRef options)
 {
-    NSURL *ipaURL = (__bridge NSURL *)url;
+    ipaURL = (__bridge NSURL *)url;
     
     NSLog(@"URL: %@", [ipaURL path]);
     
@@ -276,14 +277,18 @@ CGFloat drawArrayInRectInContext(NSArray *array, CGRect rect, CGContextRef conte
 
 void CancelPreviewGeneration(void *thisInterface, QLPreviewRequestRef preview)
 {
-    // Implement only if supported
+    if (ipaURL.path) {
         NSTask *cleanTask = [[NSTask alloc] init];
         [cleanTask setLaunchPath:@"/usr/bin/ipaHelper"];
-        [cleanTask setArguments:[NSArray arrayWithObjects:@"clean", nil]];
+        
+        NSArray *args = @[@"clean", ipaURL.path];
+        
+        [cleanTask setArguments:args];
         
         NSPipe *pipe = [NSPipe pipe];
         [cleanTask setStandardOutput: pipe];
         [cleanTask setStandardInput:[NSPipe pipe]];
         
         [cleanTask launch];
+    }
 }
