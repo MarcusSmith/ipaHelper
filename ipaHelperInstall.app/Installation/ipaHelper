@@ -288,14 +288,8 @@ If no ipa file is provided, the first (alphabetically) ipa file in the working d
 
 function clean_up
 {
-if [ -d "/tmp/ipa_payload" ]; then
-    rm -rf "/tmp/ipa_payload"
-fi
-if [ -f "/tmp/Info.plist" ]; then
-	rm "/tmp/Info.plist"
-fi
-if [ -f "/tmp/Entitlements.plist" ]; then
-	rm "/tmp/Entitlements.plist" 
+if [ -d "/tmp/ipa_helper/$file_hash" ]; then               
+    rm -rf "/tmp/ipa_helper/$file_hash"
 fi
 }
 
@@ -921,8 +915,8 @@ if [ "$edit" != "" ]; then
             cmd_rezip "$bd/$ipa"
         fi
 else
-    cp "$infoplist" "/tmp/Info.plist"
-	infoplist="/tmp/Info.plist"
+    cp "$infoplist" "/tmp/ipa_helper/$file_hash/Info.plist"
+	infoplist="/tmp/ipa_helper/$file_hash/Info.plist"
 	plutil -convert xml1 "$infoplist"
 	infoplist="$(cat "$infoplist")"
 	if [ "$1" = "" ];then
@@ -958,9 +952,9 @@ fi
 function cmd_summary
 {
     if [ "$ipa" != "" ]; then
-        cp "$ad/Info.plist" "/tmp/Info.plist"
-        plutil -convert xml1 "/tmp/Info.plist"
-        info="$(cat "/tmp/Info.plist")"
+        cp "$ad/Info.plist" "/tmp/ipa_helper/$file_hash/Info.plist"
+        plutil -convert xml1 "/tmp/ipa_helper/$file_hash/Info.plist"
+        info="$(cat "/tmp/ipa_helper/$file_hash/Info.plist")"
         profile="$ad/embedded.mobileprovision"
     else
         ipa="$(basename "$profile")"
@@ -987,9 +981,9 @@ function cmd_find
 {
 all="$(all_from_args "$@")"
 if [ "$all" = "" ]; then
-    cp "$ad/Info.plist" "/tmp/Info.plist"
-    plutil -convert xml1 "/tmp/Info.plist"
-    info="$(cat "/tmp/Info.plist")"
+    cp "$ad/Info.plist" "/tmp/ipa_helper/$file_hash/Info.plist"
+    plutil -convert xml1 "/tmp/ipa_helper/$file_hash/Info.plist"
+    info="$(cat "/tmp/ipa_helper/$file_hash/Info.plist")"
     bundleid="$(value_for_key "$info" "CFBundleIdentifier")"
 fi
 library="$(library_profiles)"
@@ -1033,9 +1027,9 @@ function cmd_verify
 function cmd_resign
 {
     cd "$bd"
-	cp "$ad/Info.plist" "/tmp/Info.plist"
-    plutil -convert xml1 "/tmp/Info.plist"
-    infoplist="$(cat "/tmp/Info.plist")"
+	cp "$ad/Info.plist" "/tmp/ipa_helper/$file_hash/Info.plist"
+    plutil -convert xml1 "/tmp/ipa_helper/$file_hash/Info.plist"
+    infoplist="$(cat "/tmp/ipa_helper/$file_hash/Info.plist")"
 	bundleid="$(value_for_key "$infoplist" CFBundleIdentifier)"
     find="$(find_from_args "$@")"
     profile=
@@ -1051,10 +1045,10 @@ function cmd_resign
 	fi
 	fullprofile="$(security cms -D -i "$profile")"
 	cert="$(value_for_key "$fullprofile" TeamName)"
-	appid="$(value_for_key "$fullprofile" application-identifier)"
-	entitlementsstring="--entitlements /tmp/Entitlements.plist"
+	appid="$(value_for_key "$fullprofile" application-identifier)"                          
+	entitlementsstring="--entitlements /tmp/ipa_helper/$file_hash/Entitlements.plist"
     tent="$(make_entitlements_from_profile "$fullprofile")"
-    echo "$tent" > /tmp/Entitlements.plist
+    echo "$tent" > /tmp/ipa_helper/$file_hash/Entitlements.plist
     #check to see if there was an output file
     newipa="$(output_from_args "$@")"
     newfiletype="${newipa##*.}"
@@ -1191,19 +1185,19 @@ if [ "$filetype" = "xcarchive" ]; then
 elif [ "$filetype" != "ipa" -a "$filetype" != "app" -a "$filetype" != "zip" ]; then
     problem_encountered "Invalid file type"
 fi
-if [ ! -d /tmp/ipa_payload ]; then
+if [ ! -d /tmp/ipa_helper ]; then
     problem_encountered "Nothing to zip"
 fi
 if [ "$filetype" = "ipa" ]; then
-    cd /tmp/ipa_payload
+    cd "/tmp/ipa_helper/$file_hash"
     zip -qr "$newfile" Payload/ 2>/dev/null
     check_status "zipping the ipa file"
 elif [ "$filetype" = "zip" ]; then
-    cd /tmp/ipa_payload/Payload
+    cd "/tmp/ipa_helper/$file_hash/Payload"
     zip -qr "$newfile" *.app/ 2>/dev/null
     check_status "zipping the zip file"
 elif [ "$filetype" = "app" ]; then
-    cp -r /tmp/ipa_payload/Payload/*.app/ "$newfile"
+    cp -r /tmp/ipa_helper/"$file_hash"/Payload/*.app/ "$newfile"                        
     check_status "coping the app file"
 fi
 }
@@ -1244,6 +1238,13 @@ function cmd_upload
     echo "uploading..."
     xcrun -sdk iphoneos Validation -online -upload -verbose "$bd/$ipa" 2>/dev/null
     q="$(security delete-generic-password  -s Xcode:itunesconnect.apple.com 2>&1)"
+}
+
+
+#function to hash a string
+function hash_string
+{
+    echo $1 | md5   
 }
 
 #### MAIN ####
@@ -1340,51 +1341,63 @@ elif [ "${1:0:1}" = "-" -o "$1" = "" ]; then
 else
     problem_encountered "invalid filetype"
 fi
-clean_up
-if [ "$cmd" = "clean" ]; then
-    exit 0
-fi
+                                                                                                                  
+
 filetype="${ipa##*.}"
+
 #make ad folder
 cd "$bd"
+
+file_hash="$(hash_string "$bd/$ipa")"
+
+if [ "$cmd" = "clean" ]; then
+    if [ "$(all_from_args $@)" = "all" ]; then
+        file_hash=""
+    fi
+    script_done
+fi
+
+clean_up
+
 ad=
 if [ "$filetype" = "xcarchive" ]; then
-    mkdir /tmp/ipa_payload && mkdir /tmp/ipa_payload/Payload
+    mkdir -p "/tmp/ipa_helper/$file_hash/Payload"
     cd "$ipa"
     tmp="$(find ./ -iname "*.app*" -maxdepth 3 -mindepth 3)"
     cd "$bd"
     tmpd="$ipa$(dirname "${tmp:2}")/"
     tmpa="$(basename "${tmp}")"
-    cp -r "$tmpd$tmpa" "/tmp/ipa_payload/Payload/$tmpa/" 2>/dev/null
-    check_status "accessing app file in xcarchive"
-    ad="/tmp/ipa_payload/Payload/$tmpa"
+    cp -r "$tmpd$tmpa" "/tmp/ipa_helper/$file_hash/Payload/$tmpa/" 2>/dev/null
+    check_status "accessing app file in xcarchive" 
+    ad="/tmp/ipa_helper/$file_hash/Payload/$tmpa"
 elif [ "$filetype" = "app" ]; then
-    mkdir /tmp/ipa_payload && mkdir /tmp/ipa_payload/Payload
-    cp -r "$ipa" "/tmp/ipa_payload/Payload/$ipa/"
-    ad="/tmp/ipa_payload/Payload/$ipa"
+    mkdir -p "/tmp/ipa_helper/$file_hash/Payload"                            
+    cp -r "$ipa" "/tmp/ipa_helper/$file_hash/Payload/$ipa/"
+    ad="/tmp/ipa_helper/$file_hash/Payload/$ipa"
 elif [ "$filetype" = "ipa" ]; then
-    unzip -q "$ipa" -d /tmp/ipa_payload 2>/dev/null
+    mkdir -p "/tmp/ipa_helper/$file_hash"
+    unzip -q "$ipa" -d "/tmp/ipa_helper/$file_hash" 2>&1>/dev/null
     check_status "unzipping ipa file"
-    if [ ! -d "/tmp/ipa_payload/Payload" ];then
+    if [ ! -d "/tmp/ipa_helper/$file_hash/Payload" ];then
         problem_encountered "problem unzipping ipa folder"
     fi
-    cd /tmp/ipa_payload/Payload
+    cd "/tmp/ipa_helper/$file_hash/Payload" 
     app="$(find ./ -type d -maxdepth 1 -iname "*.app*")"
-    ad="/tmp/ipa_payload/Payload/${app:3}"
+    ad="/tmp/ipa_helper/$file_hash/Payload/${app:3}" 
 elif [ "$filetype" = "zip" ]; then
-    mkdir /tmp/ipa_payload
-    unzip -q "$ipa" -d /tmp/ipa_payload/Payload 2>/dev/null
+    mkdir -p "/tmp/ipa_helper/$file_hash"
+    unzip -q "$ipa" -d "/tmp/ipa_helper/$file_hash/Payload" 2>/dev/null
     check_status "unzipping ipa file"
-    if [ ! -d "/tmp/ipa_payload/Payload" ];then
+    if [ ! -d "/tmp/ipa_helper/$file_hash/Payload" ];then
         problem_encountered "problem unzipping ipa folder"
     fi
-    cd /tmp/ipa_payload/Payload
+    cd "/tmp/ipa_helper/$file_hash/Payload"                                         
     app="$(find ./ -type d -iname "*.app*")"
     app="$(echo "$app" | while read -r line; do if [ "$line" = "${line%.dSYM}" ]; then echo "$line"; break; fi; done)"
     if [ "$app" = "" ]; then
         problem_encountered "zip file does not contain app file"
     fi
-    ad="/tmp/ipa_payload/Payload/${app:3}"
+    ad="/tmp/ipa_helper/$file_hash/Payload/${app:3}"
 fi
 
 #echo "ipa: $ipa ad: $ad"
