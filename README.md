@@ -224,9 +224,9 @@ do not remove or zip the temporary app directory after returning summary informa
 
 #### CLEAN ####
 
-**ipaHelper clean**
+**ipaHelper clean \[** *file* **\] \[** *--all* **\]**
 
-Cleans temporary files left over from Summary command with the --dont-clean option
+Cleans temporary files left over from Summary command with the --dont-clean option. If run with the --all option, the entire temp folder for ipaHelper is deleted. If *file* is supplied, the folder associated with that file is deleted. When run with no arguments or options, the folder associated with the first (alphabetically) ipa file in the working directory is deleted.
 
 #### REZIP ####
 
