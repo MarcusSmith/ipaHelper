@@ -63,17 +63,14 @@ xcarchive files will only be resigned as app files, for example:
 
 The **Summary** command works for .app, .ipa, .xcarchive, .mobileprovision, and .zip files (if the .zip file has an .app file one level deep)
 
-#### Resign an app with a profile downloaded from the Apple Developer Portal ####
+#### Resign an app with a profile ####
 
-	Download the correct provisioning profile from developer.apple.com (the profile should be downloaded into your Downloads folder)
 
-	$ cd /path/to/the/app  
-	$ ipaHelper get [theProfile] 
 	$ ipaHelper resign [theApp] -p [theProfile]
 
 The **resign** command works on .app, .ipa, .xcarchive, and .zip files (if the .zip file has an .app file one level deep)
 
-The **p** option is not necessary if there is only one provisioning profile in the same directory as the app.  The **get** command moves all provisioning profiles from the *Downloads* folder into your working directory if a specific profile is not given.
+The **p** option is not necessary if there is only one provisioning profile in the same directory as the app.
 
 #### Resign an app with a profile in your library that matches the app's bundle ID ####
 
@@ -87,38 +84,22 @@ The **double-check** option is not necessary, but it is a good idea to double ch
 
 The **matching** command could be used to specify "distribution" to make sure it is not matched to a development profile.  Or a specific name of a profile, if there are several matching the same bundle ID.
 
-#### Resign an ipa file and upload it to iTunesConnect ####
-
-	$ ipaHelper account --set [YourDistributionCertificateName] [youriTunesConnectAccount@email.com]
-	$ ipaHelper resign [the.ipa] --find --matching App Store Distribution
-	$ ipaHelper upload [the-resigned.ipa]
-	
-The **account** command with the **set** option only needs to be run once, not every time.  If there is no account set for the certificate that an app is signed with, you will be prompted for both an account and password.  The app must be the only one in your account in the "waiting for upload" state for the **upload** command to work.
 
 ### USAGE ###
-
-**ipaHelper get \[** *mobileprovision files...*  **\]**  
+  
 **ipaHelper certs \[** *substring* **\]**  
 **ipaHelper profile \[** *file* **\] \[** *options* **\]**  
 **ipaHelper find \[** *file* **\] \[** *options* **\]**  
 **ipaHelper info \[** *file* **\] \[** *options* **\]**  
 **ipaHelper summary \[** *file* **\]**  
-**ipaHelper clean**  
+**ipaHelper clean \[** *file* **\] \[** *--all* **\]**  
 **ipaHelper rezip \[** *outputfile* **\]**  
 **ipaHelper verify \[** *file* **\]**  
-**ipaHelper resign \[** *file* **\] \[** *options* **\]**  
-**ipaHelper account \[** *options* **\]**  
-**ipaHelper upload \[** *ipa file* **\]**  
+**ipaHelper resign \[** *file* **\] \[** *options* **\]**     
 **ipaHelper help \[** *-v* **\] \[** *commands* **\]**
 
 ### DESCRIPTION ###
        
-#### GET ####
-
-**ipaHelper get \[** *mobileprovision files...*  **\]**
-
-Moves *mobileprovision files* into the working directory.
-If no profiles are specified, all .mobileprovision files in the Downloads folder are moved.
 
 #### CERTS ####
 
@@ -271,30 +252,6 @@ display information about the file, its Info.plist, and the provisioning profile
 **-f, --force**
 overwrite output file on resign without asking.  Uses the profiles App ID if the App ID and Bundle ID do not match.
 
-#### ACCOUNT ####
-
-**ipaHelper account \[** *options* **\]**
-
-Displays information about which certificates are linked with which iTunesConnect accounts.
-
-If no options are provided, then all certificates and their linked accounts are displayed.
-
-**Account Options:**
-
-**-g** *certificate* **, --get** *certificate*  
-returns the iTunesConnect account linked to *certificate*
-
-**-s** *certificate account* **, --set** *certificate account*  
-Links *certificate* to the iTunesConnect *account*
-
-**-r** *certificate* **, --remove** *certificate*  
-Removes the link between *certificate* and its iTunesConnect account
-
-#### UPLOAD ####
-
-**ipaHelper upload \[** *ipa file* **\]**
-
-Uploads *ipa file* to iTunesConnect.  Asks for an iTunesConnect username if none is linked to the ipas certificate. Asks for a password for this account.  If no *ipa file* is provided, the first (alphabetically) ipa file in the working directory is used.
 
 #### HELP ####
 

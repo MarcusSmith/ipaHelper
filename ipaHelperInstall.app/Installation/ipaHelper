@@ -63,7 +63,7 @@ Displays usage information for the different commands.
 If -v option is present it shows the usage information for all of the commands.
 '
 
-echo "Commands:   Get   Certs   Profile   Find   Info   Summary   Clean   Rezip   Verify   Resign   Account   Upload   Help"
+echo "Commands:   Certs   Profile   Find   Info   Summary   Clean   Rezip   Verify   Resign   Help"
 echo
 }
 
@@ -91,18 +91,6 @@ ipaHelper rezip outputfile
 Rezips left over temporary files from Summary command with the --dont-clean option as outputfile.
 
 Outputfile must be an app, ipa, or zip file.
-'
-}
-
-function help_get
-{
-echo '*****GET*****
-
-ipaHelper get [ mobileprovision files...  ]
-
-Moves mobileprovision files into the working directory.
-
-If no profiles are specified, all mobileprovision files in the Downloads folder are moved.
 '
 }
 
@@ -254,40 +242,6 @@ Options:
 
 [-F | --force] will overwrite output file on resign without asking.  Uses the profiles App ID if the App ID and Bundle ID do not match.
 
-'
-}
-
-function help_account
-{
-echo '*****ACCOUNT*****
-
-ipaHelper account [ options ]
-
-Displays information about which certificates are linked with which iTunesConnect accounts.
-
-If no options are provided, then all certificates and their linked accounts are displayed.
-
-Options:
-
-[-g | --get] takes a certificate as an argument, returns the iTunesConnect account linked to that certificate
-
-[-s | --set] takes a certificate and an iTunesConnect account as arguments.  Links the certificate to the iTunesAccount
-
-[-r | --remove] takes a certificate as an argument.  Removes the link between this certificate and its iTunesConnect account.
-'
-}
-
-function help_upload
-{
-echo '*****UPLOAD*****
-
-ipaHelper upload [ ipa file ]
-
-Uploads the ipa file to iTunesConnect.  Asks for an iTunesConnect username if none is linked to the ipas certificate.
-
-Asks for a password for this account.
-
-If no ipa file is provided, the first (alphabetically) ipa file in the working directory is used.
 '
 }
 
@@ -711,24 +665,12 @@ echo '<?xml version="1.0" encoding="UTF-8"?>
 '
 }
 
-
-function make_plist
-{
-    echo '<?xml version="1.0" encoding="UTF-8"?>'
-    echo '<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">'
-    echo '<plist version="1.0">'
-    echo '<dict>'
-    echo '</dict>'
-    echo '</plist>'
-}
-
 ### CMD FUNCTIONS ###
 function cmd_help
 {
 if [ "$1" = "" ]; then
     help_help
 elif [ "$1" = "-v" ]; then
-    help_get
     help_certs
     help_profile
     help_find
@@ -738,15 +680,12 @@ elif [ "$1" = "-v" ]; then
     help_rezip
     help_verify
     help_resign
-    help_account
-    help_upload
 else
     while [ "$1" != "" ]; do
         case "$1" in
             [cC]lean )      help_clean;;
             [rR]ezip )      help_rezip;;
             [hH]elp* )      help_help;;
-            [gG]et* )       help_get;;
             [cC]erts )      help_certs;;
             [pP]rofile* )   help_profile;;
             [fF]ind* )      help_find;;
@@ -754,8 +693,6 @@ else
             [sS]ummary* )   help_summary;;
             [vV]erify* )    help_verify;;
             [rR]esign* )    help_resign;;
-            [aA]ccount* )   help_account;;
-            [uU]pload* )    help_upload;;
             * ) problem_encountered "Not a valid command";;
         esac
         shift
@@ -778,83 +715,6 @@ function cmd_certs
             echo "${tmp%?}"
         fi
     done <<< "$certs"
-}
-
-function cmd_get
-{
-    echo "moving..."
-    if [ "$1" = "" ];then
-        find ~/Downloads/ -type f -iname "*.mobileprovision" | while read f; do
-            echo "$f"
-            profilename="$(basename "${f}")"
-            mv "$f" "./$profilename"
-        done
-        script_done
-    fi
-    while [ "$1" != "" ];do
-        if [ "${1%.mobileprovision}" != "$1" ];then
-            echo "$1"
-            profilename="$(basename "${1}")"
-            mv "$1" "$bd/$profilename"
-        else
-            problem_encountered "Not a profile"
-        fi
-        shift
-    done
-}
-
-function cmd_account
-{
-    if [ ! -f ~/Publishing/Resources/accounts.plist ]; then
-        make_plist > ~/Publishing/Resources/accounts.plist
-    fi
-    accounts="$(cat ~/Publishing/Resources/accounts.plist)" 
-    if [ "$1" = "" ]; then
-        keys="$(allkeys "$accounts")"
-        while read -r key; do
-            value="$(value_for_key "$accounts" "$key")"
-            if [ "$key" != "" ]; then
-                echo "$key: $value"
-            fi
-        done <<< "$keys"
-    else
-        case "$1" in
-        -g | --get )    if [ "$2" = "" ]; then
-                            problem_encountered "missing key"
-                        fi
-                        value="$(value_for_key "$accounts" $2)"
-                        echo "$2: $value";;
-        -s | --set )    if [ "$2" = "" ]; then
-                            problem_encountered "missing key"
-                        fi
-                        if [ "$3" = "" ]; then
-                            problem_encountered "missing value"
-                        fi
-                        #check to see if the key is already there
-                        if [ "$accounts" != "${accounts#*<key>$2</key>}" ]; then
-                            tmp="${accounts#*<key>$2</key>}"
-                            tmp="${tmp#*>}"
-                            front="${accounts%$tmp}"
-                            back="<${tmp#*<}"
-                            echo "$front$3$back" > ~/Publishing/Resources/accounts.plist
-                        else
-                            front="${accounts%%</dict*>}"
-                            back="${accounts#$front}"
-                            new="$front\t<key>$2</key>\n\t<string>$3</string>\n$back"
-                            echo -e "$new" > ~/Publishing/Resources/accounts.plist
-                        fi;;
-        -r | --remove ) if [ "$accounts" != "${accounts#*<key>$2</key>}" ]; then
-                            front="${accounts%%<key>$2</key>*}"
-                            front="${front%>*}>"
-                            tmp="${accounts#$front}"
-                            back="${tmp#*</string>}"
-                            echo "$front$back" > ~/Publishing/Resources/accounts.plist
-                        else
-                            problem_encountered "Key does not exist"
-                        fi;;
-        * )             problem_encountered "not a valid option";;
-        esac
-    fi
 }
 
 function cmd_profile
@@ -1207,45 +1067,6 @@ elif [ "$filetype" = "app" ]; then
 fi
 }
 
-function cmd_upload
-{
-    if [ "$filetype" != "ipa" ]; then
-        problem_encountered "Can only upload ipa files"
-    fi
-    profile="$ad/embedded.mobileprovision"
-    if [ "$profile" = "" ];then
-        problem_encountered "No Provisioning profile"
-    fi
-    fullprofile="$(security cms -D -i "$profile")"
-    cert="$(value_for_key "$fullprofile" TeamName)"
-    username=
-    if [ -f ~/Publishing/Resources/accounts.plist ]; then
-        accounts="$(cat ~/Publishing/Resources/accounts.plist)"
-        keys="$(allkeys "$accounts")"
-        if [ "$keys" != "${keys#*$cert}" ]; then
-            username="$(value_for_key "$accounts" "$cert")"
-        fi
-    fi
-    password=
-    if [ "$username" = "" ]; then
-        echo -n "username:"
-        read username
-        echo -n "password:"
-        read -s password
-    else
-        echo -n "password for $username:"
-        read -s password
-    fi
-    echo ""
-    validator="$(xcrun -sdk iphoneos -find Validation)"
-    q="$(security delete-generic-password  -s Xcode:itunesconnect.apple.com 2>&1)"
-    q="$(security add-generic-password -s Xcode:itunesconnect.apple.com -a $username -w $password -U -T $validator 2>&1)"
-    echo "uploading..."
-    xcrun -sdk iphoneos Validation -online -upload -verbose "$bd/$ipa" 2>/dev/null
-    q="$(security delete-generic-password  -s Xcode:itunesconnect.apple.com 2>&1)"
-}
-
-
 #function to hash a string
 function hash_string
 {
@@ -1294,18 +1115,6 @@ fi
 #if there is a following argument, it limits the certificates shown to ones matching this substring
 if [ "$cmd" = "c" -o "$cmd" = "certs" -o "$cmd" = "certficiates" ];then
     cmd_certs "$@"
-    script_done
-fi
-
-#if the cmd is "get" or "g", move following args to the working directory if they are mobileprovision files.  If no args specified, pull all mobileprovision files from the ~/Downloads/ folder
-if [ "$cmd" = "get" -o "$cmd" = "g" ];then
-    cmd_get "$@"
-    script_done
-fi
-
-#if the cmd is "account" or "a", modify the accounts plist (for use in linking certificates to iTunesConnect accounts)
-if [ "$cmd" = "account" -o "$cmd" = "accounts" -o "$cmd" = "a" ];then
-    cmd_account "$@"
     script_done
 fi
 
@@ -1479,11 +1288,6 @@ if [ "$cmd" = "rezip" ]; then
     script_done
 fi
 
-#if cmd is "upload" or "u" try to upload the ipa to iTunesConnect
-if [ "$cmd" = "u" -o "$cmd" = "upload" ];then
-    cmd_upload "$@"
-    script_done
-fi
 #cmd was not a valid command
 if [ "${cmd:0:1}" = "-" ];then
 	problem_encountered "Missing Command"
