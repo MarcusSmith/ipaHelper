@@ -258,6 +258,9 @@ fi
 function value_for_key
 {
 tmp="${1##*<key>"$2"</key>}"
+if [ "$1" = "$tmp" ]; then
+    return
+fi
 tmp="${tmp%%</*}"
 tmp="${tmp##*>}"
 echo "$tmp"
