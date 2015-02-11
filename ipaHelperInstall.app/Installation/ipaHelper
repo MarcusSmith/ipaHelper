@@ -1,5 +1,5 @@
 #!/bin/bash
-
+ 
 #take the name of the process as $1 (eg: "unzipping file" or "resiging app"), if there was an error, exit the script with the text "Error $1"
 function check_status
 {
@@ -602,6 +602,18 @@ while [ "$1" != "" ];do
 	esac
 done
 }
+function frameworks_from_args
+{
+while [ "$1" != "" ];do
+    case "$1" in
+        --frameworks ) 	echo "frameworks"
+                    break;;
+        * )			shift
+    esac
+done
+
+}
+
 
 function convert_to_JSON
 {
@@ -1036,8 +1048,21 @@ function cmd_resign
     if [ ! -f "$ad/ResourceRules.plist" ]; then
         make_resource_rules > "$ad"/ResourceRules.plist
     fi
+
+    if [ "$(frameworks_from_args "$@")" = "frameworks" ]; then
+        codesign -f -s "$cert" "$ad/Frameworks/"* 
+     #  codesign -v --verify "$ad/Frameworks/"* 
+        check_status "signing frameworks"
+#        echo "Signed frameworks"
+  #      codesign -v --verify "$ad"
+      #  codesign -v --verify "$ad" 
+        check_status "signing frameworks"
+        #echo "Signed frameworks"
+    fi
+
     codesign -f -s "$cert" $entitlementsstring $bundlestring --resource-rules "$ad/ResourceRules.plist" "$ad" 2>/dev/null
     check_status "resigning the app"
+
     cmd_rezip "$newipa"
     echo "Resign Successful"
 }
@@ -1095,18 +1120,6 @@ if [ "$cmd" = "" ];then
 else
     shift
 fi
-
-if [ "$cmd" = "test" ]; then
-    matching="$(matching_from_args "$@")"
-    profile="$(first_library_match "$1" "$matching")"
-    if [ "$profile" != "" ]; then
-        echo "$profile"
-    else
-        echo "no matches"
-    fi    
-    script_done    
-fi
-
 
 #if cmd was "help" or "h" show the usage page
 if [ "$cmd" = "help" -o "$cmd" = "h" ];then

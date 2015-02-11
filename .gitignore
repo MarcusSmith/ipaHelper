@@ -1,3 +1,4 @@
+*.swp
 # Xcode
 .DS_Store
 */build/*
