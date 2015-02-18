@@ -240,6 +240,8 @@ Options:
 
 [-d | --double-check] displays information about the file, its Info.plist, and the provisioning profile and offers a choice to continue or quit
 
+[--frameworks] resigns frameworks in swift .app folders. Not for Objective-C apps.
+
 [-F | --force] will overwrite output file on resign without asking.  Uses the profiles App ID if the App ID and Bundle ID do not match.
 
 '
@@ -1050,14 +1052,12 @@ function cmd_resign
     fi
 
     if [ "$(frameworks_from_args "$@")" = "frameworks" ]; then
-        codesign -f -s "$cert" "$ad/Frameworks/"* 
-     #  codesign -v --verify "$ad/Frameworks/"* 
-        check_status "signing frameworks"
-#        echo "Signed frameworks"
-  #      codesign -v --verify "$ad"
-      #  codesign -v --verify "$ad" 
-        check_status "signing frameworks"
-        #echo "Signed frameworks"
+        if [ -d "$ad/Frameworks/" ]; then
+            codesign -f -s "$cert" "$ad/Frameworks/"* 
+            check_status "signing frameworks"
+        else
+            problem_encountered "frameworks folder doesn't exist"
+        fi
     fi
 
     codesign -f -s "$cert" $entitlementsstring $bundlestring --resource-rules "$ad/ResourceRules.plist" "$ad" 2>/dev/null
