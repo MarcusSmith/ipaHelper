@@ -240,7 +240,7 @@ Options:
 
 [-d | --double-check] displays information about the file, its Info.plist, and the provisioning profile and offers a choice to continue or quit
 
-[--frameworks] resigns frameworks in swift .app folders. Not for Objective-C apps.
+[--frameworks] resigns frameworks in Swift .app folders. Not for Objective-C apps.
 
 [-F | --force] will overwrite output file on resign without asking.  Uses the profiles App ID if the App ID and Bundle ID do not match.
 

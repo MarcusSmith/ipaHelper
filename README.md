@@ -250,7 +250,7 @@ resign the ipa file as *filename* instead of \[*ipa filename*\]-resigned.ipa
 display information about the file, its Info.plist, and the provisioning profile and have be given an option to continue with the resign or quit
 
 **--frameworks**  
-resigns frameworks in swift .app folders. Not for Objective-C apps.
+resigns frameworks in Swift .app folders. Not for Objective-C apps.
 
 **-f, --force**  
 overwrite output file on resign without asking.  Uses the profiles App ID if the App ID and Bundle ID do not match.
