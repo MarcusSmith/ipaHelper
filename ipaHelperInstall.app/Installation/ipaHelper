@@ -240,8 +240,6 @@ Options:
 
 [-d | --double-check] displays information about the file, its Info.plist, and the provisioning profile and offers a choice to continue or quit
 
-[--frameworks] resigns frameworks in Swift .app folders. Not for Objective-C apps.
-
 [-F | --force] will overwrite output file on resign without asking.  Uses the profiles App ID if the App ID and Bundle ID do not match.
 
 '
@@ -604,18 +602,6 @@ while [ "$1" != "" ];do
 	esac
 done
 }
-function frameworks_from_args
-{
-while [ "$1" != "" ];do
-    case "$1" in
-        --frameworks ) 	echo "frameworks"
-                    break;;
-        * )			shift
-    esac
-done
-
-}
-
 
 function convert_to_JSON
 {
@@ -1050,19 +1036,16 @@ function cmd_resign
     if [ ! -f "$ad/ResourceRules.plist" ]; then
         make_resource_rules > "$ad"/ResourceRules.plist
     fi
-
-    if [ "$(frameworks_from_args "$@")" = "frameworks" ]; then
-        if [ -d "$ad/Frameworks/" ]; then
-            codesign -f -s "$cert" "$ad/Frameworks/"* 
-            check_status "signing frameworks"
-        else
-            problem_encountered "frameworks folder doesn't exist"
-        fi
+    if [ -d "$ad/Frameworks/" ]; then
+        codesign -f -s "$cert" "$ad/Frameworks/"* 
+        check_status "signing frameworks"
     fi
-
+    if [ -d "$ad/Plugins/" ]; then
+        codesign -f -s "$cert" "$ad/Plugins/"* 
+        check_status "signing extensions"
+    fi
     codesign -f -s "$cert" $entitlementsstring $bundlestring --resource-rules "$ad/ResourceRules.plist" "$ad" 2>/dev/null
     check_status "resigning the app"
-
     cmd_rezip "$newipa"
     echo "Resign Successful"
 }
