@@ -1037,11 +1037,45 @@ function cmd_resign
         make_resource_rules > "$ad"/ResourceRules.plist
     fi
     if [ -d "$ad/Frameworks/" ]; then
-        codesign -f -s "$cert" "$ad/Frameworks/"* 
+        codesign -f -s "$cert" "$ad/Frameworks/"* 2>&1>/dev/null 
         check_status "signing frameworks"
     fi
     if [ -d "$ad/Plugins/" ]; then
-        codesign -f -s "$cert" "$ad/Plugins/"* 
+        for extension in "$ad/Plugins/"*.appex; do 
+            extension_plist="$(cat "$extension/Info.plist")"
+            xml=Y
+            if [ "${extension_plist:0:5}" != "<?xml" ]; then
+                 xml=N
+                 plutil -convert xml1 "$extension/Info.plist"
+                 extension_plist="$(cat "$extension/Info.plist")"
+            fi
+
+            extension_name="$(basename "$extension")"
+            extension_name="${extension_name%.*}"
+            starting_extensionID="$(value_for_key "$extension_plist" CFBundleIdentifier)"
+            new_extensionID="$bundleid"
+
+            if [ $matching = "N" ]; then
+               new_extensionID="$newbundleID"
+            fi
+
+            if [[ ($matching = "Y" && "$bundleid.$extension_name" != "$starting_extensionID") || ($matching = "N" && "$newbundleID.$extension_name" != "$starting_extensionID") ]]; then
+                tmp="${extension_plist#*<key>CFBundleIdentifier</key>}"
+   	            tmp="${tmp#*</}"
+		        tbck="</$tmp"
+		        tmp="${extension_plist%$tbck}"
+		        tmp="${tmp%>*}"
+		        tfrt="$tmp>"	
+                
+                echo "$tfrt$new_extensionID.$extension_name$tbck" > "$extension/Info.plist"
+            fi
+
+            if [ "$xml" = "N" ]; then
+                plutil -convert binary1 "$extension/Info.plist"
+            fi      
+        done
+
+        codesign -f -s "$cert" "$ad/Plugins/"* 2>&1>/dev/null
         check_status "signing extensions"
     fi
     codesign -f -s "$cert" $entitlementsstring $bundlestring --resource-rules "$ad/ResourceRules.plist" "$ad" 2>/dev/null
@@ -1066,7 +1100,7 @@ if [ ! -d /tmp/ipa_helper ]; then
 fi
 if [ "$filetype" = "ipa" ]; then
     cd "/tmp/ipa_helper/$file_hash"
-    zip -qr "$newfile" Payload/ 2>/dev/null
+    zip -qr "$newfile" Payload/ #2>/dev/null
     check_status "zipping the ipa file"
 elif [ "$filetype" = "zip" ]; then
     cd "/tmp/ipa_helper/$file_hash/Payload"
