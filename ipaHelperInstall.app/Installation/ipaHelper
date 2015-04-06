@@ -63,7 +63,7 @@ Displays usage information for the different commands.
 If -v option is present it shows the usage information for all of the commands.
 '
 
-echo "Commands:   Certs   Profile   Find   Info   Summary   Clean   Rezip   Verify   Resign   Help"
+echo "Commands:   Profile   Find   Info   Summary   Clean   Rezip   Verify   Resign   Help"
 echo
 }
 
@@ -78,7 +78,6 @@ If run with the --all option, the entire temp folder for ipaHelper is deleted.
 If file is supplied, the folder associated with that file is deleted.
 When run with no arguments or options, the folder associated with the first (alphabetically) ipa file in the working directory is deleted.
 
-
 '
 }
 
@@ -91,18 +90,7 @@ ipaHelper rezip outputfile
 Rezips left over temporary files from Summary command with the --dont-clean option as outputfile.
 
 Outputfile must be an app, ipa, or zip file.
-'
-}
 
-function help_certs
-{
-echo '*****CERTS*****
-
-ipaHelper certs [ substring ]
-
-Displays information on all certificates in the keychain.
-
-If a substring is provided, only certificates containing this substring are displayed.
 '
 }
 
@@ -122,19 +110,8 @@ Options:
                 
 [-v | --verbose] display the entire profile in xml format
                 
-[-i | --id] display the application identifier
-                
-[-c | --certificate] display the certificate name
-                
-[-t | --team] display the team name on the certificate
-                
-[-x | --expiration] display the expiration date for the profile
-                
 [-e | --entitlements] display the entitlements on the profile
-                
-[-k | --key] takes a key as an argument, returns the value for that key on the profile   
 
-[-l | --list] lists all keys in the profile
 '
 }
 
@@ -157,6 +134,7 @@ Options:
 [-a | --all] displays all profiles in the library.  Ignores --no-wildcard option.
 
 [--json] returns the profile information in a JSON dictionary.
+
 '
 }
 
@@ -177,12 +155,7 @@ Options:
 [-e | --edit] takes an editor as an argument and edits the Info.plist in this editor.  Uses default $EDITOR if no editor provided.
                 
 [-v | --verbose] display the entire Info.plist in xml format
-                
-[-i | --identifier] display the CFBundleIdentifier
-                
-[-k | --key] takes a key as an argument, returns the value for that key on the Info.plist
 
-[-l | --list] lists all keys in the Info.plist
 '
 }
 
@@ -201,6 +174,7 @@ Options:
 [--json] returns the summary information in a JSON dictionary.  Also adds the a key "AppDirectory" for the temporary unzipped app.
         
 [-dc | --dont-clean] does not remove the temporary app directory after returning summary information
+
 '
 }
 
@@ -213,6 +187,7 @@ ipaHelper verify [ file ]
 Checks to make sure the necessary code signing components are in place for an ipa, app, xcarchive, or zip file containing an app file
 
 If no file is provided the first (alphabetically) ipa file in the working directory is used.
+
 '
 }
 
@@ -266,18 +241,6 @@ tmp="${tmp##*>}"
 echo "$tmp"
 }
 
-#takes an xml string and returns all keys in that file
-function allkeys
-{
-while read -r line; do
-    if [ "$line" != "${line#*<key>}" ]; then
-        tmp="${line#*<key>}"
-        tmp="${tmp%</key>*}"
-        echo "$tmp"
-    fi
-done <<< "$1"
-}
-
 #returns useful information from an Info.plist
 function parse_info
 {
@@ -308,6 +271,7 @@ while read search; do
 done <<< "$2"
 echo "$result"
 }
+
 function library_profiles
 {
 find ~/Library/MobileDevice/"Provisioning Profiles" -iname "*.mobileprovision" | while read profile; do 
@@ -424,27 +388,9 @@ echo "$1" | awk '{split($0,a,"|"); print "***** PROFILE *****"; print "Profile:"
 }
 
 #returns profile name from a list of resign args
-function profile_from_args
-{
-tmp=
-while [ "$1" != "" ];do
-    case "$1" in
-		-p | --profile )	if [ "${2:0:1}" = "-" -o "$2" = "" ];then
-		        				break
-				        	fi
-				        	cd "$wd"
-				        	tmp="$2"
-				        	if [[ "$2" = *"/"* ]]; then
-					    	cd "$(dirname "$2")"
-					    	tmp="$(basename "$2")"
-    				    	fi
-    					    dir="$(pwd)"
-    				    	echo "$dir/$tmp"
-    			    		break;;
-		* )			        shift;;
-	esac
-done
-if [ "$tmp" != "" ]; then
+function profile_from_args {
+if [ "$opt_profile" != "" ]; then
+    echo "$opt_profile"
 	return
 fi
 cd "$bd"
@@ -458,107 +404,11 @@ done
 #returns output filename from a list of resign args
 function output_from_args
 {
-tmp=
-while [ "$1" != "" ];do
-    case "$1" in
-        -o | --output )     if [ "${2:0:1}" = "-" -o "$2" = "" ];then
-                                break
-                            fi
-                            cd "$wd"
-                            tmp="$2"
-                            if [[ "$2" = *"/"* ]]; then
-                                cd $(dirname "${2}")
-                                tmp=$(basename "${2}")
-                            fi
-                            dir="$(pwd)"
-                            echo "$dir/$tmp"
-                            break;;
-        * )                 shift;;
-    esac
-done
-if [ "$tmp" != "" ]; then
+if [ "$opt_output" != "" ]; then
+    echo "$opt_output"
     return
 fi
 echo "$bd/${ipa%.*}-resigned.$filetype"
-}
-
-
-#returns "dc" if -d --double-check option in args list
-function dc_from_args
-{
-while [ "$1" != "" ];do
-	case "$1" in
-		-d | --double-check ) 	echo "dc"
-								break;;
-		* )						shift;;
-	esac
-done
-}
-
-function find_from_args
-{
-while [ "$1" != "" ];do
-	case "$1" in
-		-f | --find ) 	echo "find"
-					    break;;
-		* )			    shift;;
-	esac
-done
-}
-
-function all_from_args
-{
-while [ "$1" != "" ];do
-	case "$1" in
-		-a | --all ) 	echo "all"
-						break;;
-		* )				shift;;
-	esac
-done
-}
-
-function nowildcard_from_args
-{
-while [ "$1" != "" ];do
-	case "$1" in
-		-n | --no-wildcard ) 	echo "nw"
-								break;;
-		* )						shift;;
-	esac
-done
-}
-
-function matching_from_args
-{
-while [ "$1" != "" ];do
-	case "$1" in
-        -m | --matching )   while  [ "$2" != "" -a "${2:0:1}" != "-" ]; do
-                                echo "$2"
-                                shift
-                            done
-                            break;;
-		* )		            shift;;
-	esac
-done
-}
-
-function edit_from_args
-{
-while [ "$1" != "" ];do
-	case "$1" in
-        -e | --edit )   if  [ "$2" != "" ]; then
-                            echo "$2"
-                        else
-                            if [ "$EDITOR" = "" ]; then
-                                echo "vim"
-                            else
-                                echo "$EDITOR"
-                            fi
-                        fi
-                        break;;
-		* )		        shift;;
-	esac
-done
 }
 
 # $1 is the file, $2 is the editor
@@ -568,39 +418,6 @@ if [ "$2" != "" -a "$1" != "" ]; then
     "$2" "$1"
     check_status "editing file"
 fi
-}
-
-function force_from_args
-{
-while [ "$1" != "" ];do
-	case "$1" in
-		-F | --force ) 	echo "force"
-						break;;
-		* )				shift
-	esac
-done
-}
-
-function dontclean_from_args
-{
-while [ "$1" != "" ];do
-	case "$1" in
-		-dc | --dont-clean ) 	echo "dc"
-								break;;
-		* )						shift
-	esac
-done
-}
-
-function JSON_from_args
-{
-while [ "$1" != "" ];do
-	case "$1" in
-		--json ) 	echo "json"
-					break;;
-		* )			shift
-	esac
-done
 }
 
 function convert_to_JSON
@@ -674,7 +491,6 @@ function cmd_help
 if [ "$1" = "" ]; then
     help_help
 elif [ "$1" = "-v" ]; then
-    help_certs
     help_profile
     help_find
     help_info
@@ -689,7 +505,6 @@ else
             [cC]lean )      help_clean;;
             [rR]ezip )      help_rezip;;
             [hH]elp* )      help_help;;
-            [cC]erts )      help_certs;;
             [pP]rofile* )   help_profile;;
             [fF]ind* )      help_find;;
             [iI]nfo* )      help_info;;
@@ -703,70 +518,30 @@ else
 fi
 }
 
-
-function cmd_certs
-{
-    tmp=
-    if [ "$1" != "" ]; then
-        tmp=" -c $1"
-    fi
-    certs="$(security find-certificate$tmp -a)"
-    echo '********************** Certificates **********************' 
-    while read line; do
-        if [ "$line" != "${line#*'labl"<blob>="'}" ]; then
-            tmp="${line#*'labl"<blob>="'}"
-            echo "${tmp%?}"
-        fi
-    done <<< "$certs"
-}
-
 function cmd_profile
 {
-	if [ "$1" = "" ];then
-		echo '*********************************************************'
-		display_profile "$profile"
-		echo '*********************************************************'
-		script_done
-	fi
 	fullprofile="$(security cms -D -i "$profile")"
-	while [ "$1" != "" ];do
-		case "$1" in
-			-v | --verbose )	    echo "$fullprofile";;
-            -i | --id )             echo "Application Identifier: $(value_for_key "$fullprofile" "application-identifier")";;
-            -c | --certificate )    echo "Certificate Name: $(value_for_key "$fullprofile" "Name")";;
-			-t | --team )		    echo "Team Name: $(value_for_key "$fullprofile" "TeamName")";;
-            -x | --expiration )     echo "Expiration Date: $(date -j -f "%Y-%m-%dT%H:%M:%SZ" $(value_for_key "$fullprofile" "ExpirationDate") +"%b %e, %Y")";;
-			-e | --entitlements )	tmp="${fullprofile##*Entitlements}"
-					            	tmp="${tmp#*<dict>}"
-					            	tmp="${tmp%%</dict>*}"
-					            	tmp="${tmp//?[[:space:]]</<}"
-					            	tmp="${tmp:1}"
-					            	echo '***************ENTITLEMENTS***************'
-					            	echo "$tmp"
-					            	echo '******************************************';;	
-			-k | --key )	    	shift
-					            	if [ "$1" = "" ];then
-						             	problem_encountered "key option needs a parameter"
-						            fi
-						            echo "$1: $(value_for_key "$fullprofile" "$1")";;
-            -l | --list)            echo '****************** KEYS ******************'
-                                    while read line; do 
-                                        if [ "${line#*<key>}" != "$line" ]; then 
-                                            tmp="${line%%</key>*}" 
-                                            echo "${tmp##*<key>}"  
-                                        fi 
-                                    done <<< "$fullprofile"
-                                    echo '******************************************';;
-            * )			            problem_encountered "Invalid Option";;
-		esac
-		shift
-	done
+	if [ "$opt_verbose" = "Y" ]; then
+        echo "$fullprofile"
+    elif [ "$opt_entitlements" = "Y" ]; then
+        tmp="${fullprofile##*Entitlements}"
+        tmp="${tmp#*<dict>}"
+        tmp="${tmp%%</dict>*}"
+        tmp="${tmp//?[[:space:]]</<}"
+        tmp="${tmp:1}"
+        echo '***************ENTITLEMENTS***************'
+        echo "$tmp"
+        echo '******************************************'
+    else
+        echo '*********************************************************'
+        display_profile "$profile"
+        echo '*********************************************************'
+    fi
 }
 
 function cmd_info
 {
-edit="$(edit_from_args "$@")"
-if [ "$edit" != "" ]; then
+    if [ "$opt_edit" != "" ]; then
         xml=Y
         #check to see if the info.plist is a binary
         plist="$(cat $infoplist)"
@@ -774,7 +549,7 @@ if [ "$edit" != "" ]; then
             xml=N
             plutil -convert xml1 "$infoplist"
         fi
-        edit_file_with "$infoplist" "$edit"
+        edit_file_with "$infoplist" "$opt_edit"
         #convert back to binary if it was binary
         if [ "$xml" = "N" ]; then
             plutil -convert binary1 "$infoplist"
@@ -782,39 +557,19 @@ if [ "$edit" != "" ]; then
         if [ "$ipa" != "" ]; then
             cmd_rezip "$bd/$ipa"
         fi
-else
-    cp "$infoplist" "/tmp/ipa_helper/$file_hash/Info.plist"
-	infoplist="/tmp/ipa_helper/$file_hash/Info.plist"
-	plutil -convert xml1 "$infoplist"
-	infoplist="$(cat "$infoplist")"
-	if [ "$1" = "" ];then
-                echo '*********************************************************'
-                parse_info "$infoplist"
-                echo '*********************************************************'
     else
-        while [ "$1" != "" ];do
-            case "$1" in
-            -v | --verbose )    	echo "$infoplist";;
-            -i | --identifier )   	echo "CFBundleIdentifier: $(value_for_key "$infoplist" "CFBundleIdentifier")";;
-            -k | --key )            shift
-                                    if [ "$1" = "" ];then
-                                        problem_encountered "key option needs a parameter"
-                                    fi
-                                    echo "$1: $(value_for_key "$infoplist" "$1")";;
-            -l | --list)            echo '****************** KEYS ******************'
-                                    while read line; do
-                                        if [ "${line#*<key>}" != "$line" ]; then
-                                            tmp="${line%%</key>*}"
-                                            echo "${tmp##*<key>}"  
-                                        fi
-                                    done <<< "$infoplist"
-                                    echo '******************************************';;
-            * )                     	problem_encountered "Invalid Option";;
-            esac
-            shift
-        done
+        cp "$infoplist" "/tmp/ipa_helper/$file_hash/Info.plist"
+	    infoplist="/tmp/ipa_helper/$file_hash/Info.plist"
+	    plutil -convert xml1 "$infoplist"
+	    infoplist="$(cat "$infoplist")"
+        if [ "$opt_verbose" = "Y" ]; then
+            echo "$infoplist"
+        else
+            echo '*********************************************************'
+            parse_info "$infoplist"
+            echo '*********************************************************'
+        fi
     fi
-fi
 }
 
 function cmd_summary
@@ -847,25 +602,22 @@ function cmd_summary
 
 function cmd_find
 {
-all="$(all_from_args "$@")"
-if [ "$all" = "" ]; then
+if [ "$opt_all" = "" ]; then
     cp "$ad/Info.plist" "/tmp/ipa_helper/$file_hash/Info.plist"
     plutil -convert xml1 "/tmp/ipa_helper/$file_hash/Info.plist"
     info="$(cat "/tmp/ipa_helper/$file_hash/Info.plist")"
     bundleid="$(value_for_key "$info" "CFBundleIdentifier")"
 fi
 library="$(library_profiles)"
-matching="$(matching_from_args "$@")"
-if [ "$matching" != "" ]; then
-    library="$(grep_loop "$library" "$matching")"
+if [ "$opt_matching" != "" ]; then
+    library="$(grep_loop "$library" "$opt_matching")"
 fi
-if [ "$all" = "" ]; then
+if [ "$opt_all" = "" ]; then
     profiles="$(profiles_direct_match "$library" "$bundleid")"
-    nw="$(nowildcard_from_args "$@")"
-    if [ "$nw" != "nw" ]; then 
+    if [ "$opt_no_wildcard" != "Y" ]; then 
         if [ "$profiles" != "" ]; then
             profiles="$profiles
-$(profiles_wildcard_match "$library" "$bundleid")"
+            $(profiles_wildcard_match "$library" "$bundleid")"
         else
             profiles="$(profiles_wildcard_match "$library" "$bundleid")"
         fi
@@ -877,8 +629,7 @@ $(profiles_wildcard_match "$library" "$bundleid")"
 else
     profiles="$library"
 fi
-json="$(JSON_from_args "$@")"
-if [ "$json" = "json" ]; then
+if [ "$opt_json" = "json" ]; then
     profiles_to_JSON "$profiles"
 else
     profiles_to_readable "$profiles"
@@ -899,11 +650,9 @@ function cmd_resign
     plutil -convert xml1 "/tmp/ipa_helper/$file_hash/Info.plist"
     infoplist="$(cat "/tmp/ipa_helper/$file_hash/Info.plist")"
 	bundleid="$(value_for_key "$infoplist" CFBundleIdentifier)"
-    find="$(find_from_args "$@")"
     profile=
-    if [ "$find" = "find" ]; then
-        matching="$(matching_from_args "$@")"
-        profile="$(first_library_match "$bundleid" "$matching")"
+    if [ "$opt_find" = "Y" ]; then
+        profile="$(first_library_match "$bundleid" "$opt_matching")"
         profile="${profile##*|}"
     else
     	profile="$(profile_from_args "$@")"    
@@ -923,9 +672,8 @@ function cmd_resign
     if [ "$newfiletype" != "ipa" -a "$newfiletype" != "app" -a "$newfiletype" != "zip" -a "$newfiletype" != "xcarchive" ]; then
         problem_encountered "Invalid output type"
     fi
-    force="$(force_from_args "$@")"
     #see if this output file already exists
-    if [ -f "$newipa" -a "$force" != "force" ]; then
+    if [ -f "$newipa" -a "$opt_force" != "Y" ]; then
         echo "$(basename "$newipa") already exists."
         input=
         while [ "$input" != "o" ]; do
@@ -939,8 +687,7 @@ function cmd_resign
         done
         echo ""
     fi
-    dc="$(dc_from_args "$@")"
-	if [ "$dc" = "dc" ];then
+	if [ "$opt_dont_clean" = "Y" ];then
         echo '*************************IPA File*************************'
         echo "          input file: $ipa"
         echo "         output file: $(basename "$newipa")"
@@ -975,7 +722,7 @@ function cmd_resign
     fi
 	if [ "$matching" = "N" ]; then
         newbundleID=
-        if [ "$force" = "force" ]; then
+        if [ "$opt_force" = "Y" ]; then
             if [ "${trimmedappid: -1}" = "*" ]; then
                 trimmedappid="${trimmedappid%?}"
                 if [ "${trimmedappid: -1}" = "." ]; then
@@ -1037,46 +784,8 @@ function cmd_resign
         make_resource_rules > "$ad"/ResourceRules.plist
     fi
     if [ -d "$ad/Frameworks/" ]; then
-        codesign -f -s "$cert" "$ad/Frameworks/"* 2>&1>/dev/null 
+        codesign -f -s "$cert" "$ad/Frameworks/"* &>/dev/null 
         check_status "signing frameworks"
-    fi
-    if [ -d "$ad/Plugins/" ]; then
-        for extension in "$ad/Plugins/"*.appex; do 
-            extension_plist="$(cat "$extension/Info.plist")"
-            xml=Y
-            if [ "${extension_plist:0:5}" != "<?xml" ]; then
-                 xml=N
-                 plutil -convert xml1 "$extension/Info.plist"
-                 extension_plist="$(cat "$extension/Info.plist")"
-            fi
-
-            extension_name="$(basename "$extension")"
-            extension_name="${extension_name%.*}"
-            starting_extensionID="$(value_for_key "$extension_plist" CFBundleIdentifier)"
-            new_extensionID="$bundleid"
-
-            if [ $matching = "N" ]; then
-               new_extensionID="$newbundleID"
-            fi
-
-            if [[ ($matching = "Y" && "$bundleid.$extension_name" != "$starting_extensionID") || ($matching = "N" && "$newbundleID.$extension_name" != "$starting_extensionID") ]]; then
-                tmp="${extension_plist#*<key>CFBundleIdentifier</key>}"
-   	            tmp="${tmp#*</}"
-		        tbck="</$tmp"
-		        tmp="${extension_plist%$tbck}"
-		        tmp="${tmp%>*}"
-		        tfrt="$tmp>"	
-                
-                echo "$tfrt$new_extensionID.$extension_name$tbck" > "$extension/Info.plist"
-            fi
-
-            if [ "$xml" = "N" ]; then
-                plutil -convert binary1 "$extension/Info.plist"
-            fi      
-        done
-
-        codesign -f -s "$cert" "$ad/Plugins/"* 2>&1>/dev/null
-        check_status "signing extensions"
     fi
     codesign -f -s "$cert" $entitlementsstring $bundlestring --resource-rules "$ad/ResourceRules.plist" "$ad" 2>/dev/null
     check_status "resigning the app"
@@ -1119,40 +828,39 @@ function hash_string
 }
 
 #### MAIN ####
-#if the first arg is an ipa/app/zip/xcarchive file, use the ipas directory as the basedirectory ($bd) and the ipa as the ($ipa)
-#if the first arg is a path, use that path as the bd, otherwise use the working directory as the bd
-#if the first arg is a mobileprovision file, use that file as the profile ($profile) and the profiles directory as the bd
-#if the first arg is an Info.plist file, use that file as the $(infoplist) and the Info.plists directory as the bd
-#otherwise use the first ipa file (alphabetically) in the bd as the ipa.
 
-## COMMANDS THAT DONT NEED AN IPA OR PATH ##
-
-#first arg should be the command ($cmd) 
-cmd="$1"
 bd="$(pwd)"
 
-#if there was no command, exit
-if [ "$cmd" = "" ];then
-    problem_encountered "no command"
-else
-    shift
-fi
+#first arg should be the command ($cmd) 
+case "$1" in
+    h | help )  cmd="help";;
+    p | prof | profile )    cmd="profile";;
+    i | info )  cmd="info";;
+    find )      cmd="find";;
+    s | summary )   cmd="summary";;
+    v | verify )    cmd="verify";;
+    r | resign )    cmd="resign";;
+    rezip )     cmd="rezip";;
+    clean )     cmd="clean";;
+    -* | "" )   problem_encountered "missing command";;
+    *)          problem_encountered "invalid command";;
+esac   
+
+shift
 
 #if cmd was "help" or "h" show the usage page
-if [ "$cmd" = "help" -o "$cmd" = "h" ];then
+if [ "$cmd" = "help" ];then
     cmd_help "$@"
-    script_done
-fi
-
-#if the cmd is "c" or "certs" or "certificates", display the information about certificates in the keychain
-#if there is a following argument, it limits the certificates shown to ones matching this substring
-if [ "$cmd" = "c" -o "$cmd" = "certs" -o "$cmd" = "certficiates" ];then
-    cmd_certs "$@"
     script_done
 fi
 
 # get ipa/profile/info.plist/directory for the following commands that need one of these.
 
+#if the first arg is an ipa/app/zip/xcarchive file, use the ipas directory as the basedirectory ($bd) and the ipa as the ($ipa)
+#if the first arg is a path, use that path as the bd, otherwise use the working directory as the bd
+#if the first arg is a mobileprovision file, use that file as the profile ($profile) and the profiles directory as the bd
+#if the first arg is an Info.plist file, use that file as the $(infoplist) and the Info.plists directory as the bd
+#otherwise use the first ipa file (alphabetically) in the bd as the ipa.
 wd="$(pwd)"
 ipa=
 filetype=
@@ -1189,6 +897,127 @@ else
     problem_encountered "invalid filetype"
 fi
                                                                                                                   
+#### OPTIONS ####
+
+opt_verbose=
+opt_entitlements=
+opt_matching=
+opt_no_wildcard=
+opt_all=
+opt_json=
+opt_edit=
+opt_dont_clean=
+opt_profile=
+opt_find=
+opt_output=
+opt_double_check=
+opt_force=
+opt_log=
+
+while [ "$1" != "" ]; do
+    case "$1" in
+        -v | --verbose )        opt_verbose=Y;;
+        -l | --log )            opt_log=Y;;
+        -dc | --dont-clean )    opt_dont_clean=Y;;
+        -e | --entitlements )   if [ "$cmd" = "profile" ]; then
+                                    opt_entitlements=Y
+                                else
+                                    problem_encountered "invalid argument: $1"
+                                fi;;
+        -m | --matching )       if [ "$cmd" = "find" -o "$cmd" = "resign" ]; then
+                                    while  [ "$2" != "" -a "${2:0:1}" != "-" ]; do
+                                        if [ "$opt_matching" != "" ]; then
+                                            opt_matching="$opt_matching"$'\n'
+                                        fi
+                                        opt_matching="$opt_matching$2"
+                                        shift
+                                    done
+                                    if [ "$opt_matching" = "" ]; then
+                                        problem_encountered "missing pattern for matching argument"
+                                    fi
+                                else
+                                    problem_encountered "invalid argument: $1"
+                                fi;;
+        -n | --no-wildcard )    if [ "$cmd" = "find" ]; then
+                                    opt_no_wildcard=Y
+                                else
+                                    problem_encountered "invalid argument: $1"
+                                fi;;
+        -a | --all )            if [ "$cmd" = "find" -o "$cmd" = "clean" ]; then
+                                    opt_all=Y
+                                else
+                                    problem_encountered "invalid argument: $1"
+                                fi;;
+        --json )                if [ "$cmd" = "find" -o "$cmd" = "summary" ]; then
+                                    opt_json=Y
+                                else
+                                    problem_encountered "invalid argument: $1"
+                                fi;;
+        --edit )                if [ "$cmd" = "info" ]; then
+                                    if  [ "$2" != "" -a "${2:0:1}" != "-" ]; then
+                                        opt_edit="$2"
+                                        shift
+                                    else
+                                        if [ "$EDITOR" = "" ]; then
+                                            opt_edit="vim"
+                                        else
+                                            opt_edit="$EDITOR"
+                                        fi
+                                    fi
+                                fi;;
+        -p | --profile )        if [ "$cmd" = "resign" ]; then
+                                    if [ "$2" != "" -a "${2:0:1}" != "-" ]; then
+				        	            cd "$wd"
+				        	            tmp="$2"
+				        	            if [[ "$2" = *"/"* ]]; then
+					    	                cd "$(dirname "$2")"
+					    	                tmp="$(basename "$2")"
+    				    	            fi
+    					                dir="$(pwd)"
+    				    	            opt_profile="$dir/$tmp"
+                                        shift
+                                    else
+                                        problem_encountered "missing profile for profile argument"
+                                    fi
+                                else
+                                    problem_encountered "invalid argument: $1"
+                                fi;;
+        --find )                if [ "$cmd" = "resign" ]; then
+                                    opt_find=Y
+                                else
+                                    problem_encountered "invalid argument: $1"
+                                fi;;
+        -o | --output )         if [ "$cmd" = "resign" ]; then
+                                    if [ "$2" != "" -a "${2:0:1}" != "-" ]; then
+                                        cd "$wd"
+                                        tmp="$2"
+                                        if [[ "$2" = *"/"* ]]; then
+                                            cd $(dirname "${2}")
+                                            tmp=$(basename "${2}")
+                                        fi
+                                        dir="$(pwd)"
+                                        opt_output="$dir/$tmp"
+                                        shift
+                                    else
+                                        problem_encountered "missing profile for output argument"
+                                    fi
+                                else
+                                    problem_encountered "invalid argument: $1"
+                                fi;;
+        -d | --double-check )   if [ "$cmd" = "resign" ]; then
+                                    opt_double_check=Y
+                                else
+                                    problem_encountered "invalid argument: $1"
+                                fi;;
+        -F | --force )          if [ "$cmd" = "resign" ]; then
+                                    opt_force=Y
+                                else
+                                    problem_encountered "invalid argument: $1"
+                                fi;;
+        *)  problem_encountered "invalid argument: $1";;
+    esac
+    shift
+done
 
 filetype="${ipa##*.}"
 
@@ -1198,7 +1027,7 @@ cd "$bd"
 file_hash="$(hash_string "$bd/$ipa")"
 
 if [ "$cmd" = "clean" ]; then
-    if [ "$(all_from_args $@)" = "all" ]; then
+    if [ "$opt_all" = "Y" ]; then
         file_hash=""
     fi
     script_done
@@ -1253,7 +1082,7 @@ fi
 ## COMMANDS THAT MAY NEED AN IPA##
 
 #profile command
-if [ "$cmd" = "p" -o "$cmd" = "prof" -o "$cmd" = "profile" ];then
+if [ "$cmd" = "profile" ];then
 	#if the first arg wasn't a profile, then an ipa file is necessary
 	if [ "$profile" = "" ];then
 		assert_ipa mobileprovision
@@ -1264,7 +1093,7 @@ if [ "$cmd" = "p" -o "$cmd" = "prof" -o "$cmd" = "profile" ];then
 fi
 
 #Info.plist command
-if [ "$cmd" = "i" -o "$cmd" = "info" ];then
+if [ "$cmd" = "info" ];then
 	if [ "$infoplist" = "" ];then
 		assert_ipa Info.plist
         infoplist="$ad/Info.plist"
@@ -1275,7 +1104,7 @@ fi
 
 #find command, to find profiles in library matching the app's bundle ID
 if [ "$cmd" = "find" ]; then
-    if [ "$(all_from_args "$@")" = "" ]; then
+    if [ "$opt_all" = "" ]; then
         assert_ipa "--all option"
     fi
     cmd_find "$@"
@@ -1283,17 +1112,17 @@ if [ "$cmd" = "find" ]; then
 fi
 
 #summary command, to show info.plist and profile information in brief summary
-if [ "$cmd" = "s" -o "$cmd" = "summary" ]; then
+if [ "$cmd" = "summary" ]; then
     if [ "$profile" = "" ]; then
         assert_ipa mobileprovision
     fi
     summary="$(cmd_summary)"
-    if [ "$(JSON_from_args "$@")" = "json" ]; then
+    if [ "$opt_json" = "Y" ]; then
         summary="$(convert_to_JSON "$summary")"
         summary="${summary%,}}"
     fi
     echo "$summary"
-    if [ "$(dontclean_from_args "$@")" = "dc" ]; then
+    if [ "$opt_dont_clean" = "Y" ]; then
         exit 0
     else
         script_done
@@ -1304,13 +1133,13 @@ fi
 assert_ipa
 
 #verify command, to see if an ipa is signed
-if [ "$cmd" = "v" -o "$cmd" = "verify" ]; then
+if [ "$cmd" = "verify" ]; then
 	cmd_verify "$@"
     script_done
 fi
 
 #resign command, to resign an ipa
-if [ "$cmd" = "r" -o "$cmd" = "resign" ];then
+if [ "$cmd" = "resign" ];then
     cmd_resign "$@"
     script_done
 fi
@@ -1320,11 +1149,4 @@ if [ "$cmd" = "rezip" ]; then
     cmd_rezip "$bd/$ipa"
     script_done
 fi
-
-#cmd was not a valid command
-if [ "${cmd:0:1}" = "-" ];then
-	problem_encountered "Missing Command"
-fi
-
-problem_encountered 'not a valid command'
 

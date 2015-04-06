@@ -6,10 +6,6 @@
 .B ipaHelper
 \-\- script to help with examining and resigning ipa files
 .SH SYNOPSIS
-.B ipaHelper certs [
-substring
-.B ]
-.br
 .B ipaHelper profile [
 file
 .B ] [
@@ -62,17 +58,6 @@ commands
 .br
 
 .SH DESCRIPTION
-.B CERTS
-
-.B ipaHelper certs [
-substring
-.B ]
-.br
-
-Displays information on all certificates in the keychain.
-
-If a substring is provided, only certificates containing this substring are displayed.
-
 .B PROFILE
 
 .B ipaHelper profile [
@@ -95,31 +80,6 @@ If no options are present, a summary of the provisioning profile is displayed.
 
 .B -e, --entitlements
     display the entitlements on the profile
-
-.B -k
-.I key
-.B ,
-.B --key
-.I key
-.br
-    return the value for
-.I key
-in the profile
-
-.B -l, --list 
-    list all keys in the profile
-
-.B -i, --id 
-    display the application identifier
-                
-.B -c, --certificate
-     display the certificate name
-                
-.B -t, --team 
-    display the team name on the certificate
-                
-.B -x, --expiration 
-    display the expiration date for the profile
 
 .B FIND
 
@@ -182,22 +142,6 @@ If no editor is provided, default $EDITOR is used
 
 .B -v, --verbose 
     display the entire Info.plist in xml format
-
-.B -k
-.I key
-.B ,
-.B --key
-.I key
-.br
-    return the value for
-.I key
-in the Info.plist    
-
-.B -l, --list 
-    list all keys in the Info.plist
-
-.B -i, --identifier 
-    display the CFBundleIdentifier
 
 .B SUMMARY
 
@@ -326,7 +270,7 @@ Displays usage information for the different commands.
 If -v option is present it shows the usage information for all of the commands.
 
 .B Commands: 
-    Certs   Profile   Info   Summary   Verify   Resign   Help
+    Profile   Find  Info   Summary   Clean  Rezip   Verify   Resign  Help
 
 .SH AUTHOR
 Marcus Smith

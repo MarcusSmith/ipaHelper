@@ -87,7 +87,6 @@ The **matching** command could be used to specify "distribution" to make sure it
 
 ### USAGE ###
   
-**ipaHelper certs \[** *substring* **\]**  
 **ipaHelper profile \[** *file* **\] \[** *options* **\]**  
 **ipaHelper find \[** *file* **\] \[** *options* **\]**  
 **ipaHelper info \[** *file* **\] \[** *options* **\]**  
@@ -100,13 +99,6 @@ The **matching** command could be used to specify "distribution" to make sure it
 
 ### DESCRIPTION ###
        
-
-#### CERTS ####
-
-**ipaHelper certs \[** *substring* **\]**
-
-Displays information on all certificates in the keychain.
-If *substring* is provided, only certificates containing this *substring* are displayed.
 
 #### PROFILE ####
 
@@ -122,24 +114,6 @@ display the entire profile in xml format
 
 **-e, --entitlements**  
 display the entitlements on the profile
-
-**-k** *key* **, --key** *key*  
-return the value for *key* in the profile
-
-**-l, --list**  
-list all keys in the profile
-
-**-i, --id**  
-display the application identifier
-
-**-c, --certificate**  
-display the certificate name
-
-**-t, --team**  
-display the team name on the certificate
-
-**-x, --expiration**  
-display the expiration date for the profile
 
 #### FIND ####
 
@@ -178,15 +152,6 @@ edit the Info.plist with *editor*. If no *editor* is provided, the default $EDIT
 
 **-v, --verbose**  
 display the entire Info.plist in xml format
-
-**-k** *key* **, --key** *key*  
-return the value for *key* in the Info.plist
-
-**-l, --list**  
-list all keys in the Info.plist
-
-**-i, --identifier**  
-display the CFBundleIdentifier
 
 #### SUMMARY ####
 
@@ -249,7 +214,7 @@ resign the ipa file as *filename* instead of \[*ipa filename*\]-resigned.ipa
 **-d, --double-check**  
 display information about the file, its Info.plist, and the provisioning profile and have be given an option to continue with the resign or quit
 
-**-f, --force**  
+**-F, --force**  
 overwrite output file on resign without asking.  Uses the profiles App ID if the App ID and Bundle ID do not match.
 
 
