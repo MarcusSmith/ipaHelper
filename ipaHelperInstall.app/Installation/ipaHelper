@@ -63,7 +63,7 @@ Displays usage information for the different commands.
 If -v option is present it shows the usage information for all of the commands.
 '
 
-echo "Commands:   Profile   Find   Info   Summary   Clean   Rezip   Verify   Resign   Help"
+echo "Commands:   Profile   Find   Info   Summary   Clean   Rezip   Verify   Resign   Open  Help"
 echo
 }
 
@@ -220,10 +220,24 @@ Options:
 '
 }
 
+function help_open
+{
+echo '*****OPEN*****
+
+ipaHelper open [file]
+
+Copies file into a temporary file location, unzipped and prints the path to the app file.
+
+If no file is provided, the first (alphabetically) ipa file in the working directory is used.
+'
+}
+
 function clean_up
 {
-if [ -d "/tmp/ipa_helper/$file_id" ]; then               
-    rm -rf "/tmp/ipa_helper/$file_id"
+if [ "$opt_dont_clean" = "" ]; then
+    if [ -d "/tmp/ipa_helper/$file_id" ]; then               
+        rm -rf "/tmp/ipa_helper/$file_id"
+    fi
 fi
 }
 
@@ -499,6 +513,7 @@ elif [ "$1" = "-v" ]; then
     help_rezip
     help_verify
     help_resign
+    help_open
 else
     while [ "$1" != "" ]; do
         case "$1" in
@@ -511,6 +526,7 @@ else
             [sS]ummary* )   help_summary;;
             [vV]erify* )    help_verify;;
             [rR]esign* )    help_resign;;
+            [oO]pen )       help_open;;
             * ) problem_encountered "Not a valid command";;
         esac
         shift
@@ -842,6 +858,7 @@ case "$1" in
     r | resign )    cmd="resign";;
     rezip )     cmd="rezip";;
     clean )     cmd="clean";;
+    o | open )  cmd="open";;
     -* | "" )   problem_encountered "missing command";;
     *)          problem_encountered "invalid command";;
 esac   
@@ -1123,11 +1140,7 @@ if [ "$cmd" = "summary" ]; then
         summary="${summary%,}}"
     fi
     echo "$summary"
-    if [ "$opt_dont_clean" = "Y" ]; then
-        exit 0
-    else
-        script_done
-    fi
+    script_done
 fi
 
 ## COMMANDS THAT NEED AN IPA
@@ -1148,6 +1161,13 @@ fi
 #rezip command, to zip up uncleaned files into an ipa file
 if [ "$cmd" = "rezip" ]; then
     cmd_rezip "$bd/$ipa"
+    script_done
+fi
+
+#open command, to open the ipa file, print out the app directory and not clean
+if [ "$cmd" = "open" ]; then
+    echo "$ad"
+    opt_dont_clean=Y
     script_done
 fi
 

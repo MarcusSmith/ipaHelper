@@ -50,6 +50,10 @@ file
 options
 .B ]
 .br
+.B ipaHelper open [
+file
+.B ]
+.br
 .B ipaHelper help [
 -v
 .B ] [
@@ -256,6 +260,16 @@ instead of [filename]-resigned.ipa
 
 .B -F, --force
     overwrites output file on resign without asking.  Uses the profiles App ID if the App ID and Bundle ID do not match.
+
+.B OPEN
+
+.B ipaHelper open [
+file
+.B ]
+
+Copies file into a temporary file location, unzipped and prints the path to the app file.
+
+If no file is provided, the first (alphabetically) ipa file in the working directory is used.
 
 .B HELP
 

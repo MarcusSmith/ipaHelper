@@ -95,7 +95,8 @@ The **matching** command could be used to specify "distribution" to make sure it
 **ipaHelper rezip \[** *outputfile* **\]**  
 **ipaHelper verify \[** *file* **\]**  
 **ipaHelper resign \[** *file* **\] \[** *options* **\]**     
-**ipaHelper help \[** *-v* **\] \[** *commands* **\]**
+**ipaHelper help \[** *-v* **\] \[** *commands* **\]**  
+**ipaHelper open \[** *file* **\]**  
 
 ### DESCRIPTION ###
        
@@ -217,6 +218,13 @@ display information about the file, its Info.plist, and the provisioning profile
 **-F, --force**  
 overwrite output file on resign without asking.  Uses the profiles App ID if the App ID and Bundle ID do not match.
 
+#### OPEN ####
+
+**ipaHelper open \[** *file* **\]**  
+
+Copies *file* into a temporary file location, unzipped and prints the path to the app file.
+
+If no *file* is provided, the first (alphabetically) ipa file in the working directory is used.
 
 #### HELP ####
 
