@@ -181,7 +181,7 @@ Cleans temporary files left over from Summary command with the --dont-clean opti
 
 Rezips left over temporary files from Summary command with the --dont-clean option as *outputfile*
 
-*Outputfile* must be an app, ipa, or zip file.
+*Outputfile* must be an app, ipa, appex, or zip file.
 
 #### VERIFY ####
 
@@ -194,7 +194,7 @@ If no *file* is provided the first (alphabetically) ipa file in the working dire
 
 **ipaHelper resign \[** *file* **\] \[** *options* **\]**
 
-Removes  the  code  signature from an ipa, app, xcarchive, or zip *file* containing an app file, and replaces it either with the first profile (alphabetically) in the directory with *file* or a specified profile.
+Removes  the  code  signature from an ipa, app, xcarchive, appex, or zip *file* containing an app file, and replaces it either with the first profile (alphabetically) in the directory with *file* or a specified profile.
 Resigns *file* using the certificate on the profile and entitlements matching the profile, zips the resigned ipa file with the output filename.  If no output filename is provided, \[*filename*\]-resigned.ipa is used.
 If no *file* is provided, the first (alphabetically) ipa file in the working directory is used.
 

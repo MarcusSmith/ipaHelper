@@ -194,7 +194,7 @@ Rezips left over temporary files from Summary command with the --dont-clean opti
 .I outputfile
 
 .I Outputfile
-must be an app, ipa, or zip file.
+must be an app, ipa, appex, or zip file.
 
 .B VERIFY
 
@@ -216,7 +216,7 @@ options
 .B ]
 .br
 
-Removes the code signature from an ipa, app, xcarchive, or zip file containing an app file, and replaces it either with the first profile (alphabetically) in the directory with the file.
+Removes the code signature from an ipa, app, xcarchive, appex, or zip file containing an app file, and replaces it either with the first profile (alphabetically) in the directory with the file.
 
 Resigns the file using the certificate on the profile and entitlements matching the profile, zips the resigned ipa file with the output filename.  If no output filename is provided, [filename]-resigned.[filetype] is used.  The same filetype as the input filetype is used by default, except xcarchives resign as app files.
     
