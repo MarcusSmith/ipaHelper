@@ -685,9 +685,14 @@ function cmd_resign
     #check to see if there was an output file
     newipa="$(output_from_args "$@")"
     newfiletype="${newipa##*.}"
-    if [ "$newfiletype" != "ipa" -a "$newfiletype" != "app" -a "$newfiletype" != "zip" -a "$newfiletype" != "xcarchive" ]; then
+    if [ "$newfiletype" != "ipa" -a "$newfiletype" != "app" -a "$newfiletype" != "zip"  -a "$newfiletype" != "xcarchive" -a "$newfiletype" != "appex" ]; then
         problem_encountered "Invalid output type"
     fi
+
+    if [ "$filetype" = "appex" -a "$newfiletype" != "appex" ]; then
+        problem_encountered "App extensions can only be resigned as app extensions"
+    fi
+
     #see if this output file already exists
     if [ -f "$newipa" -a "$opt_force" != "Y" ]; then
         echo "$(basename "$newipa") already exists."
@@ -817,10 +822,10 @@ newfile="$1"
 if [ "$filetype" = "xcarchive" ]; then
     newfile="${1%.*}.app"
     filetype="app"
-elif [ "$filetype" != "ipa" -a "$filetype" != "app" -a "$filetype" != "zip" ]; then
+elif [ "$filetype" != "ipa" -a "$filetype" != "app" -a "$filetype" != "zip" -a "$filetype" != "appex" ]; then
     problem_encountered "Invalid file type"
 fi
-if [ ! -d /tmp/ipa_helper ]; then
+if [ ! -d /tmp/ipa_helper/"$file_id" ]; then
     problem_encountered "Nothing to zip"
 fi
 if [ "$filetype" = "ipa" ]; then
@@ -834,13 +839,10 @@ elif [ "$filetype" = "zip" ]; then
 elif [ "$filetype" = "app" ]; then
     cp -r /tmp/ipa_helper/"$file_id"/Payload/*.app/ "$newfile"                        
     check_status "coping the app file"
+elif [ "$filetype" = "appex" ]; then
+    cp -r /tmp/ipa_helper/"$file_id"/Payload/*.appex/ "$newfile"                        
+    check_status "coping the appex file"
 fi
-}
-
-#function to hash a string
-function hash_string
-{
-    echo $1 | md5   
 }
 
 #### MAIN ####
@@ -883,7 +885,7 @@ ipa=
 filetype=
 profile=
 infoplist=
-if [ "${1%.ipa}" != "$1" -o "${1%.app*}" != "$1" -o "${1%.xcarchive*}" != "$1"  -o "${1%.zip*}" != "$1" ];then
+if [ "${1%.ipa}" != "$1" -o "${1%.app*}" != "$1" -o "${1%.xcarchive*}" != "$1"  -o "${1%.zip*}" != "$1" -o "${1%.appex*}" != "$1" ];then
     bd="$(dirname "${1}")"
 	ipa="$(basename "${1}")"
 	shift
@@ -1064,7 +1066,7 @@ if [ "$filetype" = "xcarchive" ]; then
     cp -r "$tmpd$tmpa" "/tmp/ipa_helper/$file_id/Payload/$tmpa/" 2>/dev/null
     check_status "accessing app file in xcarchive" 
     ad="/tmp/ipa_helper/$file_id/Payload/$tmpa"
-elif [ "$filetype" = "app" ]; then
+elif [ "$filetype" = "app" -o "$filetype" = "appex" ]; then
     mkdir -p "/tmp/ipa_helper/$file_id/Payload"                            
     cp -r "$ipa" "/tmp/ipa_helper/$file_id/Payload/$ipa/"
     ad="/tmp/ipa_helper/$file_id/Payload/$ipa"
