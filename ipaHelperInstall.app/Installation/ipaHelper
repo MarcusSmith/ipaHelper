@@ -71,13 +71,11 @@ function help_clean
 {
 echo '*****CLEAN*****
 
-ipaHelper clean
+ipaHelper clean [ file | --all ]
 
-Cleans temporary files left over from Summary command with the --dont-clean option.
+Cleans temporary files left over from previous command with the --dont-clean option.
 If run with the --all option, the entire temp folder for ipaHelper is deleted.
-If file is supplied, the folder associated with that file is deleted.
-When run with no arguments or options, the folder associated with the first (alphabetically) ipa file in the working directory is deleted.
-
+If file is supplied, the temporary folder associated with that file is deleted.
 '
 }
 
@@ -90,7 +88,6 @@ ipaHelper rezip outputfile
 Rezips left over temporary files from Summary command with the --dont-clean option as outputfile.
 
 Outputfile must be an app, ipa, appex, or zip file.
-
 '
 }
 
@@ -111,7 +108,6 @@ Options:
 [-v | --verbose] display the entire profile in xml format
                 
 [-e | --entitlements] display the entitlements on the profile
-
 '
 }
 
@@ -134,7 +130,6 @@ Options:
 [-a | --all] displays all profiles in the library.  Ignores --no-wildcard option.
 
 [--json] returns the profile information in a JSON dictionary.
-
 '
 }
 
@@ -155,7 +150,6 @@ Options:
 [-e | --edit] takes an editor as an argument and edits the Info.plist in this editor.  Uses default $EDITOR if no editor provided.
                 
 [-v | --verbose] display the entire Info.plist in xml format
-
 '
 }
 
@@ -174,7 +168,6 @@ Options:
 [--json] returns the summary information in a JSON dictionary.  Also adds the a key "AppDirectory" for the temporary unzipped app.
         
 [-dc | --dont-clean] does not remove the temporary app directory after returning summary information
-
 '
 }
 
@@ -187,7 +180,6 @@ ipaHelper verify [ file ]
 Checks to make sure the necessary code signing components are in place for an ipa, app, xcarchive, or zip file containing an app file
 
 If no file is provided the first (alphabetically) ipa file in the working directory is used.
-
 '
 }
 
@@ -216,7 +208,6 @@ Options:
 [-d | --double-check] displays information about the file, its Info.plist, and the provisioning profile and offers a choice to continue or quit
 
 [-F | --force] will overwrite output file on resign without asking.  Uses the profiles App ID if the App ID and Bundle ID do not match.
-
 '
 }
 
@@ -234,7 +225,7 @@ If no file is provided, the first (alphabetically) ipa file in the working direc
 
 function clean_up
 {
-if [ "$opt_dont_clean" = "" ]; then
+if [ "$opt_dont_clean" = "" -a "$file_id" != "" -o "$cmd" = "clean" ]; then
     if [ -d "/tmp/ipa_helper/$file_id" ]; then               
         rm -rf "/tmp/ipa_helper/$file_id"
     fi
@@ -1038,6 +1029,20 @@ while [ "$1" != "" ]; do
     shift
 done
 
+if [ "$cmd" = "clean" ]; then
+    if [ "$opt_all" = "Y" ]; then
+        file_id=""
+    else
+        assert_ipa "--all option"
+        file_id="$(echo "$bd" | grep "/tmp/ipa_helper/" | sed 's/.*tmp\/ipa_helper\/\([0-9A-F\-]*\).*/\1/')"
+        if [ "$file_id" = "" ]; then
+            cmd=  #Set cmd to empty to avoid a full clean here
+            problem_encountered "$bd/$ipa not in an ipaHelper temporary folder and cannot be cleaned"
+        fi
+    fi
+    script_done
+fi
+
 filetype="${ipa##*.}"
 
 #make ad folder
@@ -1048,12 +1053,6 @@ while [ -d  "/tmp/ipa_helper/$file_id" ]; do
     file_id="$(uuidgen)"
 done
 
-if [ "$cmd" = "clean" ]; then
-    if [ "$opt_all" = "Y" ]; then
-        file_id=""
-    fi
-    script_done
-fi
 
 ad=
 if [ "$filetype" = "xcarchive" ]; then

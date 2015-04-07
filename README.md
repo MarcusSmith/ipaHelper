@@ -91,7 +91,7 @@ The **matching** command could be used to specify "distribution" to make sure it
 **ipaHelper find \[** *file* **\] \[** *options* **\]**  
 **ipaHelper info \[** *file* **\] \[** *options* **\]**  
 **ipaHelper summary \[** *file* **\]**  
-**ipaHelper clean \[** *file* **\] \[** *--all* **\]**  
+**ipaHelper clean \[** *file* **|** *--all* **\]**  
 **ipaHelper rezip \[** *outputfile* **\]**  
 **ipaHelper verify \[** *file* **\]**  
 **ipaHelper resign \[** *file* **\] \[** *options* **\]**     
@@ -171,9 +171,9 @@ do not remove or zip the temporary app directory after returning summary informa
 
 #### CLEAN ####
 
-**ipaHelper clean \[** *file* **\] \[** *--all* **\]**
+**ipaHelper clean \[** *file* **|** *--all* **\]**
 
-Cleans temporary files left over from Summary command with the --dont-clean option. If run with the --all option, the entire temp folder for ipaHelper is deleted. If *file* is supplied, the folder associated with that file is deleted. When run with no arguments or options, the folder associated with the first (alphabetically) ipa file in the working directory is deleted.
+Cleans temporary files left over from previous command with the --dont-clean option. If run with the --all option, the entire temp folder for ipaHelper is deleted. If *file* is supplied, the folder associated with that file is deleted.
 
 #### REZIP ####
 
