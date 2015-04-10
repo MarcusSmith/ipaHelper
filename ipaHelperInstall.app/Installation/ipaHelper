@@ -1,5 +1,22 @@
 #!/bin/bash
- 
+
+#Set up logging
+logfile="/tmp/ipaHelper.log"
+echo "========================================
+$(date) - $0 $@
+----------------------------------------" >> "$logfile"
+exec 2> >(tee -a "$logfile" >&2) 1> >(tee -a "$logfile")
+
+function close_log
+{
+logtext="$(cat $logfile)"
+while [ "$(echo "$logtext" | grep "=====" -c)" -gt 49 ]; do
+    logtext="${logtext#*========================================$'\n'}"
+done
+echo "========================================
+$logtext" > $logfile
+}
+
 #take the name of the process as $1 (eg: "unzipping file" or "resiging app"), if there was an error, exit the script with the text "Error $1"
 function check_status
 {
@@ -16,7 +33,7 @@ if [ "$ipa" = "" ];then
 	if [ "$1" != "" ];then
 		message="$message or $1"
 	fi
-        problem_encountered "$message"
+    problem_encountered "$message"
 fi
 }
 
@@ -35,6 +52,7 @@ done
 function script_done
 {
 clean_up
+close_log
 exit 0
 }
 
@@ -44,8 +62,9 @@ function problem_encountered
 if [ "$1" != "" ];then
 	echo "$1" >&2
 fi
-clean_up
 echo 'type "help" for usage page' >&2
+clean_up
+close_log
 exit 1
 }
 
@@ -790,16 +809,16 @@ function cmd_resign
 			plutil -convert binary1 "$ad/Info.plist"
 		fi
 	fi
-    rm -rf "$ad/_CodeSignature/" "$ad/ResourceRules.plist" 2>/dev/null
+    rm -rf "$ad/_CodeSignature/" "$ad/ResourceRules.plist" 1>&3 2>&4
 	cp "$profile" "$ad/embedded.mobileprovision"
     if [ ! -f "$ad/ResourceRules.plist" ]; then
         make_resource_rules > "$ad"/ResourceRules.plist
     fi
     if [ -d "$ad/Frameworks/" ]; then
-        codesign -f -s "$cert" "$ad/Frameworks/"* &>/dev/null 
+        codesign -f -s "$cert" "$ad/Frameworks/"* 1>&3 2>&4
         check_status "signing frameworks"
     fi
-    codesign -f -s "$cert" $entitlementsstring $bundlestring --resource-rules "$ad/ResourceRules.plist" "$ad" 2>/dev/null
+    codesign -f -s "$cert" $entitlementsstring $bundlestring --resource-rules "$ad/ResourceRules.plist" "$ad" 1>&3 2>&4
     check_status "resigning the app"
     cmd_rezip "$newipa"
     echo "Resign Successful"
@@ -821,11 +840,11 @@ if [ ! -d /tmp/ipa_helper/"$file_id" ]; then
 fi
 if [ "$filetype" = "ipa" ]; then
     cd "/tmp/ipa_helper/$file_id"
-    zip -qr "$newfile" Payload/ #2>/dev/null
+    zip -qr "$newfile" Payload/ 1>&3 2>&4
     check_status "zipping the ipa file"
 elif [ "$filetype" = "zip" ]; then
     cd "/tmp/ipa_helper/$file_id/Payload"
-    zip -qr "$newfile" *.app/ 2>/dev/null
+    zip -qr "$newfile" *.app/ 1>&3 2>&4
     check_status "zipping the zip file"
 elif [ "$filetype" = "app" ]; then
     cp -r /tmp/ipa_helper/"$file_id"/Payload/*.app/ "$newfile"                        
@@ -845,12 +864,12 @@ case "$1" in
     h | help )  cmd="help";;
     p | prof | profile )    cmd="profile";;
     i | info )  cmd="info";;
-    find )      cmd="find";;
+    f |find )   cmd="find";;
     s | summary )   cmd="summary";;
     v | verify )    cmd="verify";;
     r | resign )    cmd="resign";;
-    rezip )     cmd="rezip";;
-    clean )     cmd="clean";;
+    z | rezip ) cmd="rezip";;
+    c | clean ) cmd="clean";;
     o | open )  cmd="open";;
     -* | "" )   problem_encountered "missing command";;
     *)          problem_encountered "invalid command";;
@@ -922,12 +941,10 @@ opt_find=
 opt_output=
 opt_double_check=
 opt_force=
-opt_log=
 
 while [ "$1" != "" ]; do
     case "$1" in
         -v | --verbose )        opt_verbose=Y;;
-        -l | --log )            opt_log=Y;;
         -dc | --dont-clean )    opt_dont_clean=Y;;
         -e | --entitlements )   if [ "$cmd" = "profile" ]; then
                                     opt_entitlements=Y
@@ -1029,6 +1046,12 @@ while [ "$1" != "" ]; do
     shift
 done
 
+if [ "$opt_verbose" = "Y" ]; then
+    exec 3>&1 4>&2
+else
+    exec 3>>$logfile 4>>$logfile
+fi
+
 if [ "$cmd" = "clean" ]; then
     if [ "$opt_all" = "Y" ]; then
         file_id=""
@@ -1062,7 +1085,7 @@ if [ "$filetype" = "xcarchive" ]; then
     cd "$bd"
     tmpd="$ipa$(dirname "${tmp:2}")/"
     tmpa="$(basename "${tmp}")"
-    cp -r "$tmpd$tmpa" "/tmp/ipa_helper/$file_id/Payload/$tmpa/" 2>/dev/null
+    cp -r "$tmpd$tmpa" "/tmp/ipa_helper/$file_id/Payload/$tmpa/" 1>&3 2>&4
     check_status "accessing app file in xcarchive" 
     ad="/tmp/ipa_helper/$file_id/Payload/$tmpa"
 elif [ "$filetype" = "app" -o "$filetype" = "appex" ]; then
@@ -1071,7 +1094,7 @@ elif [ "$filetype" = "app" -o "$filetype" = "appex" ]; then
     ad="/tmp/ipa_helper/$file_id/Payload/$ipa"
 elif [ "$filetype" = "ipa" ]; then
     mkdir -p "/tmp/ipa_helper/$file_id"
-    unzip -q "$ipa" -d "/tmp/ipa_helper/$file_id" 2>&1>/dev/null
+    unzip -q "$ipa" -d "/tmp/ipa_helper/$file_id" 1>&3 2>&4
     check_status "unzipping ipa file"
     if [ ! -d "/tmp/ipa_helper/$file_id/Payload" ];then
         problem_encountered "problem unzipping ipa folder"
@@ -1081,7 +1104,7 @@ elif [ "$filetype" = "ipa" ]; then
     ad="/tmp/ipa_helper/$file_id/Payload/${app:3}" 
 elif [ "$filetype" = "zip" ]; then
     mkdir -p "/tmp/ipa_helper/$file_id"
-    unzip -q "$ipa" -d "/tmp/ipa_helper/$file_id/Payload" 2>/dev/null
+    unzip -q "$ipa" -d "/tmp/ipa_helper/$file_id/Payload" 1>&3 2>&4
     check_status "unzipping ipa file"
     if [ ! -d "/tmp/ipa_helper/$file_id/Payload" ];then
         problem_encountered "problem unzipping ipa folder"
