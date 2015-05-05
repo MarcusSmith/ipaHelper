@@ -479,36 +479,6 @@ echo '</dict>'
 echo '</plist>'
 }
 
-function make_resource_rules
-{
-echo '<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-<key>rules</key>
-<dict>
-<key>.*</key>
-<true/>
-<key>Info.plist</key>
-<dict>
-<key>omit</key>
-<true/>
-<key>weight</key>
-<real>10</real>
-</dict>
-<key>ResourceRules.plist</key>
-<dict>
-<key>omit</key>
-<true/>
-<key>weight</key>
-<real>100</real>
-</dict>
-</dict>
-</dict>
-</plist>
-'
-}
-
 ### CMD FUNCTIONS ###
 function cmd_help
 {
@@ -811,9 +781,6 @@ function cmd_resign
 	fi
     rm -rf "$ad/_CodeSignature/" "$ad/ResourceRules.plist" 1>&3 2>&4
 	cp "$profile" "$ad/embedded.mobileprovision"
-    if [ ! -f "$ad/ResourceRules.plist" ]; then
-        make_resource_rules > "$ad"/ResourceRules.plist
-    fi
     if [ -d "$ad/Frameworks/" ]; then
         codesign -f -s "$cert" "$ad/Frameworks/"* 1>&3 2>&4
         check_status "signing frameworks"
