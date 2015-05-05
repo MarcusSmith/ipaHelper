@@ -818,7 +818,7 @@ function cmd_resign
         codesign -f -s "$cert" "$ad/Frameworks/"* 1>&3 2>&4
         check_status "signing frameworks"
     fi
-    codesign -f -s "$cert" $entitlementsstring $bundlestring --resource-rules "$ad/ResourceRules.plist" "$ad" 1>&3 2>&4
+    codesign -f -s "$cert" $entitlementsstring $bundlestring "$ad" 1>&3 2>&4
     check_status "resigning the app"
     cmd_rezip "$newipa"
     echo "Resign Successful"
