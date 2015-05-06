@@ -273,6 +273,18 @@ echo "CFBundleDisplayName: $(value_for_key "$1" "CFBundleDisplayName")"
 echo " CFBundleIdentifier: $(value_for_key "$1" "CFBundleIdentifier")"
 echo "    CFBundleVersion: $(value_for_key "$1" "CFBundleVersion")"
 echo " ShortBundleVersion: $(value_for_key "$1" "CFBundleShortVersionString")"
+echo " Minimum OS Version: $(value_for_key "$1" "MinimumOSVersion")"
+
+iPhone=$(echo "$1" | grep -i "UIDeviceFamily" -A 4 | grep "integer>1" >/dev/null && echo "iPhone")
+iPad=$(echo "$1" | grep -i "UIDeviceFamily" -A 4 | grep "integer>2" >/dev/null && echo "iPad")
+
+if [ "$iPhone" != "" -a "$iPad" != "" ]; then
+    echo "  Supported Devices: "$iPhone", "$iPad""
+elif [ "$iPhone" != "" ]; then
+    echo "  Supported Devices: "$iPhone"" 
+else
+    echo "  Supported Devices: "$iPad""
+fi
 }
 
 #returns useful information from a profile
