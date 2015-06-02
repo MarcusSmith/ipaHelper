@@ -25,7 +25,7 @@ OSStatus GeneratePreviewForURL(void *thisInterface, QLPreviewRequestRef preview,
     
     NSTask *task = [[NSTask alloc] init];
     [task setLaunchPath:@"/usr/bin/ipaHelper"];
-    [task setArguments:[NSArray arrayWithObjects:@"summary", [ipaURL path], @"--json", @"--ql", @"--dont-clean", nil]];
+    [task setArguments:[NSArray arrayWithObjects:@"summary", [ipaURL path], @"--json", @"--dont-clean", nil]];
     
     NSPipe *pipe = [NSPipe pipe];
     [task setStandardOutput: pipe];

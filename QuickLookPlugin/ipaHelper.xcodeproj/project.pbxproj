@@ -33,7 +33,7 @@
 		4552E81D192BA56400C4D9E3 /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 12;
-			dstPath = "~/Developer/Marcus/ipaHelper/ipaHelperInstall.app/Installation";
+			dstPath = "~/Development/Marcus/ipaHelper/ipaHelperInstall.app/Installation";
 			dstSubfolderSpec = 0;
 			files = (
 				4552E81E192BA57000C4D9E3 /* ipaHelper.qlgenerator in CopyFiles */,
@@ -300,6 +300,7 @@
 		452F812018F71F3F00E76451 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ALTERNATE_GROUP = "$(INSTALL_GROUP)";
 				COMBINE_HIDPI_IMAGES = YES;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "QuickLookPlugin/ipaHelper-Prefix.pch";
@@ -313,6 +314,7 @@
 		452F812118F71F3F00E76451 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ALTERNATE_GROUP = "$(INSTALL_GROUP)";
 				COMBINE_HIDPI_IMAGES = YES;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "QuickLookPlugin/ipaHelper-Prefix.pch";
