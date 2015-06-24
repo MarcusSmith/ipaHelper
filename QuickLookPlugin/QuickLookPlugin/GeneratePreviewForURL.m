@@ -43,6 +43,8 @@ OSStatus GeneratePreviewForURL(void *thisInterface, QLPreviewRequestRef preview,
     
     NSDictionary *summaryDictionary = [NSJSONSerialization JSONObjectWithData:data options:NSJSONReadingMutableContainers  error:&jsonError];
     
+    NSLog(@"%@", summaryDictionary);
+    
     if (jsonError) {
         NSLog(@"Error loading json: %@", jsonError);
     }
@@ -82,14 +84,14 @@ OSStatus GeneratePreviewForURL(void *thisInterface, QLPreviewRequestRef preview,
     [cleanTask launch];
     
     
-    CGSize contextSize = CGSizeMake(544.0, 248.0);
+    CGSize contextSize = CGSizeMake(544.0, 296.0);
     
     if ([filetype isEqualToString:@"mobileprovision"]) {
         contextSize = CGSizeMake(600.0, 150.0);
     }
     
     if (!summaryDictionary[@"App Identifier"]) {
-        contextSize = CGSizeMake(600.0, 200.0);
+        contextSize = CGSizeMake(600.0, 248.0);
     }
     
     CGFloat margin = 10.0;
@@ -182,6 +184,8 @@ OSStatus GeneratePreviewForURL(void *thisInterface, QLPreviewRequestRef preview,
                         @{@"key":@"Display Name:",@"value":(NSString *)summaryDictionary[@"CFBundleDisplayName"]},
                         @{@"key":@"Short Version:",@"value":(NSString *)summaryDictionary[@"ShortBundleVersion"]},
                         @{@"key":@"Bundle Version:",@"value":(NSString *)summaryDictionary[@"CFBundleVersion"]},
+                        @{@"key":@"Minimum OS Version:",@"value":(NSString *)summaryDictionary[@"Minimum OS Version"]},
+                        @{@"key":@"Supported Devices:",@"value":(NSString *)summaryDictionary[@"Supported Devices"]},
                         @{@"key":@"Code Signature:",@"value":(NSString *)summaryDictionary[@"Code Signature"]},
                         @{@"key":@"",@"value":@""},
                         @{@"key":@"Profile Name:",@"value":(NSString *)summaryDictionary[@"Profile Name"]},
