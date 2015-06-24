@@ -467,7 +467,7 @@ while read line; do
             line="${line:1}"
         done
         echo -n '"'
-        echo -n "${line//: /":"}"
+        echo -n "${line/: /":"}"
         echo -n '",'
     fi
 done <<< "$1"

@@ -43,8 +43,6 @@ OSStatus GeneratePreviewForURL(void *thisInterface, QLPreviewRequestRef preview,
     
     NSDictionary *summaryDictionary = [NSJSONSerialization JSONObjectWithData:data options:NSJSONReadingMutableContainers  error:&jsonError];
     
-    NSLog(@"%@", summaryDictionary);
-    
     if (jsonError) {
         NSLog(@"Error loading json: %@", jsonError);
     }
@@ -84,14 +82,14 @@ OSStatus GeneratePreviewForURL(void *thisInterface, QLPreviewRequestRef preview,
     [cleanTask launch];
     
     
-    CGSize contextSize = CGSizeMake(544.0, 296.0);
+    CGSize contextSize = CGSizeMake(544.0, 308.0);
     
     if ([filetype isEqualToString:@"mobileprovision"]) {
         contextSize = CGSizeMake(600.0, 150.0);
     }
     
     if (!summaryDictionary[@"App Identifier"]) {
-        contextSize = CGSizeMake(600.0, 248.0);
+        contextSize = CGSizeMake(600.0, 264.0);
     }
     
     CGFloat margin = 10.0;
