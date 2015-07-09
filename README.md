@@ -212,6 +212,9 @@ restricts the *--find* option to only profiles matching *patterns*
 **-o** *filename* **, --output** *filename*  
 resign the ipa file as *filename* instead of \[*ipa filename*\]-resigned.ipa
 
+**--overwrite**  
+overwrites the original file with the resigned file (ignores the --output option)
+
 **-d, --double-check**  
 display information about the file, its Info.plist, and the provisioning profile and have be given an option to continue with the resign or quit
 

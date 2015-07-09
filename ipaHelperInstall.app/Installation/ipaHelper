@@ -222,7 +222,9 @@ Options:
 
 [-m | --matching] takes patterns as arguments.  restricts the find command to profiles matching the patterns.
 
-[-o | --output ] takes an output file as an argument, zips the resigned ipa file using this name instead of [ipa filename]-resigned.ipa
+[-o | --output] takes an output file as an argument, zips the resigned ipa file using this name instead of [ipa filename]-resigned.ipa
+
+[--overwrite] overwrites the original file with the resigned file (ignores the --output option)
 
 [-d | --double-check] displays information about the file, its Info.plist, and the provisioning profile and offers a choice to continue or quit
 
@@ -688,7 +690,7 @@ function cmd_resign
     fi
 
     #see if this output file already exists
-    if [ -f "$newipa" -a "$opt_force" != "Y" ]; then
+    if [ -f "$newipa" -a "$opt_force" != "Y" -a "$opt_overwrite" != "Y" ]; then
         echo "$(basename "$newipa") already exists."
         input=
         while [ "$input" != "o" ]; do
@@ -801,6 +803,9 @@ function cmd_resign
     fi
     codesign -f -s "$cert" $entitlementsstring $bundlestring "$ad" 1>&3 2>&4
     check_status "resigning the app"
+    
+    echo "new ipa: $newipa" #DELETE THIS
+    
     cmd_rezip "$newipa"
     echo "Resign Successful"
 }
@@ -922,6 +927,7 @@ opt_find=
 opt_output=
 opt_double_check=
 opt_force=
+opt_overwrite=
 
 while [ "$1" != "" ]; do
     case "$1" in
@@ -995,7 +1001,7 @@ while [ "$1" != "" ]; do
                                 else
                                     problem_encountered "invalid argument: $1"
                                 fi;;
-        -o | --output )         if [ "$cmd" = "resign" ]; then
+        -o | --output )         if [ "$cmd" = "resign" -a "$opt_overwrite" != "Y" ]; then
                                     if [ "$2" != "" -a "${2:0:1}" != "-" ]; then
                                         cd "$wd"
                                         tmp="$2"
@@ -1009,6 +1015,12 @@ while [ "$1" != "" ]; do
                                     else
                                         problem_encountered "missing profile for output argument"
                                     fi
+                                elif [ "$opt_overwrite" != "Y" ]; then
+                                    problem_encountered "invalid argument: $1"
+                                fi;;
+        --overwrite )           if [ "$cmd" = "resign" ]; then
+                                    opt_output="$bd/$ipa"
+                                    opt_overwrite="Y"
                                 else
                                     problem_encountered "invalid argument: $1"
                                 fi;;
