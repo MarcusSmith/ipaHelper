@@ -24,7 +24,7 @@ OSStatus GeneratePreviewForURL(void *thisInterface, QLPreviewRequestRef preview,
     NSString *filetype = ipaURL.pathExtension;
     
     NSTask *task = [[NSTask alloc] init];
-    [task setLaunchPath:@"/usr/bin/ipaHelper"];
+    [task setLaunchPath:@"/usr/local/bin/ipaHelper"];
     [task setArguments:[NSArray arrayWithObjects:@"summary", [ipaURL path], @"--json", @"--dont-clean", nil]];
     
     NSPipe *pipe = [NSPipe pipe];
@@ -72,7 +72,7 @@ OSStatus GeneratePreviewForURL(void *thisInterface, QLPreviewRequestRef preview,
     //Got the icon image and the summary dictionary, time to clean up
     
     NSTask *cleanTask = [[NSTask alloc] init];
-    [cleanTask setLaunchPath:@"/usr/bin/ipaHelper"];
+    [cleanTask setLaunchPath:@"/usr/local/bin/ipaHelper"];
     [cleanTask setArguments:[NSArray arrayWithObjects:@"clean", [ipaURL path], nil]];
     
     pipe = [NSPipe pipe];
@@ -281,7 +281,7 @@ void CancelPreviewGeneration(void *thisInterface, QLPreviewRequestRef preview)
 {
     if (ipaURL.path) {
         NSTask *cleanTask = [[NSTask alloc] init];
-        [cleanTask setLaunchPath:@"/usr/bin/ipaHelper"];
+        [cleanTask setLaunchPath:@"/usr/local/bin/ipaHelper"];
         
         NSArray *args = @[@"clean", ipaURL.path];
         

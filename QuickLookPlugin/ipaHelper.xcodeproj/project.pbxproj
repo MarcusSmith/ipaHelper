@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		4505CCFC18F734B5006D8046 /* ipaHelper.qlgenerator in CopyFiles */ = {isa = PBXBuildFile; fileRef = 452F810518F71F3F00E76451 /* ipaHelper.qlgenerator */; };
 		452F810918F71F3F00E76451 /* QuickLook.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 452F810818F71F3F00E76451 /* QuickLook.framework */; };
 		452F810B18F71F3F00E76451 /* ApplicationServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 452F810A18F71F3F00E76451 /* ApplicationServices.framework */; };
 		452F810D18F71F3F00E76451 /* CoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 452F810C18F71F3F00E76451 /* CoreServices.framework */; };
@@ -16,31 +15,7 @@
 		452F811718F71F3F00E76451 /* GenerateThumbnailForURL.m in Sources */ = {isa = PBXBuildFile; fileRef = 452F811618F71F3F00E76451 /* GenerateThumbnailForURL.m */; };
 		452F811918F71F3F00E76451 /* GeneratePreviewForURL.m in Sources */ = {isa = PBXBuildFile; fileRef = 452F811818F71F3F00E76451 /* GeneratePreviewForURL.m */; };
 		452F811B18F71F3F00E76451 /* main.c in Sources */ = {isa = PBXBuildFile; fileRef = 452F811A18F71F3F00E76451 /* main.c */; };
-		4552E81E192BA57000C4D9E3 /* ipaHelper.qlgenerator in CopyFiles */ = {isa = PBXBuildFile; fileRef = 452F810518F71F3F00E76451 /* ipaHelper.qlgenerator */; };
 /* End PBXBuildFile section */
-
-/* Begin PBXCopyFilesBuildPhase section */
-		4505CCFB18F73221006D8046 /* CopyFiles */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 12;
-			dstPath = "~/Library/QuickLook";
-			dstSubfolderSpec = 0;
-			files = (
-				4505CCFC18F734B5006D8046 /* ipaHelper.qlgenerator in CopyFiles */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		4552E81D192BA56400C4D9E3 /* CopyFiles */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 12;
-			dstPath = "~/Development/Marcus/ipaHelper/ipaHelperInstall.app/Installation";
-			dstSubfolderSpec = 0;
-			files = (
-				4552E81E192BA57000C4D9E3 /* ipaHelper.qlgenerator in CopyFiles */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		452F810518F71F3F00E76451 /* ipaHelper.qlgenerator */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ipaHelper.qlgenerator; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -142,8 +117,7 @@
 				452F810118F71F3F00E76451 /* Headers */,
 				452F810218F71F3F00E76451 /* Resources */,
 				452F810318F71F3F00E76451 /* Rez */,
-				4505CCFB18F73221006D8046 /* CopyFiles */,
-				4552E81D192BA56400C4D9E3 /* CopyFiles */,
+				2CB2348F1BE6C40B009389B6 /* ShellScript */,
 			);
 			buildRules = (
 			);
@@ -200,6 +174,22 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXRezBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		2CB2348F1BE6C40B009389B6 /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "echo \"Overwriting Quicklook Generator\"\nmkdir -p \"$USER_LIBRARY_DIR/QuickLook/\"\nsudo rm -rf \"$USER_LIBRARY_DIR/QuickLook/ipaHelper.qlgenerator\"\nsudo cp -rf \"$BUILT_PRODUCTS_DIR/ipaHelper.qlgenerator\" \"$USER_LIBRARY_DIR/QuickLook/\"\necho \"Copying new qlgenerator to install app\"\nrm -rf \"$PROJECT_DIR/../ipaHelperInstall.app/Installation/ipaHelper.qlgenerator\"\ncp -rf \"$BUILT_PRODUCTS_DIR/ipaHelper.qlgenerator\" \"$PROJECT_DIR/../ipaHelperInstall.app/Installation/\"";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		452F80FF18F71F3F00E76451 /* Sources */ = {

@@ -18,7 +18,7 @@ OSStatus GenerateThumbnailForURL(void *thisInterface, QLThumbnailRequestRef thum
     NSURL *ipaURL = (__bridge NSURL *)url;
     
     NSTask *task = [[NSTask alloc] init];
-    [task setLaunchPath:@"/usr/bin/ipaHelper"];
+    [task setLaunchPath:@"/usr/local/bin/ipaHelper"];
     [task setArguments:[NSArray arrayWithObjects:@"summary", [ipaURL path], @"--json", @"--dont-clean", nil]];
     
     NSPipe *pipe = [NSPipe pipe];
@@ -47,7 +47,7 @@ OSStatus GenerateThumbnailForURL(void *thisInterface, QLThumbnailRequestRef thum
     //Got the icon image, time to clean up
     
     NSTask *cleanTask = [[NSTask alloc] init];
-    [cleanTask setLaunchPath:@"/usr/bin/ipaHelper"];
+    [cleanTask setLaunchPath:@"/usr/local/bin/ipaHelper"];
     [cleanTask setArguments:[NSArray arrayWithObjects:@"clean", [ipaURL path], nil]];
     
     pipe = [NSPipe pipe];
@@ -115,7 +115,7 @@ void CancelThumbnailGeneration(void *thisInterface, QLThumbnailRequestRef thumbn
 {
     // Implement only if supported
         NSTask *cleanTask = [[NSTask alloc] init];
-        [cleanTask setLaunchPath:@"/usr/bin/ipaHelper"];
+        [cleanTask setLaunchPath:@"/usr/local/bin/ipaHelper"];
         [cleanTask setArguments:[NSArray arrayWithObjects:@"clean", nil]];
         
         NSPipe *pipe = [NSPipe pipe];

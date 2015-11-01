@@ -3,9 +3,9 @@
 <plist version="1.0">
 <dict>
 	<key>AMApplicationBuild</key>
-	<string>381</string>
+	<string>417</string>
 	<key>AMApplicationVersion</key>
-	<string>2.4</string>
+	<string>2.6</string>
 	<key>AMDocumentVersion</key>
 	<string>2</string>
 	<key>actions</key>
@@ -169,7 +169,7 @@
 				<key>isViewVisible</key>
 				<false/>
 				<key>location</key>
-				<string>590.500000:554.000000</string>
+				<string>309.000000:112.000000</string>
 				<key>nibPath</key>
 				<string>/System/Library/Automator/Ask for Finder Items.action/Contents/Resources/Base.lproj/main.nib</string>
 			</dict>
@@ -227,7 +227,7 @@
 					<key>COMMAND_STRING</key>
 					<string>profile="${@: -1}"
 while [ "$2" != "" ]; do
-	ipaHelper resign "$1" --force -p "$profile" 2&gt;&amp;1
+	/usr/local/bin/ipaHelper resign "$1" --force -p "$profile" 2&gt;&amp;1
 	shift
 done
 </string>
@@ -345,7 +345,7 @@ done
 				<key>isViewVisible</key>
 				<true/>
 				<key>location</key>
-				<string>590.500000:512.000000</string>
+				<string>309.000000:295.000000</string>
 				<key>nibPath</key>
 				<string>/System/Library/Automator/Run Shell Script.action/Contents/Resources/English.lproj/main.nib</string>
 			</dict>
@@ -453,7 +453,7 @@ done
 				<key>isViewVisible</key>
 				<false/>
 				<key>location</key>
-				<string>590.500000:329.000000</string>
+				<string>309.000000:337.000000</string>
 				<key>nibPath</key>
 				<string>/System/Library/Automator/Set Value of Variable.action/Contents/Resources/Base.lproj/main.nib</string>
 			</dict>
@@ -588,7 +588,7 @@ done
 				<key>isViewVisible</key>
 				<true/>
 				<key>location</key>
-				<string>590.500000:287.000000</string>
+				<string>309.000000:527.000000</string>
 				<key>nibPath</key>
 				<string>/System/Library/Automator/Display Notification.action/Contents/Resources/Base.lproj/main.nib</string>
 			</dict>
@@ -598,26 +598,26 @@ done
 	</array>
 	<key>connectors</key>
 	<dict>
-		<key>8E515776-B0F7-46D3-ABB1-994721DC5DEC</key>
+		<key>4539F118-45A5-4364-ADB3-6B64173DB4CD</key>
+		<dict>
+			<key>from</key>
+			<string>5B1D209F-DFC4-4478-B64B-9795616593E6 - 5B1D209F-DFC4-4478-B64B-9795616593E6</string>
+			<key>to</key>
+			<string>354B148D-ACBA-4C96-83E6-472D32432EFE - 354B148D-ACBA-4C96-83E6-472D32432EFE</string>
+		</dict>
+		<key>7F8DF34C-041F-4439-88D2-A1D2EA83B9A7</key>
 		<dict>
 			<key>from</key>
 			<string>95D0D9B8-8781-4F48-87DD-C758C3DB074B - 95D0D9B8-8781-4F48-87DD-C758C3DB074B</string>
 			<key>to</key>
 			<string>5B1D209F-DFC4-4478-B64B-9795616593E6 - 5B1D209F-DFC4-4478-B64B-9795616593E6</string>
 		</dict>
-		<key>DC01EEF3-3C3F-4266-ACFB-C09AE47E369A</key>
+		<key>F823E6D3-D3CF-4C3A-903C-E4A245EDD2BA</key>
 		<dict>
 			<key>from</key>
 			<string>354B148D-ACBA-4C96-83E6-472D32432EFE - 354B148D-ACBA-4C96-83E6-472D32432EFE</string>
 			<key>to</key>
 			<string>F5BAC43B-726D-4661-939E-810EAABB201A - F5BAC43B-726D-4661-939E-810EAABB201A</string>
-		</dict>
-		<key>F3E967A3-BC17-480A-A394-C2BE2CF2A7BE</key>
-		<dict>
-			<key>from</key>
-			<string>5B1D209F-DFC4-4478-B64B-9795616593E6 - 5B1D209F-DFC4-4478-B64B-9795616593E6</string>
-			<key>to</key>
-			<string>354B148D-ACBA-4C96-83E6-472D32432EFE - 354B148D-ACBA-4C96-83E6-472D32432EFE</string>
 		</dict>
 	</dict>
 	<key>variables</key>

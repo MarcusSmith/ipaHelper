@@ -3,7 +3,11 @@
 dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 error=N
 
-sudo cp "$dir/ipaHelper" /usr/bin/
+if [ ! -d /usr/local/bin ]; then
+    sudo mkdir /usr/local/bin
+fi
+
+sudo cp "$dir/ipaHelper" /usr/local/bin/
 if [ $? != 0 ]; then
     error=Y
     echo "Error copying script"
